@@ -4,6 +4,8 @@
   "description": "Cleveland Holding Group CRM",
   "main": "server/index.js",
   "scripts": {
+    "start": "node server/index.js",
+    "build": "cd client && npm run build",
     "start:server": "node server/index.js",
     "start:client": "cd client && PORT=3001 npm start",
     "dev": "concurrently \"npm run start:server\" \"npm run start:client\"",
