@@ -17,8 +17,8 @@ app.get('/', (req, res) => {
   })
 })
 
-// Routes (we will add these one by one)
 app.use('/api/properties', require('./routes/properties'))
+app.use('/api/contractors', require('./routes/contractors'))
 app.use('/api/projects', require('./routes/projects'))
 app.use('/api/tenants', require('./routes/tenants'))
 app.use('/api/deals', require('./routes/deals'))

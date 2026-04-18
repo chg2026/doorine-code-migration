@@ -6,7 +6,8 @@
   "scripts": {
     "start:server": "node server/index.js",
     "start:client": "cd client && PORT=3001 npm start",
-    "dev": "concurrently \"npm run start:server\" \"npm run start:client\""
+    "dev": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "seed": "node scripts/seed.js"
   },
   "repository": {
     "type": "git",
