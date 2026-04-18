@@ -5,6 +5,7 @@ const supabase = require('../db')
 // Get all projects with property info
 router.get('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('construction_projects')
       .select(`
@@ -24,6 +25,7 @@ router.get('/', async (req, res) => {
 // Get single project with all phases
 router.get('/:id', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('construction_projects')
       .select(`
@@ -44,6 +46,7 @@ router.get('/:id', async (req, res) => {
 // Create project
 router.post('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('construction_projects')
       .insert([req.body])
@@ -58,6 +61,7 @@ router.post('/', async (req, res) => {
 // Update project
 router.put('/:id', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('construction_projects')
       .update(req.body)
@@ -77,6 +81,7 @@ router.post('/:id/phases', async (req, res) => {
       ...req.body,
       project_id: req.params.id
     }
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('construction_phases')
       .insert([phaseData])
@@ -91,6 +96,7 @@ router.post('/:id/phases', async (req, res) => {
 // Update phase
 router.put('/phases/:id', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('construction_phases')
       .update(req.body)

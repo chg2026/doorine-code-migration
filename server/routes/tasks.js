@@ -5,6 +5,7 @@ const supabase = require('../db')
 // Get all tasks
 router.get('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('recurring_tasks')
       .select('*, properties(address)')
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
 // Complete a task with confirmation number
 router.put('/:id/complete', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('recurring_tasks')
       .update({

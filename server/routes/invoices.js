@@ -5,6 +5,7 @@ const supabase = require('../db')
 // Get all invoices
 router.get('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('invoices')
       .select('*, properties(address)')
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
 // Create invoice
 router.post('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('invoices')
       .insert([req.body])

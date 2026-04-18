@@ -5,6 +5,7 @@ const supabase = require('../db')
 // Get all deals
 router.get('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('deals')
       .select('*')
@@ -27,6 +28,7 @@ router.post('/', async (req, res) => {
         ((req.body.arv - totalCost) / totalCost) * 100
       )
     }
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('deals')
       .insert([req.body])
@@ -41,6 +43,7 @@ router.post('/', async (req, res) => {
 // Update deal
 router.put('/:id', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('deals')
       .update(req.body)

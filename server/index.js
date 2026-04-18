@@ -25,6 +25,12 @@ app.use('/api/deals', require('./routes/deals'))
 app.use('/api/tasks', require('./routes/tasks'))
 app.use('/api/invoices', require('./routes/invoices'))
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack)
+  res.status(500).json({ error: err.message || 'Internal server error' })
+})
+
 app.listen(PORT, () => {
   console.log(`CHG CRM server running on port ${PORT}`)
 })

@@ -5,6 +5,7 @@ const supabase = require('../db')
 // Get all properties
 router.get('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('properties')
       .select('*')
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
 // Get single property
 router.get('/:id', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('properties')
       .select('*')
@@ -34,6 +36,7 @@ router.get('/:id', async (req, res) => {
 // Create property
 router.post('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('properties')
       .insert([req.body])
@@ -48,6 +51,7 @@ router.post('/', async (req, res) => {
 // Update property
 router.put('/:id', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('properties')
       .update(req.body)

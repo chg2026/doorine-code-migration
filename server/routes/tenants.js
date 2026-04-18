@@ -5,6 +5,7 @@ const supabase = require('../db')
 // Get all tenants
 router.get('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('tenants')
       .select('*, properties(address)')
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
 // Create tenant
 router.post('/', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('tenants')
       .insert([req.body])
@@ -47,6 +49,7 @@ router.put('/:id', async (req, res) => {
       req.body.current_late_fee = lateFee
     }
 
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
     const { data, error } = await supabase
       .from('tenants')
       .update(req.body)
