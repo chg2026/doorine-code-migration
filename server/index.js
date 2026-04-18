@@ -21,10 +21,11 @@ app.use('/api/deals', require('./routes/deals'))
 app.use('/api/tasks', require('./routes/tasks'))
 app.use('/api/invoices', require('./routes/invoices'))
 
-app.use(express.static(path.join(__dirname, '../client/build')))
+const buildPath = path.resolve(__dirname, '../client/build')
+app.use(express.static(buildPath))
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'))
+app.use((req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'))
 })
 
 app.listen(PORT, () => {
