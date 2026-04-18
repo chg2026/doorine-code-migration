@@ -24,6 +24,10 @@ app.use('/api/invoices', require('./routes/invoices'))
 const buildPath = path.resolve(__dirname, '../client/build')
 app.use(express.static(buildPath))
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'))
+})
+
 app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(buildPath, 'index.html'))
 })
