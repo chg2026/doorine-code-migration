@@ -2,10 +2,15 @@ const express = require('express')
 const router = express.Router()
 const supabase = require('../db')
 
+const dbCheck = (res) => {
+  if (!supabase) { res.status(503).json({ error: 'Database not configured.' }); return false; }
+  return true;
+}
+
 // Get all properties
 router.get('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
+    if (!dbCheck(res)) return
     const { data, error } = await supabase
       .from('properties')
       .select('*')
@@ -20,7 +25,7 @@ router.get('/', async (req, res) => {
 // Get single property
 router.get('/:id', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
+    if (!dbCheck(res)) return
     const { data, error } = await supabase
       .from('properties')
       .select('*')
@@ -36,7 +41,7 @@ router.get('/:id', async (req, res) => {
 // Create property
 router.post('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
+    if (!dbCheck(res)) return
     const { data, error } = await supabase
       .from('properties')
       .insert([req.body])
@@ -51,7 +56,7 @@ router.post('/', async (req, res) => {
 // Update property
 router.put('/:id', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
+    if (!dbCheck(res)) return
     const { data, error } = await supabase
       .from('properties')
       .update(req.body)
@@ -59,6 +64,21 @@ router.put('/:id', async (req, res) => {
       .select()
     if (error) throw error
     res.json(data[0])
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Delete property
+router.delete('/:id', async (req, res) => {
+  try {
+    if (!dbCheck(res)) return
+    const { error } = await supabase
+      .from('properties')
+      .delete()
+      .eq('id', req.params.id)
+    if (error) throw error
+    res.json({ success: true })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
