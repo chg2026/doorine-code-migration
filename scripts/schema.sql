@@ -12,9 +12,14 @@ CREATE TABLE IF NOT EXISTS properties (
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE properties ADD COLUMN IF NOT EXISTS property_type TEXT DEFAULT 'single_family';
-ALTER TABLE properties ADD COLUMN IF NOT EXISTS unit_count    INTEGER DEFAULT 1;
-ALTER TABLE properties ADD COLUMN IF NOT EXISTS status        TEXT DEFAULT 'vacant';
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS property_type    TEXT DEFAULT 'single_family';
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS type             TEXT;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS unit_count       INTEGER DEFAULT 1;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS status           TEXT DEFAULT 'vacant';
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS purchase_price   NUMERIC;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS acquisition_date DATE;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS insurance_policy TEXT;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS monthly_rent     NUMERIC;
 
 -- ─── CONTRACTORS ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS contractors (

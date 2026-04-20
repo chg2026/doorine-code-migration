@@ -60,4 +60,20 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
+    // Detach contractor from any projects first to avoid FK violations
+    await supabase.from('construction_projects').update({ contractor_id: null }).eq('contractor_id', req.params.id);
+    const { error } = await supabase
+      .from('contractors')
+      .delete()
+      .eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

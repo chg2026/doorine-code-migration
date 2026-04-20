@@ -38,16 +38,41 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// Create project
+// Create project — optionally with a list of standard phases to create atomically.
+// Body: { ...projectFields, phases?: ["Demolition","Framing",...] }
+// If any phase insert fails, the just-created project is rolled back so the
+// client never sees a project with a partial phase list.
 router.post('/', async (req, res) => {
   try {
     if (!dbCheck(res)) return
+    const { phases, ...projectFields } = req.body || {}
+
     const { data, error } = await supabase
       .from('construction_projects')
-      .insert([req.body])
+      .insert([projectFields])
       .select()
     if (error) throw error
-    res.json(data[0])
+    const project = data[0]
+
+    if (Array.isArray(phases) && phases.length > 0) {
+      const rows = phases
+        .filter(name => typeof name === 'string' && name.trim())
+        .map(name => ({ project_id: project.id, name, completion_pct: 0, budget: 0 }))
+
+      if (rows.length > 0) {
+        const { error: phaseErr } = await supabase
+          .from('construction_phases')
+          .insert(rows)
+        if (phaseErr) {
+          // Roll back: delete any phases that did make it in, then the project itself
+          await supabase.from('construction_phases').delete().eq('project_id', project.id)
+          await supabase.from('construction_projects').delete().eq('id', project.id)
+          throw new Error('Failed to create standard phases: ' + phaseErr.message)
+        }
+      }
+    }
+
+    res.json(project)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -69,10 +94,17 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// Delete project
+// Delete project — cascades phases first to avoid FK violations
 router.delete('/:id', async (req, res) => {
   try {
     if (!dbCheck(res)) return
+    // Remove all child phases before deleting the project
+    const { error: phaseErr } = await supabase
+      .from('construction_phases')
+      .delete()
+      .eq('project_id', req.params.id)
+    if (phaseErr) throw phaseErr
+
     const { error } = await supabase
       .from('construction_projects')
       .delete()

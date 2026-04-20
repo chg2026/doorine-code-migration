@@ -57,6 +57,17 @@ const PROPERTY_STATUS_MAP = {
   active: { label: 'Active', color: '#7ab88a', bg: '#0d2b1a' },
 };
 
+// Pre-loaded job phases organized by category for fast project setup
+const STANDARD_PHASE_GROUPS = [
+  { group: 'Structural / Prep',   phases: ['Demolition', 'Cleaning', 'Framing', 'Insulation'] },
+  { group: 'MEP',                 phases: ['Electrical', 'Plumbing'] },
+  { group: 'Walls & Ceiling',     phases: ['Drywall', 'Mudding', 'Ceiling Repair', 'Paint Preparation', 'Paint'] },
+  { group: 'Bathroom Remodel',    phases: ['Bathroom Prep', 'Bathroom Tile Install', 'Bathroom Fixtures Install'] },
+  { group: 'Flooring',            phases: ['Floor Leveling', 'Plywood', 'Vinyl Floor Install'] },
+  { group: 'Finishes & Install',  phases: ['Kitchen Cabinets Installation', 'Fixtures Installation', 'Doors Installation', 'Window Replacement'] },
+];
+const ALL_STANDARD_PHASES = STANDARD_PHASE_GROUPS.flatMap(g => g.phases);
+
 const PROJECT_STATUSES = [
   { value: 'planning',   label: 'Planning',   color: '#9b8ec4', bg: '#1e1a2d' },
   { value: 'active',     label: 'Active',     color: '#7ab88a', bg: '#0d2b1a' },
@@ -316,7 +327,7 @@ function PropCard({ property, tenants, onClick }) {
 
 // ─── Project Form Modal (create / edit project) ───────────────────────────────
 
-function ProjectFormModal({ project, properties, contractors, onClose, onSave, onDelete }) {
+function ProjectFormModal({ project, properties, contractors, onClose, onSave, onDelete, onAddContractor }) {
   const isEdit = !!project?.id;
   const [form, setForm] = useState({
     name:              project?.name              || '',
@@ -328,9 +339,22 @@ function ProjectFormModal({ project, properties, contractors, onClose, onSave, o
     labor_budget:      project?.labor_budget      || '',
     material_budget:   project?.material_budget   || '',
   });
+  // Default to all standard phases pre-selected for new projects
+  const [selectedPhases, setSelectedPhases] = useState(isEdit ? [] : ALL_STANDARD_PHASES);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState('');
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const togglePhase = (phase) => setSelectedPhases(prev =>
+    prev.includes(phase) ? prev.filter(p => p !== phase) : [...prev, phase]
+  );
+  const toggleGroup = (groupPhases) => {
+    const allSelected = groupPhases.every(p => selectedPhases.includes(p));
+    setSelectedPhases(prev => allSelected
+      ? prev.filter(p => !groupPhases.includes(p))
+      : Array.from(new Set([...prev, ...groupPhases]))
+    );
+  };
 
   const handleSave = async () => {
     if (!form.name.trim()) { setError('Project name is required.'); return; }
@@ -342,7 +366,7 @@ function ProjectFormModal({ project, properties, contractors, onClose, onSave, o
         material_budget: parseFloat(form.material_budget) || 0,
         property_id:     form.property_id  || null,
         contractor_id:   form.contractor_id || null,
-      });
+      }, isEdit ? null : selectedPhases);
     } catch (e) { setError(e?.response?.data?.error || 'Save failed.'); setSaving(false); }
   };
 
@@ -408,6 +432,53 @@ function ProjectFormModal({ project, properties, contractors, onClose, onSave, o
             </div>
           ) : null}
         </div>
+
+        {/* ── Standard phase checklist (create mode only) ── */}
+        {!isEdit && (
+          <div style={{ background: '#111', borderRadius: 10, padding: '16px', border: '0.5px solid #2a2a2a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <div style={lbl}>Pre-Load Job Phases</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setSelectedPhases(ALL_STANDARD_PHASES)} style={{ ...ghostBtn, padding: '4px 10px', fontSize: 11 }}>Select all</button>
+                <button onClick={() => setSelectedPhases([])} style={{ ...ghostBtn, padding: '4px 10px', fontSize: 11 }}>Clear</button>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#5a5855', marginBottom: 12 }}>
+              {selectedPhases.length} of {ALL_STANDARD_PHASES.length} phases will be created. You can add, edit, or remove any phase later.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {STANDARD_PHASE_GROUPS.map(({ group, phases }) => {
+                const allOn = phases.every(p => selectedPhases.includes(p));
+                const someOn = phases.some(p => selectedPhases.includes(p));
+                return (
+                  <div key={group}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <div style={{ fontSize: 11, color: '#c8a96e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{group}</div>
+                      <button onClick={() => toggleGroup(phases)}
+                        style={{ background: 'none', border: 'none', color: allOn ? '#7ab88a' : someOn ? '#c8a96e' : '#5a5855', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        {allOn ? '✓ all' : someOn ? 'some' : 'none'}
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+                      {phases.map(p => {
+                        const on = selectedPhases.includes(p);
+                        return (
+                          <button key={p} onClick={() => togglePhase(p)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 6, border: `0.5px solid ${on ? '#c8a96e66' : '#2a2a2a'}`, background: on ? '#1e1a0e' : 'transparent', color: on ? '#f0ede8' : '#9a9690', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                            <span style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${on ? '#c8a96e' : '#3a3a3a'}`, background: on ? '#c8a96e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#0f0f0f', fontWeight: 700, flexShrink: 0 }}>
+                              {on ? '✓' : ''}
+                            </span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {error && <div style={{ fontSize: 12, color: '#c97b6e', padding: '8px 12px', background: '#2d1a1a', borderRadius: 8 }}>{error}</div>}
         <FormActions onClose={onClose} onDelete={isEdit ? onDelete : null} onSave={handleSave} saving={saving} disabled={!form.name.trim()} label={isEdit ? 'Save Changes' : 'Create Project'} />
@@ -591,9 +662,73 @@ function ExpenseFormModal({ project, onClose, onSave }) {
   );
 }
 
+// ─── Contractor Modal ────────────────────────────────────────────────────────
+
+const W9_STATUSES = [
+  { value: 'pending',     label: 'Pending',     color: '#c8a96e', bg: '#2b1a0d' },
+  { value: 'on_file',     label: 'On File',     color: '#7ab88a', bg: '#0d2b1a' },
+  { value: 'not_required',label: 'Not Required',color: '#9a9690', bg: '#222'    },
+];
+
+function ContractorModal({ contractor, onClose, onSave, onDelete }) {
+  const isEdit = !!contractor?.id;
+  const [form, setForm] = useState({
+    name:             contractor?.name             || '',
+    trade:            contractor?.trade            || '',
+    phone:            contractor?.phone            || '',
+    email:            contractor?.email            || '',
+    w9_status:        contractor?.w9_status        || 'pending',
+    agreement_signed: !!contractor?.agreement_signed,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState('');
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSave = async () => {
+    if (!form.name.trim()) { setError('Contractor name is required.'); return; }
+    setSaving(true); setError('');
+    try { await onSave(form); }
+    catch (e) { setError(e?.response?.data?.error || 'Save failed.'); setSaving(false); }
+  };
+
+  return (
+    <Modal onClose={onClose} title={isEdit ? 'Edit Contractor' : 'Add Contractor'} maxWidth={520}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div><label style={lbl}>Name *</label><input style={inp} value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. JN Winston LLC" autoFocus /></div>
+        <div><label style={lbl}>Trade / Specialty</label><input style={inp} value={form.trade} onChange={e => set('trade', e.target.value)} placeholder="e.g. General Contractor, Electrician, Plumber" /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><label style={lbl}>Phone</label><input style={inp} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(216) 555-0123" /></div>
+          <div><label style={lbl}>Email</label><input style={inp} type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="contact@…" /></div>
+        </div>
+        <div>
+          <label style={lbl}>W-9 Status</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {W9_STATUSES.map(st => {
+              const active = form.w9_status === st.value;
+              return (
+                <button key={st.value} onClick={() => set('w9_status', st.value)}
+                  style={{ flex: 1, padding: '9px 8px', borderRadius: 8, border: `1px solid ${active ? st.color : '#2a2a2a'}`, background: active ? st.bg : 'transparent', color: active ? st.color : '#5a5855', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {st.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '10px 12px', background: '#111', border: '0.5px solid #2a2a2a', borderRadius: 8 }}>
+          <input type="checkbox" checked={form.agreement_signed} onChange={e => set('agreement_signed', e.target.checked)} style={{ width: 16, height: 16, accentColor: '#c8a96e' }} />
+          <span style={{ fontSize: 13 }}>Contractor agreement signed</span>
+        </label>
+        {error && <div style={{ fontSize: 12, color: '#c97b6e', padding: '8px 12px', background: '#2d1a1a', borderRadius: 8 }}>{error}</div>}
+        <FormActions onClose={onClose} onDelete={isEdit ? onDelete : null} onSave={handleSave} saving={saving} disabled={!form.name.trim()} label={isEdit ? 'Save Changes' : 'Add Contractor'} />
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Interactive Project Card ─────────────────────────────────────────────────
 
-function ProjectCard({ project, projectInvoices, onEdit, onAddPhase, onEditPhase, onDeletePhase, onLogExpense }) {
+function ProjectCard({ project, projectInvoices, onEdit, onDelete, onAddPhase, onEditPhase, onDeletePhase, onLogExpense }) {
+  const [confirmDel, setConfirmDel] = useState(false);
   const phases        = project.construction_phases || [];
   const completionPct = phaseCompletion(phases);
   const timeline      = getTimeline(project.start_date, project.target_completion);
@@ -631,7 +766,16 @@ function ProjectCard({ project, projectInvoices, onEdit, onAddPhase, onEditPhase
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
             <Badge label={statusInfo.label.toUpperCase()} bg={statusInfo.bg} color={statusInfo.color} />
             {timeline && <Badge label={onTime ? 'ON TIME' : 'BEHIND'} bg={onTime ? '#0a2e18' : '#2e0a0a'} color={onTime ? '#7ab88a' : '#c97b6e'} />}
-            <button onClick={onEdit} style={btnStyle}>Edit Project</button>
+            <button onClick={onEdit} style={btnStyle}>Edit</button>
+            {!confirmDel ? (
+              <button onClick={() => setConfirmDel(true)} title="Delete project" style={{ ...btnStyle, color: '#c97b6e', borderColor: '#c97b6e44', padding: '5px 9px' }}>Delete</button>
+            ) : (
+              <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: '#c97b6e' }}>Confirm?</span>
+                <button onClick={() => { setConfirmDel(false); onDelete(); }} style={{ ...btnStyle, background: '#c97b6e', color: '#0f0f0f', border: 'none', fontWeight: 700 }}>Yes</button>
+                <button onClick={() => setConfirmDel(false)} style={btnStyle}>No</button>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -793,10 +937,11 @@ function App() {
   const [loading,       setLoading]       = useState(true);
 
   // Modal states
-  const [propertyModal,  setPropertyModal]  = useState(null); // null | {} | property
-  const [projectModal,   setProjectModal]   = useState(null); // null | {} | project
-  const [phaseModal,     setPhaseModal]     = useState(null); // null | { phase?, projectId }
-  const [expenseModal,   setExpenseModal]   = useState(null); // null | { project }
+  const [propertyModal,   setPropertyModal]   = useState(null); // null | {} | property
+  const [projectModal,    setProjectModal]    = useState(null); // null | {} | project
+  const [phaseModal,      setPhaseModal]      = useState(null); // null | { phase?, projectId }
+  const [expenseModal,    setExpenseModal]    = useState(null); // null | { project }
+  const [contractorModal, setContractorModal] = useState(null); // null | {} | contractor
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -853,6 +998,7 @@ function App() {
     { id: 'properties',   label: 'Properties'    },
     { id: 'construction', label: 'Construction'  },
     { id: 'pm',           label: 'Property Mgmt' },
+    { id: 'contractors',  label: 'Contractors'   },
     { id: 'acquisitions', label: 'Acquisitions'  },
     { id: 'finance',      label: 'Finance'       },
     { id: 'tasks',        label: 'Tasks'         },
@@ -1058,6 +1204,12 @@ function App() {
                     (inv.classification || '').startsWith('construction_')
                   )}
                   onEdit={() => setProjectModal(p)}
+                  onDelete={async () => {
+                    try {
+                      await axios.delete(`${API}/api/projects/${p.id}`);
+                      fetchAll();
+                    } catch (e) { alert('Failed to delete project: ' + (e?.response?.data?.error || e.message)); }
+                  }}
                   onAddPhase={() => setPhaseModal({ projectId: p.id })}
                   onEditPhase={(phase) => setPhaseModal({ phase, projectId: p.id })}
                   onDeletePhase={async (phaseId) => {
@@ -1076,11 +1228,15 @@ function App() {
                   properties={properties}
                   contractors={contractors}
                   onClose={() => setProjectModal(null)}
-                  onSave={async (form) => {
+                  onSave={async (form, phasesToCreate) => {
                     if (projectModal.id) {
                       await axios.put(`${API}/api/projects/${projectModal.id}`, form);
                     } else {
-                      await axios.post(`${API}/api/projects`, form);
+                      // Server creates project + phases atomically and rolls back on failure
+                      await axios.post(`${API}/api/projects`, {
+                        ...form,
+                        phases: phasesToCreate || [],
+                      });
                     }
                     setProjectModal(null);
                     fetchAll();
@@ -1149,6 +1305,81 @@ function App() {
                   Partial payments: <span style={{ color: '#c97b6e', fontWeight: 500 }}>Not accepted</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ══ Contractors ══ */}
+          {activeTab === 'contractors' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 500 }}>Contractor Directory</div>
+                  <div style={{ fontSize: 12, color: '#9a9690', marginTop: 3 }}>
+                    {contractors.length} {contractors.length === 1 ? 'contractor' : 'contractors'}
+                    {contractors.length > 0 && <> &nbsp;·&nbsp; {contractors.filter(c => c.agreement_signed).length} with signed agreement</>}
+                  </div>
+                </div>
+                <button onClick={() => setContractorModal({})} style={s.addBtn}>+ Add Contractor</button>
+              </div>
+
+              {contractors.length === 0 ? (
+                <div style={{ ...s.card, textAlign: 'center', padding: 48 }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>🔧</div>
+                  <div style={{ color: '#9a9690', marginBottom: 6, fontSize: 15 }}>No contractors in directory yet</div>
+                  <div style={{ color: '#5a5855', fontSize: 13, marginBottom: 20 }}>Add contractors so they're available when planning projects</div>
+                  <button onClick={() => setContractorModal({})} style={{ ...s.addBtn, padding: '10px 24px', fontSize: 14 }}>Add Contractor</button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                  {contractors.map(c => {
+                    const w9 = W9_STATUSES.find(s => s.value === c.w9_status) || W9_STATUSES[0];
+                    const projectCount = projects.filter(p => p.contractor_id === c.id).length;
+                    return (
+                      <div key={c.id} onClick={() => setContractorModal(c)}
+                        style={{ background: '#171717', border: '0.5px solid #2a2a2a', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = '#444'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = '#2a2a2a'}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                            {c.trade && <div style={{ fontSize: 12, color: '#c8a96e' }}>{c.trade}</div>}
+                          </div>
+                          <Badge label={w9.label.toUpperCase()} bg={w9.bg} color={w9.color} />
+                        </div>
+                        <div style={{ fontSize: 12, color: '#9a9690', display: 'flex', flexDirection: 'column', gap: 3, marginTop: 8 }}>
+                          {c.phone && <div>📞 {c.phone}</div>}
+                          {c.email && <div style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>✉ {c.email}</div>}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '0.5px solid #222', fontSize: 11 }}>
+                          <span style={{ color: c.agreement_signed ? '#7ab88a' : '#c97b6e' }}>{c.agreement_signed ? '✓ Agreement signed' : '⚠ No agreement'}</span>
+                          <span style={{ color: '#5a5855' }}>{projectCount} {projectCount === 1 ? 'project' : 'projects'}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {contractorModal !== null && (
+                <ContractorModal
+                  contractor={contractorModal}
+                  onClose={() => setContractorModal(null)}
+                  onSave={async (form) => {
+                    if (contractorModal.id) {
+                      await axios.put(`${API}/api/contractors/${contractorModal.id}`, form);
+                    } else {
+                      await axios.post(`${API}/api/contractors`, form);
+                    }
+                    setContractorModal(null);
+                    fetchAll();
+                  }}
+                  onDelete={contractorModal.id ? async () => {
+                    await axios.delete(`${API}/api/contractors/${contractorModal.id}`);
+                    setContractorModal(null);
+                    fetchAll();
+                  } : null}
+                />
+              )}
             </div>
           )}
 
