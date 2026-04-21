@@ -35,7 +35,7 @@ Operations platform for Cleveland Holding Group — real estate portfolio manage
         PropertiesPage.jsx       - Properties CRUD (list, add, edit, delete)
         ConstructionPage.jsx     - Construction projects + phases + budgets
         ContractorsPage.jsx      - Contractor directory (list, add, edit, delete)
-        AcquisitionsPage.jsx     - Deal pipeline with stage tracking + ROI
+        AcquisitionsPage.jsx     - Deal pipeline with status tracking
         FinancePage.jsx          - Invoices + expense tracking
         TasksPage.jsx            - Recurring tasks (list, filter, complete)
         TenantsPage.jsx          - Tenant management (list, add, edit, payments)
@@ -118,6 +118,20 @@ Uses **Supabase Auth** natively:
 - Danger: `#c81e1e` (red)
 - Dark sidebar (`gray-900`) + white content area
 - Font: Inter (system fallback)
+
+## Known Issue: Signup Trigger
+
+The `handle_new_user` trigger in Supabase crashes on NULL metadata, blocking all new user creation. To fix, run `scripts/fix-trigger.sql` in Supabase SQL Editor. This replaces the trigger with a NULL-safe version that guards against missing account_id metadata. Until this is applied, the signup page will show an error.
+
+## Database Schema (actual column names)
+
+- **properties**: id, address, city, type, status, acquisition_date, purchase_price, insurance_policy, rental_registration_status, rental_registration_expiry, lead_safe_expiry, mortgage_due_day, tax_due_date, property_type, unit_count, account_id
+- **contractors**: id, name, trade, phone, email, w9_status, coi_expiry, agreement_signed, performance_score, account_id
+- **construction_projects**: id, name, property_id, contractor_id, status, labor_budget, material_budget, labor_spent, material_spent, overall_pct, start_date, target_completion, account_id
+- **tenants**: id, name, unit, lease_start, lease_end, payment_status, property_id, rent_amount, late_fee_count, account_id
+- **deals**: id, address, asking_price, arv, status, notes, source, account_id
+- **recurring_tasks**: id, name, status, property_id, due_date, type, account_id
+- **invoices**: id, property_id, project_id, vendor, amount, classification, date, file_url, account_id
 
 ## Database Migration
 

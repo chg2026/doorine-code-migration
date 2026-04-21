@@ -11,7 +11,6 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
-  const [completing, setCompleting] = useState(null);
 
   const fetch = useCallback(async () => {
     try {
@@ -27,11 +26,10 @@ export default function TasksPage() {
   const pendingCount = tasks.filter(t => t.status === 'pending').length;
   const completedCount = tasks.filter(t => t.status === 'completed').length;
 
-  const handleComplete = async (taskId, confirmationNumber) => {
+  const handleComplete = async (taskId) => {
     try {
-      await api.put(`/tasks/${taskId}/complete`, { confirmation_number: confirmationNumber });
+      await api.put(`/tasks/${taskId}/complete`, {});
       toast.success('Task completed');
-      setCompleting(null);
       fetch();
     } catch (e) {
       toast.error('Failed to complete task');
@@ -73,23 +71,16 @@ export default function TasksPage() {
               <div key={t.id} className="p-4 flex items-center gap-4 hover:bg-gray-50">
                 <div className={`w-3 h-3 rounded-full flex-shrink-0 ${t.status === 'completed' ? 'bg-green-500' : 'bg-amber-400'}`} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900">{t.task_name || t.name || 'Untitled Task'}</div>
+                  <div className="text-sm font-medium text-gray-900">{t.name || 'Untitled Task'}</div>
                   <div className="text-xs text-gray-500 mt-0.5">
-                    {t.properties?.address || 'No property'} · {t.frequency || 'one-time'}
+                    {t.properties?.address || 'No property'}
+                    {t.type && ` · ${t.type}`}
                     {t.due_date && ` · Due ${new Date(t.due_date).toLocaleDateString()}`}
                   </div>
-                  {t.confirmation_number && (
-                    <div className="text-xs text-gray-400 mt-0.5">Confirmation: {t.confirmation_number}</div>
-                  )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {t.status === 'completed' && t.completed_at && (
-                    <span className="text-xs text-gray-400">
-                      {new Date(t.completed_at).toLocaleDateString()}
-                    </span>
-                  )}
                   {t.status === 'pending' && canEdit && (
-                    <button onClick={() => setCompleting(t)}
+                    <button onClick={() => handleComplete(t.id)}
                       className="text-sm font-medium text-primary-500 hover:text-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors">
                       Complete
                     </button>
@@ -100,44 +91,6 @@ export default function TasksPage() {
           </div>
         )}
       </Card>
-
-      {completing && <CompleteModal task={completing} onClose={() => setCompleting(null)} onComplete={handleComplete} />}
     </Layout>
-  );
-}
-
-function CompleteModal({ task, onClose, onComplete }) {
-  const [confirmNum, setConfirmNum] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    await onComplete(task.id, confirmNum);
-    setSaving(false);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Complete Task</h3>
-        <p className="text-sm text-gray-500 mb-4">Mark "{task.task_name || task.name}" as completed.</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmation Number (optional)</label>
-            <input value={confirmNum} onChange={e => setConfirmNum(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              placeholder="e.g. receipt or reference number" />
-          </div>
-          <div className="flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
-            <button type="submit" disabled={saving}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50">
-              {saving ? 'Completing...' : 'Mark Complete'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   );
 }

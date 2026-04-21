@@ -44,9 +44,9 @@ router.post('/', requireEdit, async (req, res) => {
 
 router.put('/:id', requireEdit, async (req, res) => {
   try {
-    let verifyQuery = db().from('tenants').select('id, late_fee_count, rent_amount').eq('id', req.params.id)
+    let verifyQuery = db().from('tenants').select('id, late_fee_count, rent_amount, payment_status').eq('id', req.params.id)
     if (req.account_filter) verifyQuery = verifyQuery.eq('account_id', req.account_filter)
-    const { data: tenant, error: vErr } = await verifyQuery.single()
+    const { data: tenant, error: vErr } = await verifyQuery.maybeSingle()
     if (vErr || !tenant) return res.status(403).json({ error: 'Access denied.' })
 
     const updates = stripAccountId(req.body)
@@ -57,11 +57,9 @@ router.put('/:id', requireEdit, async (req, res) => {
       }
     }
 
-    if (updates.payment_status === 'late') {
+    if (updates.payment_status === 'late' && tenant.payment_status !== 'late') {
       const newCount = (tenant.late_fee_count || 0) + 1
-      const lateFee = newCount === 1 ? 69 : tenant.rent_amount * 0.10
       updates.late_fee_count = newCount
-      updates.current_late_fee = lateFee
     }
 
     const { data, error } = await db().from('tenants').update(updates).eq('id', req.params.id).select()

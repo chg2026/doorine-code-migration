@@ -29,10 +29,6 @@ router.post('/', requireEdit, async (req, res) => {
   try {
     const row = stripAccountId(req.body)
     row.account_id = req.user.account_id
-    if (row.arv && row.asking_price) {
-      const totalCost = row.asking_price + (row.labor_estimate || 0) + (row.material_estimate || 0)
-      row.roi_estimate = Math.round(((row.arv - totalCost) / totalCost) * 100)
-    }
     const { data, error } = await db().from('deals').insert([row]).select()
     if (error) throw error
     res.json(data[0])

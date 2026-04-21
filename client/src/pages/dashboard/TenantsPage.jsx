@@ -72,6 +72,7 @@ export default function TenantsPage() {
               <thead><tr className="border-b border-gray-200 text-left">
                 <th className="px-4 py-3 font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Property</th>
+                <th className="px-4 py-3 font-medium text-gray-500">Unit</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Rent</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Payment Status</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Lease End</th>
@@ -80,11 +81,9 @@ export default function TenantsPage() {
               <tbody>
                 {filtered.map(t => (
                   <tr key={t.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{t.name || '—'}</div>
-                      {t.phone && <div className="text-xs text-gray-500">{t.phone}</div>}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{t.name || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{t.properties?.address || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{t.unit || '—'}</td>
                     <td className="px-4 py-3 text-gray-900 font-medium">${(Number(t.rent_amount) || 0).toLocaleString()}</td>
                     <td className="px-4 py-3"><StatusBadge status={t.payment_status || 'current'} /></td>
                     <td className="px-4 py-3 text-gray-600">{t.lease_end ? new Date(t.lease_end).toLocaleDateString() : '—'}</td>
@@ -110,10 +109,8 @@ function TenantFormModal({ tenant, properties, onClose, onSave }) {
   const isEdit = !!tenant?.id;
   const [form, setForm] = useState({
     name: tenant?.name || '',
-    phone: tenant?.phone || '',
-    email: tenant?.email || '',
     property_id: tenant?.property_id || '',
-    unit_number: tenant?.unit_number || '',
+    unit: tenant?.unit || '',
     rent_amount: tenant?.rent_amount || '',
     lease_start: tenant?.lease_start || '',
     lease_end: tenant?.lease_end || '',
@@ -141,18 +138,6 @@ function TenantFormModal({ tenant, properties, onClose, onSave }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input value={form.phone} onChange={e => set('phone', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Property</label>
               <select value={form.property_id} onChange={e => set('property_id', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
@@ -161,8 +146,8 @@ function TenantFormModal({ tenant, properties, onClose, onSave }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Unit #</label>
-              <input value={form.unit_number} onChange={e => set('unit_number', e.target.value)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+              <input value={form.unit} onChange={e => set('unit', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
             </div>
           </div>

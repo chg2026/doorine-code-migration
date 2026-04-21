@@ -79,7 +79,6 @@ export default function PropertiesPage() {
               <thead><tr className="border-b border-gray-200 text-left">
                 <th className="px-4 py-3 font-medium text-gray-500">Address</th>
                 <th className="px-4 py-3 font-medium text-gray-500">City</th>
-                <th className="px-4 py-3 font-medium text-gray-500">State</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Type</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Units</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Status</th>
@@ -90,9 +89,8 @@ export default function PropertiesPage() {
                   <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{p.address || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{p.city || '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.state || '—'}</td>
                     <td className="px-4 py-3 text-gray-600 capitalize">{(p.property_type || p.type || '—').replace(/_/g, ' ')}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.units ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{p.unit_count ?? '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${p.status === 'active' ? 'bg-green-50 text-green-700 ring-green-600/20' : 'bg-gray-50 text-gray-600 ring-gray-500/10'}`}>
                         {p.status || 'active'}
@@ -129,12 +127,9 @@ function PropertyFormModal({ property, onClose, onSave }) {
   const [form, setForm] = useState({
     address: property?.address || '',
     city: property?.city || '',
-    state: property?.state || '',
-    zip: property?.zip || '',
     property_type: property?.property_type || property?.type || 'single_family',
-    units: property?.units || '',
+    unit_count: property?.unit_count || '',
     purchase_price: property?.purchase_price || '',
-    arv: property?.arv || '',
     status: property?.status || 'active',
   });
   const [saving, setSaving] = useState(false);
@@ -157,22 +152,10 @@ function PropertyFormModal({ property, onClose, onSave }) {
             <input value={form.address} onChange={e => set('address', e.target.value)} required
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input value={form.city} onChange={e => set('city', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <input value={form.state} onChange={e => set('state', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ZIP</label>
-              <input value={form.zip} onChange={e => set('zip', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+            <input value={form.city} onChange={e => set('city', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -187,21 +170,14 @@ function PropertyFormModal({ property, onClose, onSave }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Units</label>
-              <input type="number" value={form.units} onChange={e => set('units', e.target.value)}
+              <input type="number" value={form.unit_count} onChange={e => set('unit_count', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Price</label>
-              <input type="number" value={form.purchase_price} onChange={e => set('purchase_price', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ARV</label>
-              <input type="number" value={form.arv} onChange={e => set('arv', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Price</label>
+            <input type="number" value={form.purchase_price} onChange={e => set('purchase_price', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>

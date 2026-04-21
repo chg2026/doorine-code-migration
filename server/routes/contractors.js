@@ -73,7 +73,9 @@ router.delete('/:id', requireEdit, async (req, res) => {
     let projQuery = db().from('construction_projects').update({ contractor_id: null }).eq('contractor_id', req.params.id)
     if (req.account_filter) projQuery = projQuery.eq('account_id', req.account_filter)
     await projQuery
-    const { error } = await db().from('contractors').delete().eq('id', req.params.id)
+    let delQuery = db().from('contractors').delete().eq('id', req.params.id)
+    if (req.account_filter) delQuery = delQuery.eq('account_id', req.account_filter)
+    const { error } = await delQuery
     if (error) throw error
     res.json({ success: true })
   } catch (err) {

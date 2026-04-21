@@ -77,36 +77,65 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
       .insert(departments.map(dept => ({ role_id: roleId, department: dept, permission_level: 'edit' })))
     if (permError) throw permError
 
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email.toLowerCase().trim(),
+    const normalizedEmail = email.toLowerCase().trim()
+
+    let authUser, authError
+    const createResult = await supabaseAdmin.auth.admin.createUser({
+      email: normalizedEmail,
       password,
       email_confirm: true,
       user_metadata: { full_name: sanitizedName, account_id: accountId, role_id: roleId },
     })
+    authUser = createResult.data
+    authError = createResult.error
+
+    if (authError && authError.message?.includes('Database error')) {
+      const retryResult = await supabaseAdmin.auth.admin.createUser({
+        email: normalizedEmail,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: sanitizedName },
+      })
+      authUser = retryResult.data
+      authError = retryResult.error
+    }
     if (authError) throw authError
     authUserId = authUser.user.id
 
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
-      .update({ is_account_admin: true })
-      .eq('id', authUser.user.id)
+      .upsert({
+        id: authUser.user.id,
+        email: normalizedEmail,
+        full_name: sanitizedName,
+        account_id: accountId,
+        role_id: roleId,
+        is_account_admin: true,
+        is_super_admin: false,
+        status: 'active',
+      })
     if (profileError) {
-      console.error('[auth/signup] Profile update warning:', profileError.message)
+      console.error('[auth/signup] Profile creation error:', profileError.message)
+      throw profileError
     }
 
     res.status(201).json({ message: 'Account created successfully.' })
   } catch (e) {
     console.error('[auth/signup] Error:', e.message)
 
-    if (authUserId) {
-      await supabaseAdmin.auth.admin.deleteUser(authUserId).catch(() => {})
-    }
-    if (roleId) {
-      await supabaseAdmin.from('role_permissions').delete().eq('role_id', roleId).catch(() => {})
-      await supabaseAdmin.from('roles').delete().eq('id', roleId).catch(() => {})
-    }
-    if (accountId) {
-      await supabaseAdmin.from('accounts').delete().eq('id', accountId).catch(() => {})
+    try {
+      if (authUserId) {
+        await supabaseAdmin.auth.admin.deleteUser(authUserId)
+      }
+      if (roleId) {
+        await supabaseAdmin.from('role_permissions').delete().eq('role_id', roleId)
+        await supabaseAdmin.from('roles').delete().eq('id', roleId)
+      }
+      if (accountId) {
+        await supabaseAdmin.from('accounts').delete().eq('id', accountId)
+      }
+    } catch (cleanupErr) {
+      console.error('[auth/signup] Cleanup error:', cleanupErr.message)
     }
 
     if (e.message?.includes('already been registered') || e.message?.includes('unique constraint')) {

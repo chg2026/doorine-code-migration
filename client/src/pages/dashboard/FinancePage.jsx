@@ -100,7 +100,7 @@ export default function FinancePage() {
               <tbody>
                 {filtered.map(i => (
                   <tr key={i.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-600">{new Date(i.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-gray-600">{new Date(i.date || i.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3 font-medium text-gray-900">{i.vendor || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{i.properties?.address || '—'}</td>
                     <td className="px-4 py-3">
@@ -128,7 +128,7 @@ function InvoiceFormModal({ properties, onClose, onSave }) {
     amount: '',
     property_id: '',
     classification: 'construction_labor',
-    description: '',
+    date: new Date().toISOString().split('T')[0],
   });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -182,8 +182,8 @@ function InvoiceFormModal({ properties, onClose, onSave }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input type="date" value={form.date} onChange={e => set('date', e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
           </div>
           <div className="flex justify-end gap-3 pt-2">

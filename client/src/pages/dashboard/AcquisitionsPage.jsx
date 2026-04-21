@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 
-const STAGES = ['lead', 'analyzing', 'offer_sent', 'under_contract', 'due_diligence', 'closed', 'dead'];
+const STATUSES = ['lead', 'analyzing', 'offer_sent', 'under_contract', 'due_diligence', 'closed', 'dead'];
 
 export default function AcquisitionsPage() {
   const { canEditDepartment } = useAuth();
@@ -13,7 +13,7 @@ export default function AcquisitionsPage() {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [editing, setEditing] = useState(null);
 
   const fetch = useCallback(async () => {
@@ -27,10 +27,10 @@ export default function AcquisitionsPage() {
   useEffect(() => { fetch(); }, [fetch]);
 
   const filtered = deals.filter(d => {
-    if (stageFilter && d.stage !== stageFilter) return false;
+    if (statusFilter && d.status !== statusFilter) return false;
     if (!search) return true;
     const s = search.toLowerCase();
-    return (d.address || '').toLowerCase().includes(s) || (d.seller_name || '').toLowerCase().includes(s);
+    return (d.address || '').toLowerCase().includes(s);
   });
 
   const handleSave = async (form) => {
@@ -49,7 +49,7 @@ export default function AcquisitionsPage() {
     }
   };
 
-  const stageColor = (s) => {
+  const statusColor = (s) => {
     if (s === 'closed') return 'bg-green-50 text-green-700 ring-green-600/20';
     if (s === 'dead') return 'bg-red-50 text-red-700 ring-red-600/20';
     if (s === 'under_contract' || s === 'due_diligence') return 'bg-blue-50 text-blue-700 ring-blue-600/20';
@@ -57,19 +57,19 @@ export default function AcquisitionsPage() {
     return 'bg-gray-50 text-gray-600 ring-gray-500/10';
   };
 
-  const pipelineStats = STAGES.filter(s => s !== 'dead' && s !== 'closed').map(s => ({
-    stage: s,
-    count: deals.filter(d => d.stage === s).length,
+  const pipelineStats = STATUSES.filter(s => s !== 'dead' && s !== 'closed').map(s => ({
+    status: s,
+    count: deals.filter(d => d.status === s).length,
   }));
 
   return (
     <Layout title="Acquisitions">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         {pipelineStats.map(s => (
-          <button key={s.stage} onClick={() => setStageFilter(stageFilter === s.stage ? '' : s.stage)}
-            className={`p-3 rounded-xl border text-left transition-colors ${stageFilter === s.stage ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+          <button key={s.status} onClick={() => setStatusFilter(statusFilter === s.status ? '' : s.status)}
+            className={`p-3 rounded-xl border text-left transition-colors ${statusFilter === s.status ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
             <div className="text-xl font-bold text-gray-900">{s.count}</div>
-            <div className="text-xs text-gray-500 capitalize">{s.stage.replace(/_/g, ' ')}</div>
+            <div className="text-xs text-gray-500 capitalize">{s.status.replace(/_/g, ' ')}</div>
           </button>
         ))}
       </div>
@@ -78,8 +78,8 @@ export default function AcquisitionsPage() {
         <div className="flex items-center gap-3">
           <input type="text" placeholder="Search deals..." value={search} onChange={e => setSearch(e.target.value)}
             className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-64" />
-          {stageFilter && (
-            <button onClick={() => setStageFilter('')} className="text-xs text-primary-500 hover:text-primary-600 font-medium">
+          {statusFilter && (
+            <button onClick={() => setStatusFilter('')} className="text-xs text-primary-500 hover:text-primary-600 font-medium">
               Clear filter
             </button>
           )}
@@ -100,11 +100,10 @@ export default function AcquisitionsPage() {
             <table className="w-full text-sm">
               <thead><tr className="border-b border-gray-200 text-left">
                 <th className="px-4 py-3 font-medium text-gray-500">Address</th>
-                <th className="px-4 py-3 font-medium text-gray-500">Stage</th>
+                <th className="px-4 py-3 font-medium text-gray-500">Status</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Asking</th>
                 <th className="px-4 py-3 font-medium text-gray-500">ARV</th>
-                <th className="px-4 py-3 font-medium text-gray-500">ROI</th>
-                <th className="px-4 py-3 font-medium text-gray-500">Seller</th>
+                <th className="px-4 py-3 font-medium text-gray-500">Source</th>
                 {canEdit && <th className="px-4 py-3 font-medium text-gray-500 text-right">Actions</th>}
               </tr></thead>
               <tbody>
@@ -112,20 +111,13 @@ export default function AcquisitionsPage() {
                   <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{d.address || '—'}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset capitalize ${stageColor(d.stage)}`}>
-                        {(d.stage || 'lead').replace(/_/g, ' ')}
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset capitalize ${statusColor(d.status)}`}>
+                        {(d.status || 'lead').replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{d.asking_price ? `$${Number(d.asking_price).toLocaleString()}` : '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{d.arv ? `$${Number(d.arv).toLocaleString()}` : '—'}</td>
-                    <td className="px-4 py-3">
-                      {d.roi_estimate != null ? (
-                        <span className={d.roi_estimate >= 20 ? 'text-green-600 font-medium' : d.roi_estimate >= 0 ? 'text-gray-600' : 'text-red-600 font-medium'}>
-                          {d.roi_estimate}%
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{d.seller_name || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{d.source || '—'}</td>
                     {canEdit && (
                       <td className="px-4 py-3 text-right">
                         <button onClick={() => setEditing(d)} className="text-gray-400 hover:text-primary-500 p-1"><EditIcon /></button>
@@ -148,16 +140,10 @@ function DealFormModal({ deal, onClose, onSave }) {
   const isEdit = !!deal?.id;
   const [form, setForm] = useState({
     address: deal?.address || '',
-    city: deal?.city || '',
-    state: deal?.state || '',
-    stage: deal?.stage || 'lead',
+    status: deal?.status || 'lead',
     asking_price: deal?.asking_price || '',
-    offer_price: deal?.offer_price || '',
     arv: deal?.arv || '',
-    labor_estimate: deal?.labor_estimate || '',
-    material_estimate: deal?.material_estimate || '',
-    seller_name: deal?.seller_name || '',
-    seller_phone: deal?.seller_phone || '',
+    source: deal?.source || '',
     notes: deal?.notes || '',
   });
   const [saving, setSaving] = useState(false);
@@ -182,57 +168,28 @@ function DealFormModal({ deal, onClose, onSave }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input value={form.city} onChange={e => set('city', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
-              <select value={form.stage} onChange={e => set('stage', e.target.value)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select value={form.status} onChange={e => set('status', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
-                {STAGES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>)}
+                {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>)}
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+              <input value={form.source} onChange={e => set('source', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="e.g. MLS, Wholesaler" />
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Asking Price</label>
               <input type="number" value={form.asking_price} onChange={e => set('asking_price', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Offer Price</label>
-              <input type="number" value={form.offer_price} onChange={e => set('offer_price', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
-            </div>
-            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">ARV</label>
               <input type="number" value={form.arv} onChange={e => set('arv', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Labor Estimate</label>
-              <input type="number" value={form.labor_estimate} onChange={e => set('labor_estimate', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Material Estimate</label>
-              <input type="number" value={form.material_estimate} onChange={e => set('material_estimate', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="$" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Seller Name</label>
-              <input value={form.seller_name} onChange={e => set('seller_name', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Seller Phone</label>
-              <input value={form.seller_phone} onChange={e => set('seller_phone', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
             </div>
           </div>
           <div>

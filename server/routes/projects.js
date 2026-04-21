@@ -109,7 +109,9 @@ router.put('/:id', requireEdit, async (req, res) => {
         return res.status(400).json({ error: 'Invalid contractor reference.' })
       }
     }
-    const { data, error } = await db().from('construction_projects').update(updates).eq('id', req.params.id).select()
+    let updQuery = db().from('construction_projects').update(updates).eq('id', req.params.id)
+    if (req.account_filter) updQuery = updQuery.eq('account_id', req.account_filter)
+    const { data, error } = await updQuery.select()
     if (error) throw error
     res.json(data[0])
   } catch (err) {
@@ -123,7 +125,9 @@ router.delete('/:id', requireEdit, async (req, res) => {
       return res.status(403).json({ error: 'Access denied.' })
     }
     await db().from('construction_phases').delete().eq('project_id', req.params.id)
-    const { error } = await db().from('construction_projects').delete().eq('id', req.params.id)
+    let delQuery = db().from('construction_projects').delete().eq('id', req.params.id)
+    if (req.account_filter) delQuery = delQuery.eq('account_id', req.account_filter)
+    const { error } = await delQuery
     if (error) throw error
     res.json({ success: true })
   } catch (err) {

@@ -83,18 +83,23 @@ router.delete('/:id', requireEdit, async (req, res) => {
     if (!prop) return res.status(403).json({ error: 'Access denied.' })
 
     const propertyId = req.params.id
-    const { data: projs } = await db().from('construction_projects').select('id').eq('property_id', propertyId)
+    let projQuery = db().from('construction_projects').select('id').eq('property_id', propertyId)
+    if (req.account_filter) projQuery = projQuery.eq('account_id', req.account_filter)
+    const { data: projs } = await projQuery
     const projIds = (projs || []).map(p => p.id)
     if (projIds.length) {
       await db().from('construction_phases').delete().in('project_id', projIds)
       await db().from('construction_projects').delete().in('id', projIds)
     }
-    await Promise.all([
-      db().from('invoices').delete().eq('property_id', propertyId),
-      db().from('tenants').delete().eq('property_id', propertyId),
-      db().from('recurring_tasks').delete().eq('property_id', propertyId),
-    ].map(p => p.then(() => null, () => null)))
-    const { error } = await db().from('properties').delete().eq('id', propertyId)
+    const cascadeTables = ['invoices', 'tenants', 'recurring_tasks']
+    for (const table of cascadeTables) {
+      let cq = db().from(table).delete().eq('property_id', propertyId)
+      if (req.account_filter) cq = cq.eq('account_id', req.account_filter)
+      await cq
+    }
+    let delQuery = db().from('properties').delete().eq('id', propertyId)
+    if (req.account_filter) delQuery = delQuery.eq('account_id', req.account_filter)
+    const { error } = await delQuery
     if (error) throw error
     res.json({ success: true })
   } catch (error) {

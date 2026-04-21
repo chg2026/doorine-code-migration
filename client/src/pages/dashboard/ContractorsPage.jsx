@@ -92,10 +92,10 @@ export default function ContractorsPage() {
                     <td className="px-4 py-3 text-gray-600">{c.phone || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{c.email || '—'}</td>
                     <td className="px-4 py-3">
-                      {c.rating ? (
+                      {c.performance_score ? (
                         <div className="flex items-center gap-1">
-                          <span className="text-amber-500">{'★'.repeat(Math.round(c.rating))}</span>
-                          <span className="text-gray-400 text-xs">{c.rating}</span>
+                          <span className="text-amber-500">{'★'.repeat(Math.round(c.performance_score))}</span>
+                          <span className="text-gray-400 text-xs">{c.performance_score}</span>
                         </div>
                       ) : '—'}
                     </td>
@@ -128,9 +128,7 @@ function ContractorFormModal({ contractor, onClose, onSave }) {
     trade: contractor?.trade || '',
     phone: contractor?.phone || '',
     email: contractor?.email || '',
-    license_number: contractor?.license_number || '',
-    rating: contractor?.rating || '',
-    notes: contractor?.notes || '',
+    performance_score: contractor?.performance_score || '',
   });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -172,7 +170,7 @@ function ContractorFormModal({ contractor, onClose, onSave }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-              <select value={form.rating} onChange={e => set('rating', e.target.value)}
+              <select value={form.performance_score} onChange={e => set('performance_score', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
                 <option value="">No rating</option>
                 <option value="5">5 - Excellent</option>
@@ -194,16 +192,6 @@ function ContractorFormModal({ contractor, onClose, onSave }) {
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
-            <input value={form.license_number} onChange={e => set('license_number', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>

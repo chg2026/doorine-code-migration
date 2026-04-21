@@ -25,7 +25,12 @@ export default function Signup() {
       await signIn(form.email, form.password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to create account');
+      const msg = err.response?.data?.error || err.message || 'Failed to create account';
+      if (msg.includes('try again')) {
+        setError('Account creation is temporarily unavailable. Please contact support or try again later.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

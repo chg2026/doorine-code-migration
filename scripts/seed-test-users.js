@@ -1,5 +1,4 @@
 const { createClient } = require('@supabase/supabase-js')
-const crypto = require('crypto')
 
 if (process.env.NODE_ENV === 'production') {
   console.error('Refusing to seed test users in production. Set NODE_ENV to development.')
@@ -55,14 +54,16 @@ async function seed() {
   console.log('Seeding test users...\n')
 
   for (const u of TEST_USERS) {
-    const existing = await supabase
+    let userId = null
+
+    const { data: existingProfile } = await supabase
       .from('user_profiles')
-      .select('id')
+      .select('id, is_super_admin, is_account_admin')
       .eq('email', u.email)
       .maybeSingle()
 
-    if (existing.data) {
-      console.log(`  [skip] ${u.email} already exists`)
+    if (existingProfile) {
+      console.log(`  [exists] ${u.email} — profile already exists`)
       continue
     }
 
@@ -79,17 +80,27 @@ async function seed() {
 
     if (authError) {
       if (authError.message.includes('already been registered')) {
-        console.log(`  [skip] ${u.email} already registered in auth`)
+        const { data: { users } } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 })
+        const found = users.find(au => au.email === u.email)
+        if (found) {
+          userId = found.id
+          console.log(`  [auth exists] ${u.email} — creating missing profile`)
+        } else {
+          console.error(`  [error] ${u.email}: registered but not found`)
+          continue
+        }
+      } else {
+        console.error(`  [error] ${u.email}: ${authError.message}`)
         continue
       }
-      console.error(`  [error] ${u.email}: ${authError.message}`)
-      continue
+    } else {
+      userId = authUser.user.id
     }
 
     const { error: profileError } = await supabase
       .from('user_profiles')
       .upsert({
-        id: authUser.user.id,
+        id: userId,
         email: u.email,
         full_name: u.full_name,
         account_id: u.account_id,

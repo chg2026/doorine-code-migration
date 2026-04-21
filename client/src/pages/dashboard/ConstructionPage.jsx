@@ -207,7 +207,7 @@ function ProjectFormModal({ project, properties, contractors, onClose, onSave })
     labor_budget: project?.labor_budget || '',
     material_budget: project?.material_budget || '',
     start_date: project?.start_date || '',
-    end_date: project?.end_date || '',
+    target_completion: project?.target_completion || '',
   });
   const [useDefaultPhases, setUseDefaultPhases] = useState(!isEdit);
   const [saving, setSaving] = useState(false);
@@ -280,8 +280,8 @@ function ProjectFormModal({ project, properties, contractors, onClose, onSave })
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <input type="date" value={form.end_date ? form.end_date.split('T')[0] : ''} onChange={e => set('end_date', e.target.value)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Target Completion</label>
+              <input type="date" value={form.target_completion ? form.target_completion.split('T')[0] : ''} onChange={e => set('target_completion', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
             </div>
           </div>
