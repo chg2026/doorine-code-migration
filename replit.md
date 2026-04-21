@@ -69,6 +69,7 @@ Operations platform for Cleveland Holding Group — real estate portfolio manage
 /scripts
   schema.sql                     - Original DB schema
   saas-migration.sql             - Multi-tenant tables + RLS policies
+  construction-migration.sql     - Construction module tables + storage bucket
 ```
 
 ## Environment Variables / Secrets Required
@@ -125,23 +126,45 @@ The `handle_new_user` trigger in Supabase crashes on NULL metadata, blocking all
 
 ## Database Schema (actual column names)
 
-- **properties**: id, address, city, type, status, acquisition_date, purchase_price, insurance_policy, rental_registration_status, rental_registration_expiry, lead_safe_expiry, mortgage_due_day, tax_due_date, property_type, unit_count, account_id
-- **contractors**: id, name, trade, phone, email, w9_status, coi_expiry, agreement_signed, performance_score, account_id
-- **construction_projects**: id, name, property_id, contractor_id, status, labor_budget, material_budget, labor_spent, material_spent, overall_pct, start_date, target_completion, account_id
+- **properties**: id, name, address, street, city, state, zip, type, property_type, status, acquisition_date, purchase_date, purchase_price, photo_url, insurance_policy, rental_registration_status, rental_registration_expiry, lead_safe_expiry, mortgage_due_day, tax_due_date, unit_count, account_id, created_by
+- **units**: id, property_id, account_id, label, sort_order, created_at, updated_at
+- **contractors**: id, name, contact_name, trade, phone, email, w9_status, w9_url, insurance_url, insurance_expiry, coi_expiry, agreement_signed, performance_score (1–10), notes, account_id
+- **construction_projects**: id, name, property_id, unit_id, contractor_id, description, status, labor_budget, material_budget, labor_spent, material_spent, overall_pct, start_date, target_completion, agreement_url, w9_url, insurance_url, account_id, created_by
+- **construction_phases** (the spec's "phases"): id, project_id, name, contractor_id, completion_pct, status, payment_approved, checklist_complete, labor_budget, materials_budget, labor_spent, materials_spent, estimated_start, estimated_completion, sort_order, notes
+- **master_phases**: id, account_id, name, sort_order, is_active (per-account customizable phase library; 19 standard phases seeded per account)
+- **addendums**: id, project_id, account_id, title, description, change_types[], budget_delta_labor, budget_delta_materials, proposed_delivery_date, document_url, status (pending/approved/rejected), requested_by, request_date, reviewed_by, review_date, review_comment
+- **project_notes**: id, project_id, account_id, content, note_type (note/update/reminder/issue/meeting), visibility (all/admin), created_by
+- **project_activity**: id, project_id, account_id, event_type, description, metadata (jsonb), created_by — read-only audit log
+- **invoices**: id, property_id, project_id, phase_id, vendor, amount, category (Labor/Materials/Equipment Rental/Permits & Fees/Other), classification, invoice_date, invoice_number, notes, submitted_by, date, file_url, account_id
 - **tenants**: id, name, unit, lease_start, lease_end, payment_status, property_id, rent_amount, late_fee_count, account_id
 - **deals**: id, address, asking_price, arv, status, notes, source, account_id
 - **recurring_tasks**: id, name, status, property_id, due_date, type, account_id
-- **invoices**: id, property_id, project_id, vendor, amount, classification, date, file_url, account_id
+
+### Storage Buckets
+
+- **project-documents** (private) — agreement, W9, insurance, invoice files, addendum docs. File path convention: `<account_id>/<project_id>/<filename>`. RLS scopes access by the first path segment matching the user's `account_id`.
 
 ## Database Migration
 
-Run `scripts/saas-migration.sql` in Supabase SQL Editor to:
-1. Create `accounts`, `roles`, `role_permissions`, `user_profiles`, `subscription_tiers`, `activity_log` tables
-2. Add `account_id` to all existing data tables
-3. Enable RLS on all tables with tenant isolation policies
-4. Create helper functions (`is_super_admin()`, `current_account_id()`)
-5. Seed a default "CHG Internal" account + Super Admin role
-6. Link existing data to CHG Internal account
+Run migrations in this order in the Supabase SQL Editor:
+
+**1. `scripts/saas-migration.sql`** — multi-tenant foundation:
+- Creates `accounts`, `roles`, `role_permissions`, `user_profiles`, `subscription_tiers`, `activity_log`
+- Adds `account_id` to all existing data tables
+- Enables RLS with tenant isolation policies
+- Creates helper functions (`is_super_admin()`, `current_account_id()`)
+- Seeds a default "CHG Internal" account + Super Admin role
+- Links existing data to CHG Internal
+
+**2. `scripts/fix-trigger.sql`** — patches the `handle_new_user` trigger to be NULL-safe (one-time fix; required for signup to work).
+
+**3. `scripts/construction-migration.sql`** — Construction module foundation:
+- Creates `units`, `master_phases`, `addendums`, `project_notes`, `project_activity`
+- Extends `properties` (name/street/state/zip/photo_url/purchase_date), `construction_projects` (unit_id/description/agreement_url/w9_url/insurance_url), `construction_phases` (full phase fields per spec), `invoices` (phase_id/project_id/category/etc.), `contractors` (contact_name/W9 + insurance URLs/expiry/notes/score)
+- Enables RLS on all new tables with tenant isolation
+- Seeds 19 standard master phases per account; auto-seeds on new account creation
+- Backfills 1 default unit for every existing property
+- Creates the `project-documents` Supabase Storage bucket with account-scoped RLS (file path = `<account_id>/<project_id>/<filename>`)
 
 ## Test Users
 
