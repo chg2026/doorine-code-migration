@@ -462,12 +462,12 @@ export function ProjectFormModal({ project, contractors, onClose, onSaved }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   useEffect(() => {
-    api.get('/properties').then(r => setProperties(r.data || [])).catch(() => setProperties([]));
+    api.get('/projects/lookups/properties').then(r => setProperties(r.data || [])).catch(() => setProperties([]));
   }, []);
 
   useEffect(() => {
     if (!form.property_id) { setUnits([]); return; }
-    api.get(`/units?property_id=${form.property_id}`).then(r => setUnits(r.data || [])).catch(() => setUnits([]));
+    api.get(`/projects/lookups/units?property_id=${form.property_id}`).then(r => setUnits(r.data || [])).catch(() => setUnits([]));
   }, [form.property_id]);
 
   const totalBudget = (parseFloat(form.labor_budget) || 0) + (parseFloat(form.material_budget) || 0);

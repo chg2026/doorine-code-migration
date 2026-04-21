@@ -116,6 +116,34 @@ async function verifyProjectFKs(updates, accountFilter) {
   return null
 }
 
+// ─── LOOKUPS (construction-scoped selectors so construction-only users can
+// populate the project form without needing property_management access) ──────
+
+router.get('/lookups/properties', async (req, res) => {
+  try {
+    let q = db().from('properties').select('id, name, address, street, city').order('name', { ascending: true })
+    if (req.account_filter) q = q.eq('account_id', req.account_filter)
+    const { data, error } = await q
+    if (error) throw error
+    res.json(data || [])
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+router.get('/lookups/units', async (req, res) => {
+  try {
+    if (!req.query.property_id) return res.json([])
+    if (req.account_filter) {
+      const ok = await verifyForeignKey(db(), 'properties', req.query.property_id, req.account_filter)
+      if (!ok) return res.status(403).json({ error: 'Access denied.' })
+    }
+    const { data, error } = await db().from('units').select('id, label, sort_order')
+      .eq('property_id', req.query.property_id)
+      .order('sort_order', { ascending: true })
+    if (error) throw error
+    res.json(data || [])
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
 // ─── PROJECTS ────────────────────────────────────────────────────────────────
 
 router.get('/', async (req, res) => {
