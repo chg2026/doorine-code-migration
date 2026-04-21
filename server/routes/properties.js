@@ -1,17 +1,14 @@
 const express = require('express')
 const router = express.Router()
-const supabase = require('../db')
+const { supabaseAdmin } = require('../middleware/auth')
 
-const dbCheck = (res) => {
-  if (!supabase) { res.status(503).json({ error: 'Database not configured.' }); return false; }
-  return true;
-}
+const db = () => supabaseAdmin
 
-// Sanitize incoming property data — empty strings break Postgres date/numeric columns,
-// and we keep `type` and `property_type` in sync since both columns exist in the DB.
 function clean(body) {
   const out = {};
+  const skip = ['account_filter'];
   for (const k of Object.keys(body || {})) {
+    if (skip.includes(k)) continue;
     out[k] = body[k] === '' ? null : body[k];
   }
   if (out.type && !out.property_type) out.property_type = out.type;
@@ -19,14 +16,11 @@ function clean(body) {
   return out;
 }
 
-// Get all properties
 router.get('/', async (req, res) => {
   try {
-    if (!dbCheck(res)) return
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let query = db().from('properties').select('*').order('created_at', { ascending: false })
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query
     if (error) throw error
     res.json(data)
   } catch (error) {
@@ -34,15 +28,11 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Get single property
 router.get('/:id', async (req, res) => {
   try {
-    if (!dbCheck(res)) return
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('id', req.params.id)
-      .single()
+    let query = db().from('properties').select('*').eq('id', req.params.id)
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query.single()
     if (error) throw error
     res.json(data)
   } catch (error) {
@@ -50,14 +40,11 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// Create property
 router.post('/', async (req, res) => {
   try {
-    if (!dbCheck(res)) return
-    const { data, error } = await supabase
-      .from('properties')
-      .insert([clean(req.body)])
-      .select()
+    const row = clean(req.body)
+    row.account_id = req.user.account_id
+    const { data, error } = await db().from('properties').insert([row]).select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {
@@ -65,15 +52,11 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Update property
 router.put('/:id', async (req, res) => {
   try {
-    if (!dbCheck(res)) return
-    const { data, error } = await supabase
-      .from('properties')
-      .update(clean(req.body))
-      .eq('id', req.params.id)
-      .select()
+    let query = db().from('properties').update(clean(req.body)).eq('id', req.params.id)
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query.select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {
@@ -81,37 +64,24 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// Delete property — cascade dependents manually so FK constraints don't block.
-// For projects, also delete their child phases first.
 router.delete('/:id', async (req, res) => {
   try {
-    if (!dbCheck(res)) return
     const propertyId = req.params.id
-
-    // 1. Find any construction projects on this property and delete their phases first
-    const { data: projs } = await supabase
-      .from('construction_projects')
-      .select('id')
-      .eq('property_id', propertyId)
+    const { data: projs } = await db()
+      .from('construction_projects').select('id').eq('property_id', propertyId)
     const projIds = (projs || []).map(p => p.id)
     if (projIds.length) {
-      await supabase.from('construction_phases').delete().in('project_id', projIds)
-      await supabase.from('construction_projects').delete().in('id', projIds)
+      await db().from('construction_phases').delete().in('project_id', projIds)
+      await db().from('construction_projects').delete().in('id', projIds)
     }
-
-    // 2. Delete dependent rows in tables that reference properties (best-effort).
-    //    Each call is fire-and-forget — missing tables won't block the property delete.
     await Promise.all([
-      supabase.from('invoices').delete().eq('property_id', propertyId),
-      supabase.from('tenants').delete().eq('property_id', propertyId),
-      supabase.from('property_tasks').delete().eq('property_id', propertyId),
+      db().from('invoices').delete().eq('property_id', propertyId),
+      db().from('tenants').delete().eq('property_id', propertyId),
+      db().from('recurring_tasks').delete().eq('property_id', propertyId),
     ].map(p => p.then(() => null, () => null)))
-
-    // 3. Finally delete the property itself
-    const { error } = await supabase
-      .from('properties')
-      .delete()
-      .eq('id', propertyId)
+    let query = db().from('properties').delete().eq('id', propertyId)
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { error } = await query
     if (error) throw error
     res.json({ success: true })
   } catch (error) {

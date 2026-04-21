@@ -1,15 +1,14 @@
 const express = require('express')
 const router = express.Router()
-const supabase = require('../db')
+const { supabaseAdmin } = require('../middleware/auth')
 
-// Get all tenants
+const db = () => supabaseAdmin
+
 router.get('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*, properties(address)')
-      .order('created_at', { ascending: false })
+    let query = db().from('tenants').select('*, properties(address)').order('created_at', { ascending: false })
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query
     if (error) throw error
     res.json(data)
   } catch (error) {
@@ -17,14 +16,10 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Create tenant
 router.post('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('tenants')
-      .insert([req.body])
-      .select()
+    const row = { ...req.body, account_id: req.user.account_id }
+    const { data, error } = await db().from('tenants').insert([row]).select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {
@@ -32,29 +27,18 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Update tenant payment status
 router.put('/:id', async (req, res) => {
   try {
-    // Auto late fee logic
     if (req.body.payment_status === 'late') {
-      const { data: tenant } = await supabase
-        .from('tenants')
-        .select('late_fee_count, rent_amount')
-        .eq('id', req.params.id)
-        .single()
-
+      const { data: tenant } = await db().from('tenants').select('late_fee_count, rent_amount').eq('id', req.params.id).single()
       const newCount = (tenant.late_fee_count || 0) + 1
       const lateFee = newCount === 1 ? 69 : tenant.rent_amount * 0.10
       req.body.late_fee_count = newCount
       req.body.current_late_fee = lateFee
     }
-
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('tenants')
-      .update(req.body)
-      .eq('id', req.params.id)
-      .select()
+    let query = db().from('tenants').update(req.body).eq('id', req.params.id)
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query.select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {

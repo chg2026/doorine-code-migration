@@ -11,40 +11,39 @@ app.use(cors())
 app.use(express.json())
 
 const { requireAuth } = require('./middleware/auth')
+const { scopeToAccount } = require('./middleware/permissions')
 
-// Public endpoints (no auth)
 app.use('/api/auth', require('./routes/auth'))
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'CHG CRM is running', version: '1.0.0', timestamp: new Date().toISOString() })
+  res.json({ status: 'CHG CRM is running', version: '2.0.0', timestamp: new Date().toISOString() })
 })
 
-// Protected API routes — every CRUD endpoint requires a valid session token
-app.use('/api/properties', requireAuth, require('./routes/properties'))
-app.use('/api/contractors', requireAuth, require('./routes/contractors'))
-app.use('/api/projects', requireAuth, require('./routes/projects'))
-app.use('/api/tenants', requireAuth, require('./routes/tenants'))
-app.use('/api/deals', requireAuth, require('./routes/deals'))
-app.use('/api/tasks', requireAuth, require('./routes/tasks'))
-app.use('/api/invoices', requireAuth, require('./routes/invoices'))
+app.use('/api/admin', requireAuth, require('./routes/admin'))
+app.use('/api/users', require('./routes/users'))
+app.use('/api/dashboard', requireAuth, require('./routes/dashboard'))
 
-// Serve React build in production (after API routes)
+app.use('/api/properties', requireAuth, scopeToAccount, require('./routes/properties'))
+app.use('/api/contractors', requireAuth, scopeToAccount, require('./routes/contractors'))
+app.use('/api/projects', requireAuth, scopeToAccount, require('./routes/projects'))
+app.use('/api/tenants', requireAuth, scopeToAccount, require('./routes/tenants'))
+app.use('/api/deals', requireAuth, scopeToAccount, require('./routes/deals'))
+app.use('/api/tasks', requireAuth, scopeToAccount, require('./routes/tasks'))
+app.use('/api/invoices', requireAuth, scopeToAccount, require('./routes/invoices'))
+
 const buildPath = path.join(__dirname, '..', 'client', 'build')
 const hasBuild = fs.existsSync(path.join(buildPath, 'index.html'))
 
 if (hasBuild) {
   app.use(express.static(buildPath))
-  // React Router catch-all — Express 5 requires named wildcard (not bare *)
   app.get('/{*splat}', (req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'))
   })
 } else {
-  // Dev fallback — API-only mode
   app.get('/', (req, res) => {
-    res.json({ status: 'CHG CRM API is running', version: '1.0.0', timestamp: new Date().toISOString() })
+    res.json({ status: 'CHG CRM API is running', version: '2.0.0', timestamp: new Date().toISOString() })
   })
 }
 
-// Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack)
   res.status(500).json({ error: err.message || 'Internal server error' })

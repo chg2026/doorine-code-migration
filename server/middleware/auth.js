@@ -1,44 +1,84 @@
-const jwt = require('jsonwebtoken')
+const { createClient } = require('@supabase/supabase-js')
 
-const JWT_SECRET = process.env.JWT_SECRET
-const APP_PASSWORD = process.env.APP_PASSWORD
-const TOKEN_TTL = '7d'
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 
-if (!JWT_SECRET) {
-  console.warn('[auth] JWT_SECRET is not set — auth tokens cannot be issued.')
-}
-if (!APP_PASSWORD) {
-  console.warn('[auth] APP_PASSWORD is not set — login is disabled until you set it in Secrets.')
-}
+if (!supabaseUrl) console.warn('[auth] SUPABASE_URL is not set')
 
-function issueToken() {
-  return jwt.sign({ role: 'team' }, JWT_SECRET, { expiresIn: TOKEN_TTL })
-}
+const supabaseAdmin = supabaseUrl && supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null
 
-function verifyPassword(password) {
-  if (!APP_PASSWORD || typeof password !== 'string') return false
-  // Constant-time-ish comparison
-  if (password.length !== APP_PASSWORD.length) return false
-  let mismatch = 0
-  for (let i = 0; i < password.length; i++) {
-    mismatch |= password.charCodeAt(i) ^ APP_PASSWORD.charCodeAt(i)
-  }
-  return mismatch === 0
-}
+const supabaseAnon = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
-function requireAuth(req, res, next) {
-  if (!JWT_SECRET) {
-    return res.status(503).json({ error: 'Auth not configured on server.' })
-  }
+async function requireAuth(req, res, next) {
   const header = req.headers.authorization || ''
   const match = header.match(/^Bearer\s+(.+)$/i)
   if (!match) return res.status(401).json({ error: 'Authentication required.' })
+
+  const token = match[1]
+
+  if (!supabaseAdmin) {
+    return res.status(503).json({ error: 'Auth not configured on server.' })
+  }
+
   try {
-    req.user = jwt.verify(match[1], JWT_SECRET)
-    return next()
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+    if (error || !user) return res.status(401).json({ error: 'Invalid or expired session.' })
+
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('*, roles(name), accounts(name, plan_tier, status, allowed_departments)')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) return res.status(401).json({ error: 'User profile not found.' })
+
+    if (profile.status === 'suspended') {
+      return res.status(403).json({ error: 'Account suspended.' })
+    }
+
+    if (profile.accounts?.status === 'suspended') {
+      return res.status(403).json({ error: 'Organization account suspended.' })
+    }
+
+    const { data: perms } = await supabaseAdmin
+      .from('role_permissions')
+      .select('department, permission_level')
+      .eq('role_id', profile.role_id)
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      profile,
+      account_id: profile.account_id,
+      is_super_admin: profile.is_super_admin,
+      is_account_admin: profile.is_account_admin,
+      permissions: (perms || []).reduce((acc, p) => { acc[p.department] = p.permission_level; return acc }, {}),
+    }
+
+    next()
   } catch (e) {
+    console.error('[auth] Error validating token:', e.message)
     return res.status(401).json({ error: 'Invalid or expired session.' })
   }
 }
 
-module.exports = { requireAuth, verifyPassword, issueToken }
+function requireSuperAdmin(req, res, next) {
+  if (!req.user?.is_super_admin) {
+    return res.status(403).json({ error: 'Super Admin access required.' })
+  }
+  next()
+}
+
+function requireAccountAdmin(req, res, next) {
+  if (!req.user?.is_super_admin && !req.user?.is_account_admin) {
+    return res.status(403).json({ error: 'Admin access required.' })
+  }
+  next()
+}
+
+module.exports = { requireAuth, requireSuperAdmin, requireAccountAdmin, supabaseAdmin, supabaseAnon }

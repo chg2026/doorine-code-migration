@@ -1,0 +1,249 @@
+Please convert the existing platform into a comprehensive, production-grade SaaS 
+platform for a construction and real estate company. Do not rebuild from scratch — 
+analyze the existing codebase first, understand what is already built, and extend it 
+with the following capabilities. Preserve all existing functionality, routes, components, 
+and database tables. Everything below should be added on top of what already exists.
+
+The platform handles property acquisitions, construction project management, property 
+management, contractor management, finance tracking, and internal task management 
+(replacing tools like Monday.com). This will be sold to third-party clients as a SaaS 
+product with tiered access.
+
+TECH STACK:
+- Backend: Node.js + Express
+- Frontend: React
+- Database + Auth: Supabase (use Supabase Auth natively for all authentication, 
+  sessions, and password resets)
+- Styling: Tailwind CSS
+
+---
+
+PART 1 — AUTHENTICATION SYSTEM
+
+Build a complete auth flow using Supabase Auth:
+
+1. LOGIN PAGE
+   - Email + password login
+   - "Forgot password?" link
+   - Clean, professional UI — not generic
+   - On success, redirect based on user role (Super Admin → admin dashboard, 
+     client/team user → their department dashboard)
+
+2. PASSWORD RESET
+   - "Forgot password" sends a reset link via email (Supabase handles delivery)
+   - Reset password page: user enters new password + confirm password
+   - On success, redirect to login with confirmation message
+
+3. ACCOUNT CREATION (Admin-only, not self-signup)
+   - Super Admins create accounts for team members and clients
+   - No public registration page
+
+4. SESSION MANAGEMENT
+   - Supabase session persists across page refreshes
+   - Protected routes: redirect to login if not authenticated
+   - Logout button clears session and returns to login
+
+---
+
+PART 2 — USER ROLES & PERMISSIONS SYSTEM
+
+Build a fully customizable role and permissions system stored in Supabase.
+
+ROLE TYPES:
+
+1. SUPER ADMIN
+   - Full access to everything: all departments, all client accounts, all settings
+   - Can create, edit, suspend, delete any user or client account
+   - Can create and customize roles
+   - Can assign department access and permission levels to any role
+   - Sees the full Super Admin dashboard
+
+2. CUSTOM ROLES (created and named by Super Admin)
+   - Each role is assigned access to one or more departments:
+     * Acquisitions
+     * Construction
+     * Property Management
+     * Contractor Management
+     * Finance
+     * Task Management
+   - For each department assigned, the role gets either:
+     * View Only — can see data but not edit
+     * Edit — can view and modify data
+   - A user with no access to a department cannot see that department in the nav
+   - Permissions are enforced both in the UI (hide nav items) and backend (API guards)
+
+3. CLIENT ACCOUNTS (third-party paying customers)
+   - Each client is a separate account/organization
+   - Client admins manage their own users within their account
+   - Client data is fully isolated from other clients (row-level security in Supabase)
+   - Clients have subscription tiers (see Part 4)
+
+DATABASE TABLES NEEDED:
+- users (linked to Supabase Auth, stores role_id, account_id, profile info)
+- roles (id, name, account_id, created_by)
+- role_permissions (role_id, department, permission_level: 'view' | 'edit' | 'none')
+- accounts (id, name, plan_tier, status, billing_email, created_at)
+
+---
+
+PART 3 — SUPER ADMIN DASHBOARD
+
+Build a Super Admin dashboard with the following sections:
+
+1. OVERVIEW PAGE
+   - Total active client accounts
+   - Total users across all accounts
+   - Accounts by plan tier (count per tier)
+   - Recent signups / new accounts (last 30 days)
+   - Accounts flagged for billing issues
+
+2. CLIENT ACCOUNTS MANAGER
+   - Table of all client accounts with columns:
+     Account Name | Plan Tier | Status | Users | Created Date | Actions
+   - Status options: Active, Suspended, Trial, Cancelled
+   - Actions per row:
+     * View account details
+     * Edit account (name, plan, billing email)
+     * Suspend account (user sees a "suspended" message on login)
+     * Delete account (with confirmation modal)
+     * Impersonate / view as this client (for support)
+   - Filter by: status, plan tier, date range
+   - Search by account name or billing email
+
+3. USER MANAGER
+   - Table of all users across all accounts
+   - Columns: Name | Email | Role | Account | Status | Last Login | Actions
+   - Actions: Edit role, Reset password, Suspend user, Delete user
+   - Filter by: account, role, status
+
+4. ROLE & PERMISSIONS MANAGER
+   - List of all roles across all accounts
+   - Create new role: enter name, select account, assign department permissions
+   - Edit existing role: change name or permissions
+   - Delete role (reassign users first)
+   - For each role show a permission matrix:
+     Departments as rows, View / Edit / None as columns, toggles for each
+
+5. ACCOUNT DETAILS PAGE (drill into any client account)
+   - Account info: name, plan, status, billing email, created date
+   - Users in this account with their roles
+   - Usage stats: logins this month, records created, storage used
+   - Quick actions: suspend, upgrade plan, reset all passwords
+
+---
+
+PART 4 — CLIENT ACCOUNT EXPERIENCE
+
+Each paying client has their own isolated workspace. Build:
+
+1. CLIENT ADMIN DASHBOARD
+   - Overview of their own account: users, departments active, recent activity
+   - Can manage their own users (create, edit, suspend within their account)
+   - Can assign roles to their users from the roles available to their plan
+   - Cannot see other client accounts
+
+2. USER PROFILE & ACCOUNT SETTINGS
+   - Update name, email, phone number, profile photo
+   - Change password (current password required)
+   - View current plan and billing tier
+   - View account activity log (last 10 logins with timestamp and IP)
+
+3. SUBSCRIPTION TIERS
+   Build a tier structure with these example tiers (Super Admin can edit tier details):
+   - Starter: access to 2 departments, up to 5 users
+   - Professional: access to 4 departments, up to 20 users
+   - Enterprise: all departments, unlimited users, custom roles
+   
+   - Plan tier is shown on the account details page
+   - Users on a lower tier cannot access departments outside their plan
+   - Super Admin can manually upgrade or downgrade any account's tier
+
+4. BILLING SECTION (UI only, Stripe integration to be added later)
+   - Show current plan name and price
+   - Show next billing date
+   - Placeholder "Manage Billing" button (will connect to Stripe in next phase)
+   - Show payment status: Active / Past Due / Cancelled
+
+---
+
+PART 5 — NAVIGATION & LAYOUT
+
+1. SIDEBAR NAVIGATION
+   - Logo / brand name at top
+   - Navigation items generated dynamically based on user role and permissions
+   - If user has no access to a department, that nav item does not appear
+   - Active state on current page
+   - User avatar + name at bottom with dropdown: Profile, Settings, Logout
+
+2. DEPARTMENTS IN NAV (shown only if user has access):
+   - Dashboard (always visible)
+   - Acquisitions
+   - Construction
+   - Property Management
+   - Contractors
+   - Finance
+   - Tasks
+   - Admin (visible only to Super Admin and account admins)
+
+3. TOP BAR
+   - Page title (current section)
+   - Notification bell (placeholder for now)
+   - User avatar with dropdown menu
+
+---
+
+PART 6 — SECURITY REQUIREMENTS
+
+1. Supabase Row Level Security (RLS) enabled on all tables
+2. All API routes protected — return 401 if no valid Supabase session
+3. Department access enforced at the API level — not just hidden in the UI
+4. Client data isolation — users can only query records belonging to their account_id
+5. Super Admin bypass — Super Admin role can query across all accounts
+6. All role/permission checks happen server-side, never trust the client
+
+---
+
+PART 7 — FILE STRUCTURE
+
+Organize the project as follows:
+- server/index.js — Express server entry point
+- server/middleware/auth.js — Supabase session validation middleware
+- server/middleware/permissions.js — Department access checker
+- server/routes/auth.js — Login, logout, password reset endpoints
+- server/routes/admin.js — Super Admin routes (accounts, users, roles)
+- server/routes/users.js — User profile and settings
+- client/src/pages/Login.jsx — Login page
+- client/src/pages/ResetPassword.jsx — Password reset page
+- client/src/pages/admin/ — All Super Admin dashboard pages
+- client/src/pages/dashboard/ — Client-facing dashboard pages
+- client/src/components/Sidebar.jsx — Dynamic permission-based navigation
+- client/src/context/AuthContext.jsx — Supabase auth state across the app
+
+---
+
+PART 8 — DESIGN REQUIREMENTS
+
+- Professional, modern SaaS aesthetic — think Linear, Notion, or Vercel's dashboard
+- Dark sidebar, clean white content area
+- Consistent color system:
+  * Primary: deep blue (#1a56db)
+  * Success: green (#057a55)
+  * Warning: amber (#c27803)
+  * Danger: red (#c81e1e)
+- Status badges as colored pills throughout
+- Responsive: works on desktop and tablet
+- All tables have search, filter, and empty states
+- All destructive actions (delete, suspend) require a confirmation modal
+- Loading states on all async operations
+- Toast notifications for all success and error actions
+
+---
+
+BUILD ORDER:
+1. Supabase schema (users, roles, role_permissions, accounts tables + RLS policies)
+2. Auth flow (login, password reset, protected routes, AuthContext)
+3. Sidebar with dynamic permission-based navigation
+4. Super Admin dashboard (accounts list, user manager, role/permissions manager)
+5. Client account experience (profile, settings, billing placeholder)
+6. Department placeholder pages (empty shells with correct access guards)
+7. Connect everything with working data from Supabase

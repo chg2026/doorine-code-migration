@@ -1,15 +1,14 @@
 const express = require('express')
 const router = express.Router()
-const supabase = require('../db')
+const { supabaseAdmin } = require('../middleware/auth')
 
-// Get all invoices
+const db = () => supabaseAdmin
+
 router.get('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*, properties(address)')
-      .order('created_at', { ascending: false })
+    let query = db().from('invoices').select('*, properties(address)').order('created_at', { ascending: false })
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query
     if (error) throw error
     res.json(data)
   } catch (error) {
@@ -17,14 +16,10 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Create invoice
 router.post('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('invoices')
-      .insert([req.body])
-      .select()
+    const row = { ...req.body, account_id: req.user.account_id }
+    const { data, error } = await db().from('invoices').insert([row]).select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {

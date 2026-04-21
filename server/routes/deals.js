@@ -1,15 +1,14 @@
 const express = require('express')
 const router = express.Router()
-const supabase = require('../db')
+const { supabaseAdmin } = require('../middleware/auth')
 
-// Get all deals
+const db = () => supabaseAdmin
+
 router.get('/', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('deals')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let query = db().from('deals').select('*').order('created_at', { ascending: false })
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query
     if (error) throw error
     res.json(data)
   } catch (error) {
@@ -17,22 +16,14 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Create deal
 router.post('/', async (req, res) => {
   try {
-    if (req.body.arv && req.body.asking_price) {
-      const totalCost = req.body.asking_price +
-        (req.body.labor_estimate || 0) +
-        (req.body.material_estimate || 0)
-      req.body.roi_estimate = Math.round(
-        ((req.body.arv - totalCost) / totalCost) * 100
-      )
+    const row = { ...req.body, account_id: req.user.account_id }
+    if (row.arv && row.asking_price) {
+      const totalCost = row.asking_price + (row.labor_estimate || 0) + (row.material_estimate || 0)
+      row.roi_estimate = Math.round(((row.arv - totalCost) / totalCost) * 100)
     }
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('deals')
-      .insert([req.body])
-      .select()
+    const { data, error } = await db().from('deals').insert([row]).select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {
@@ -40,15 +31,11 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Update deal
 router.put('/:id', async (req, res) => {
   try {
-    if (!supabase) return res.status(503).json({ error: "Database not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY." });
-    const { data, error } = await supabase
-      .from('deals')
-      .update(req.body)
-      .eq('id', req.params.id)
-      .select()
+    let query = db().from('deals').update(req.body).eq('id', req.params.id)
+    if (req.account_filter) query = query.eq('account_id', req.account_filter)
+    const { data, error } = await query.select()
     if (error) throw error
     res.json(data[0])
   } catch (error) {
