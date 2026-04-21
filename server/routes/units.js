@@ -77,6 +77,29 @@ router.get('/:id/stats', async (req, res) => {
   }
 })
 
+// GET /api/units/:id/projects — list construction projects for this unit
+// (under property_management scope so the unit dashboard can render without
+// construction access)
+router.get('/:id/projects', async (req, res) => {
+  try {
+    let unitQ = db().from('units').select('id, account_id').eq('id', req.params.id)
+    if (req.account_filter) unitQ = unitQ.eq('account_id', req.account_filter)
+    const { data: unit } = await unitQ.single()
+    if (!unit) return res.status(404).json({ error: 'Unit not found' })
+
+    let projQ = db()
+      .from('construction_projects')
+      .select('id, name, status, start_date, target_completion, overall_pct, labor_budget, material_budget, labor_spent, material_spent, contractor_id, contractors(id, name), construction_phases(id, name, completion_pct, status)')
+      .eq('unit_id', req.params.id)
+      .order('created_at', { ascending: false })
+    if (req.account_filter) projQ = projQ.eq('account_id', req.account_filter)
+    const { data: projects } = await projQ
+    res.json(projects || [])
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
 // POST /api/units — create a single unit
 router.post('/', requireEdit, async (req, res) => {
   try {

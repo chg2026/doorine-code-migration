@@ -182,6 +182,15 @@ router.post('/', requireEdit, async (req, res) => {
         })
         .filter(Boolean)
 
+      if (req.account_filter) {
+        for (const row of rows) {
+          if (row.contractor_id && !(await verifyForeignKey(db(), 'contractors', row.contractor_id, req.account_filter))) {
+            await db().from('construction_projects').delete().eq('id', project.id)
+            return res.status(400).json({ error: `Invalid contractor reference on phase "${row.name}".` })
+          }
+        }
+      }
+
       if (rows.length > 0) {
         const { error: phaseErr } = await db().from('construction_phases').insert(rows)
         if (phaseErr) {
@@ -342,6 +351,15 @@ router.post('/:id/phases/bulk', requireEdit, async (req, res) => {
       .filter(Boolean)
 
     if (rows.length === 0) return res.json([])
+
+    if (req.account_filter) {
+      for (const row of rows) {
+        if (row.contractor_id && !(await verifyForeignKey(db(), 'contractors', row.contractor_id, req.account_filter))) {
+          return res.status(400).json({ error: `Invalid contractor reference on phase "${row.name}".` })
+        }
+      }
+    }
+
     const { data, error } = await db().from('construction_phases').insert(rows).select('*, contractors(id, name)')
     if (error) throw error
     await rollupProjectCompletion(req.params.id)

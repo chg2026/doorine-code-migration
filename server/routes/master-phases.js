@@ -6,15 +6,14 @@ const { stripAccountId } = require('../middleware/permissions')
 const db = () => supabaseAdmin
 
 // Anyone with at least view access on construction can read the library.
-// Only super admins, account admins, or construction-edit users can mutate.
+// Mutations are restricted to super admins or account admins (per spec:
+// "Master phase manager (admin-only settings page)").
 function canManage(req) {
-  if (req.user?.is_super_admin) return true
-  if (req.user?.is_account_admin) return true
-  return req.user?.permissions?.construction === 'edit'
+  return !!(req.user?.is_super_admin || req.user?.is_account_admin)
 }
 
 function requireManage(req, res, next) {
-  if (!canManage(req)) return res.status(403).json({ error: 'Admin or edit access required to manage the master phase library.' })
+  if (!canManage(req)) return res.status(403).json({ error: 'Admin access required to manage the master phase library.' })
   next()
 }
 

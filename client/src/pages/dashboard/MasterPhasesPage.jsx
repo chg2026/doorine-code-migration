@@ -7,8 +7,8 @@ import api from '../../lib/api';
 import toast from 'react-hot-toast';
 
 export default function MasterPhasesPage() {
-  const { isSuperAdmin, isAccountAdmin, canEditDepartment } = useAuth();
-  const canManage = isSuperAdmin || isAccountAdmin || canEditDepartment('construction');
+  const { isSuperAdmin, isAccountAdmin } = useAuth();
+  const canManage = isSuperAdmin || isAccountAdmin;
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -245,10 +245,18 @@ export default function ProjectDashboard() {
         ))}
       </div>
 
-      {/* Quick actions placeholder for next tasks (invoices, addendums, notes) */}
-      <Card className="p-4 mb-6 bg-gray-50/60">
-        <p className="text-xs text-gray-500">Invoice logging, addendum approvals, and notes & activity arrive in the next steps of this rollout.</p>
-      </Card>
+      {/* Quick Actions */}
+      <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-8">Quick Actions</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <QuickAction icon="🧾" label="Log Invoice"
+          onClick={() => toast('Invoice logging arrives in the next step.', { icon: '🧾' })} disabled={!canEdit} />
+        <QuickAction icon="📑" label="Request Addendum"
+          onClick={() => toast('Addendum approvals arrive in the next step.', { icon: '📑' })} disabled={!canEdit} />
+        <QuickAction icon="📝" label="Add Note"
+          onClick={() => toast('Notes & activity log arrive in the next step.', { icon: '📝' })} disabled={!canEdit} />
+        <QuickAction icon="📊" label="Construction Overview"
+          onClick={() => navigate('/construction')} />
+      </div>
 
       {/* Modals */}
       {editingProject && (
@@ -823,6 +831,16 @@ function EditPhaseModal({ phase, contractors, onClose, onSaved }) {
         </form>
       </div>
     </div>
+  );
+}
+
+function QuickAction({ icon, label, onClick, disabled }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled}
+      className="bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-primary-300 hover:bg-primary-50/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-200">
+      <div className="text-2xl mb-1">{icon}</div>
+      <div className="text-sm font-medium text-gray-900">{label}</div>
+    </button>
   );
 }
 

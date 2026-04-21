@@ -19,16 +19,16 @@ export default function UnitDashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: prop }, { data: units }, { data: s }, { data: allProjects }] = await Promise.all([
+      const [{ data: prop }, { data: units }, { data: s }, { data: unitProjects }] = await Promise.all([
         api.get(`/properties/${propId}`),
         api.get(`/units?property_id=${propId}`),
         api.get(`/units/${unitId}/stats`),
-        api.get('/projects'),
+        api.get(`/units/${unitId}/projects`),
       ]);
       setProperty(prop);
       setUnit((units || []).find(u => u.id === unitId) || null);
       setStats(s);
-      setProjects((allProjects || []).filter(p => p.unit_id === unitId));
+      setProjects(unitProjects || []);
     } catch {
       toast.error('Could not load unit');
     }
@@ -74,6 +74,8 @@ export default function UnitDashboard() {
         <Stat label="Budget / Spent" value={`${fmtUsd(stats?.total_budget)} / ${fmtUsd(stats?.total_spent)}`} />
         <Stat label="Combined Completion" value={`${stats?.completion_pct ?? 0}%`} />
       </div>
+
+      {projects.length > 0 && <Timeline projects={projects} />}
 
       <h2 className="text-lg font-semibold text-gray-900 mb-3">Projects on this unit</h2>
       {projects.length === 0 ? (
@@ -135,6 +137,53 @@ export default function UnitDashboard() {
         </div>
       )}
     </Layout>
+  );
+}
+
+function Timeline({ projects }) {
+  const dated = projects.filter(p => p.start_date && p.target_completion);
+  if (dated.length === 0) return null;
+  const min = Math.min(...dated.map(p => new Date(p.start_date).getTime()));
+  const max = Math.max(...dated.map(p => new Date(p.target_completion).getTime()));
+  const span = Math.max(1, max - min);
+  const now = Date.now();
+  const nowPct = now < min ? 0 : now > max ? 100 : ((now - min) / span) * 100;
+
+  return (
+    <div className="mb-6">
+      <h2 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h2>
+      <Card className="p-5">
+        <div className="text-xs text-gray-500 mb-3 flex justify-between">
+          <span>{new Date(min).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+          <span>Today</span>
+          <span>{new Date(max).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+        </div>
+        <div className="relative space-y-2 pt-2">
+          {dated.map(p => {
+            const start = new Date(p.start_date).getTime();
+            const end = new Date(p.target_completion).getTime();
+            const left  = ((start - min) / span) * 100;
+            const width = Math.max(2, ((end - start) / span) * 100);
+            const fillPct = Math.min(100, Math.max(0, p.overall_pct || 0));
+            const ot = computeOnTime(p);
+            const barColor = ot.state === 'delayed' ? 'bg-red-200' : ot.state === 'completed' ? 'bg-green-200' : 'bg-blue-200';
+            const fillColor = ot.state === 'delayed' ? 'bg-red-500' : ot.state === 'completed' ? 'bg-green-500' : 'bg-blue-500';
+            return (
+              <div key={p.id} className="flex items-center gap-3">
+                <span className="text-xs text-gray-700 w-32 truncate" title={p.name}>{p.name}</span>
+                <div className="relative flex-1 h-5 bg-gray-50 rounded-full">
+                  <div className={`absolute top-0 h-5 rounded-full ${barColor}`} style={{ left: `${left}%`, width: `${width}%` }}>
+                    <div className={`h-full rounded-full ${fillColor}`} style={{ width: `${fillPct}%` }} />
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500 w-10 text-right">{Math.round(p.overall_pct || 0)}%</span>
+              </div>
+            );
+          })}
+          <div className="absolute top-0 bottom-0 w-px bg-gray-400 pointer-events-none" style={{ left: `calc(8rem + 0.75rem + ${nowPct}% * (100% - 8rem - 0.75rem - 2.5rem - 0.75rem) / 100%)` }} />
+        </div>
+      </Card>
+    </div>
   );
 }
 

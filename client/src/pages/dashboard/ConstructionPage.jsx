@@ -12,7 +12,7 @@ export default function ConstructionPage() {
   const navigate = useNavigate();
   const { canEditDepartment, isSuperAdmin, isAccountAdmin } = useAuth();
   const canEdit = canEditDepartment('construction');
-  const canManageLib = canEdit || isSuperAdmin || isAccountAdmin;
+  const canManageLib = isSuperAdmin || isAccountAdmin;
 
   const [projects, setProjects] = useState([]);
   const [contractors, setContractors] = useState([]);
