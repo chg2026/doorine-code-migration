@@ -182,8 +182,10 @@ export default function PropertyDashboard() {
           {units.map(u => {
             const s = unitStats[u.id] || {};
             const onTime = s.on_time !== false;
+            const isEditing = editingUnit?.id === u.id;
             return (
-              <Card key={u.id} className="p-5">
+              <Card key={u.id} className={`p-5 ${isEditing ? '' : 'hover:shadow-md transition-shadow cursor-pointer'}`}
+                onClick={() => { if (!isEditing) navigate(`/properties/${id}/units/${u.id}`); }}>
                 <div className="flex items-start justify-between gap-2 mb-3">
                   {editingUnit?.id === u.id ? (
                     <div className="flex-1 flex gap-2">
@@ -221,8 +223,8 @@ export default function PropertyDashboard() {
                     <span className="font-medium text-gray-900">{fmtUsd(s.total_budget)} / {fmtUsd(s.total_spent)}</span>
                   </div>
                 </div>
-                {canEdit && editingUnit?.id !== u.id && (
-                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
+                {canEdit && !isEditing && (
+                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
                     <button onClick={() => setEditingUnit({ id: u.id, label: u.label })} className="text-xs text-gray-500 hover:text-primary-600">Rename</button>
                     <button onClick={() => setDeletingUnit(u)} className="text-xs text-gray-500 hover:text-danger-600">Delete</button>
                   </div>

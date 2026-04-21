@@ -95,6 +95,8 @@ router.post('/', requireEdit, async (req, res) => {
 router.put('/:id', requireEdit, async (req, res) => {
   try {
     const updates = clean(req.body)
+    // unit_count is owned by /api/units (add/remove sync the count). Ignore on property edit.
+    delete updates.unit_count
     let query = db().from('properties').update(updates).eq('id', req.params.id)
     if (req.account_filter) query = query.eq('account_id', req.account_filter)
     const { data, error } = await query.select()

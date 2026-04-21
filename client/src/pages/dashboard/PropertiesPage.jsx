@@ -225,11 +225,11 @@ function PropertyFormModal({ property, accountId, onClose, onSave }) {
       const path = `${accountId}/properties/photo-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from('project-documents').upload(path, file, { upsert: false });
       if (error) throw error;
-      const { data } = supabase.storage.from('project-documents').createSignedUrl
-        ? await supabase.storage.from('project-documents').createSignedUrl(path, 60 * 60 * 24 * 365 * 5)
-        : { data: null };
-      const url = data?.signedUrl || supabase.storage.from('project-documents').getPublicUrl(path).data.publicUrl;
-      set('photo_url', url);
+      const { data: signed, error: signErr } = await supabase.storage
+        .from('project-documents')
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      if (signErr) throw signErr;
+      set('photo_url', signed.signedUrl);
       toast.success('Photo uploaded');
     } catch (err) {
       toast.error(err?.message || 'Upload failed');
@@ -276,9 +276,9 @@ function PropertyFormModal({ property, accountId, onClose, onSave }) {
                   {PROPERTY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </Field>
-              <Field label={isLocked ? 'Units (locked for Single Family)' : 'Number of Units'}>
+              <Field label={isEdit ? 'Units (manage from property dashboard)' : isLocked ? 'Units (locked for Single Family)' : 'Number of Units'}>
                 <input type="number" min={1} max={200} value={form.unit_count} onChange={e => onCountChange(e.target.value)}
-                  disabled={isLocked}
+                  disabled={isLocked || isEdit}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500" />
               </Field>
             </div>
