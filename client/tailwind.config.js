@@ -34,13 +34,6 @@ module.exports = {
           500: '#c81e1e',
           600: '#b91c1c',
         },
-        sidebar: {
-          bg: '#111827',
-          hover: '#1f2937',
-          active: '#374151',
-          text: '#9ca3af',
-          'text-active': '#ffffff',
-        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -49,6 +42,5 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
   ],
 };

@@ -1,8 +1,17 @@
 const express = require('express')
 const router = express.Router()
 const { supabaseAdmin } = require('../middleware/auth')
+const { stripAccountId, verifyForeignKey } = require('../middleware/permissions')
 
 const db = () => supabaseAdmin
+
+function requireEdit(req, res, next) {
+  if (req.user?.is_super_admin) return next()
+  if (req.user?.permissions?.finance !== 'edit') {
+    return res.status(403).json({ error: 'Edit access required.' })
+  }
+  next()
+}
 
 router.get('/', async (req, res) => {
   try {
@@ -16,9 +25,15 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', requireEdit, async (req, res) => {
   try {
-    const row = { ...req.body, account_id: req.user.account_id }
+    const row = stripAccountId(req.body)
+    row.account_id = req.user.account_id
+    if (req.account_filter && row.property_id) {
+      if (!(await verifyForeignKey(db(), 'properties', row.property_id, req.account_filter))) {
+        return res.status(400).json({ error: 'Invalid property reference.' })
+      }
+    }
     const { data, error } = await db().from('invoices').insert([row]).select()
     if (error) throw error
     res.json(data[0])

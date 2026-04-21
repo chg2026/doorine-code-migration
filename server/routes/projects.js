@@ -1,8 +1,30 @@
 const express = require('express')
 const router = express.Router()
 const { supabaseAdmin } = require('../middleware/auth')
+const { stripAccountId, verifyForeignKey } = require('../middleware/permissions')
 
 const db = () => supabaseAdmin
+
+function requireEdit(req, res, next) {
+  if (req.user?.is_super_admin) return next()
+  if (req.user?.permissions?.construction !== 'edit') {
+    return res.status(403).json({ error: 'Edit access required.' })
+  }
+  next()
+}
+
+async function verifyProjectOwnership(projectId, accountFilter) {
+  if (!accountFilter) return true
+  const { data } = await db().from('construction_projects').select('id').eq('id', projectId).eq('account_id', accountFilter).single()
+  return !!data
+}
+
+async function verifyPhaseOwnership(phaseId, accountFilter) {
+  if (!accountFilter) return true
+  const { data: phase } = await db().from('construction_phases').select('project_id').eq('id', phaseId).single()
+  if (!phase) return false
+  return verifyProjectOwnership(phase.project_id, accountFilter)
+}
 
 router.get('/', async (req, res) => {
   try {
@@ -34,10 +56,20 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', requireEdit, async (req, res) => {
   try {
-    const { phases, ...projectFields } = req.body || {}
+    const { phases, ...rawFields } = req.body || {}
+    const projectFields = stripAccountId(rawFields)
     projectFields.account_id = req.user.account_id
+
+    if (req.account_filter) {
+      if (projectFields.property_id && !(await verifyForeignKey(db(), 'properties', projectFields.property_id, req.account_filter))) {
+        return res.status(400).json({ error: 'Invalid property reference.' })
+      }
+      if (projectFields.contractor_id && !(await verifyForeignKey(db(), 'contractors', projectFields.contractor_id, req.account_filter))) {
+        return res.status(400).json({ error: 'Invalid contractor reference.' })
+      }
+    }
 
     const { data, error } = await db().from('construction_projects').insert([projectFields]).select()
     if (error) throw error
@@ -63,11 +95,21 @@ router.post('/', async (req, res) => {
   }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireEdit, async (req, res) => {
   try {
-    let query = db().from('construction_projects').update(req.body).eq('id', req.params.id)
-    if (req.account_filter) query = query.eq('account_id', req.account_filter)
-    const { data, error } = await query.select()
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    const updates = stripAccountId(req.body)
+    if (req.account_filter) {
+      if (updates.property_id && !(await verifyForeignKey(db(), 'properties', updates.property_id, req.account_filter))) {
+        return res.status(400).json({ error: 'Invalid property reference.' })
+      }
+      if (updates.contractor_id && !(await verifyForeignKey(db(), 'contractors', updates.contractor_id, req.account_filter))) {
+        return res.status(400).json({ error: 'Invalid contractor reference.' })
+      }
+    }
+    const { data, error } = await db().from('construction_projects').update(updates).eq('id', req.params.id).select()
     if (error) throw error
     res.json(data[0])
   } catch (err) {
@@ -75,13 +117,13 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireEdit, async (req, res) => {
   try {
-    const { error: phaseErr } = await db().from('construction_phases').delete().eq('project_id', req.params.id)
-    if (phaseErr) throw phaseErr
-    let query = db().from('construction_projects').delete().eq('id', req.params.id)
-    if (req.account_filter) query = query.eq('account_id', req.account_filter)
-    const { error } = await query
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    await db().from('construction_phases').delete().eq('project_id', req.params.id)
+    const { error } = await db().from('construction_projects').delete().eq('id', req.params.id)
     if (error) throw error
     res.json({ success: true })
   } catch (err) {
@@ -89,11 +131,15 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
-router.post('/:id/phases', async (req, res) => {
+router.post('/:id/phases', requireEdit, async (req, res) => {
   try {
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    const phaseData = stripAccountId(req.body)
     const { data, error } = await db()
       .from('construction_phases')
-      .insert([{ ...req.body, project_id: req.params.id }])
+      .insert([{ ...phaseData, project_id: req.params.id }])
       .select()
     if (error) throw error
     res.json(data[0])
@@ -102,9 +148,13 @@ router.post('/:id/phases', async (req, res) => {
   }
 })
 
-router.put('/phases/:id', async (req, res) => {
+router.put('/phases/:id', requireEdit, async (req, res) => {
   try {
-    const { data, error } = await db().from('construction_phases').update(req.body).eq('id', req.params.id).select()
+    if (!(await verifyPhaseOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    const updates = stripAccountId(req.body)
+    const { data, error } = await db().from('construction_phases').update(updates).eq('id', req.params.id).select()
     if (error) throw error
     const phase = data[0]
     const { data: allPhases } = await db().from('construction_phases').select('completion_pct').eq('project_id', phase.project_id)
@@ -118,8 +168,11 @@ router.put('/phases/:id', async (req, res) => {
   }
 })
 
-router.delete('/phases/:id', async (req, res) => {
+router.delete('/phases/:id', requireEdit, async (req, res) => {
   try {
+    if (!(await verifyPhaseOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
     const { error } = await db().from('construction_phases').delete().eq('id', req.params.id)
     if (error) throw error
     res.json({ success: true })
@@ -128,8 +181,11 @@ router.delete('/phases/:id', async (req, res) => {
   }
 })
 
-router.post('/:id/expenses', async (req, res) => {
+router.post('/:id/expenses', requireEdit, async (req, res) => {
   try {
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
     const { type, amount, vendor } = req.body
     const amt = parseFloat(amount) || 0
     const { data: proj, error: pErr } = await db().from('construction_projects').select('*').eq('id', req.params.id).single()

@@ -125,6 +125,7 @@ ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscription_tiers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contractors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE construction_projects ENABLE ROW LEVEL SECURITY;
@@ -150,26 +151,63 @@ RETURNS UUID AS $$
   SELECT account_id FROM user_profiles WHERE id = auth.uid();
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
+-- ── Drop existing policies for idempotency ──
+
+DO $$ BEGIN
+  -- user_profiles
+  DROP POLICY IF EXISTS "Super admin sees all profiles" ON user_profiles;
+  DROP POLICY IF EXISTS "Users see own account profiles" ON user_profiles;
+  DROP POLICY IF EXISTS "Super admin manages all profiles" ON user_profiles;
+  DROP POLICY IF EXISTS "Account admin manages own account profiles" ON user_profiles;
+  -- accounts
+  DROP POLICY IF EXISTS "Super admin sees all accounts" ON accounts;
+  DROP POLICY IF EXISTS "Users see own account" ON accounts;
+  DROP POLICY IF EXISTS "Super admin manages accounts" ON accounts;
+  -- roles
+  DROP POLICY IF EXISTS "Super admin sees all roles" ON roles;
+  DROP POLICY IF EXISTS "Users see own account roles" ON roles;
+  DROP POLICY IF EXISTS "Super admin manages roles" ON roles;
+  -- role_permissions
+  DROP POLICY IF EXISTS "Super admin sees all permissions" ON role_permissions;
+  DROP POLICY IF EXISTS "Users see own account permissions" ON role_permissions;
+  DROP POLICY IF EXISTS "Super admin manages permissions" ON role_permissions;
+  -- subscription_tiers
+  DROP POLICY IF EXISTS "Anyone can read tiers" ON subscription_tiers;
+  DROP POLICY IF EXISTS "Super admin manages tiers" ON subscription_tiers;
+  -- construction_phases
+  DROP POLICY IF EXISTS "Super admin full access on construction_phases" ON construction_phases;
+  DROP POLICY IF EXISTS "Tenant isolation on construction_phases" ON construction_phases;
+  -- activity_log
+  DROP POLICY IF EXISTS "Super admin sees all activity" ON activity_log;
+  DROP POLICY IF EXISTS "Users see own account activity" ON activity_log;
+END $$;
+
+DO $$
+DECLARE tbl TEXT;
+BEGIN
+  FOREACH tbl IN ARRAY ARRAY[
+    'properties','contractors','construction_projects',
+    'tenants','deals','invoices','recurring_tasks'
+  ] LOOP
+    EXECUTE format('DROP POLICY IF EXISTS "Super admin full access on %1$s" ON %1$s', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "Tenant isolation on %1$s" ON %1$s', tbl);
+  END LOOP;
+END $$;
+
 -- ── Policies: user_profiles ──
 
 CREATE POLICY "Super admin sees all profiles"
-  ON user_profiles FOR SELECT
-  USING (is_super_admin());
+  ON user_profiles FOR SELECT USING (is_super_admin());
 
 CREATE POLICY "Users see own account profiles"
-  ON user_profiles FOR SELECT
-  USING (account_id = current_account_id());
+  ON user_profiles FOR SELECT USING (account_id = current_account_id());
 
 CREATE POLICY "Super admin manages all profiles"
-  ON user_profiles FOR ALL
-  USING (is_super_admin());
+  ON user_profiles FOR ALL USING (is_super_admin());
 
 CREATE POLICY "Account admin manages own account profiles"
   ON user_profiles FOR ALL
-  USING (
-    account_id = current_account_id()
-    AND (SELECT is_account_admin FROM user_profiles WHERE id = auth.uid())
-  );
+  USING (account_id = current_account_id() AND (SELECT is_account_admin FROM user_profiles WHERE id = auth.uid()));
 
 -- ── Policies: accounts ──
 
@@ -200,32 +238,30 @@ CREATE POLICY "Super admin sees all permissions"
 
 CREATE POLICY "Users see own account permissions"
   ON role_permissions FOR SELECT
-  USING (
-    role_id IN (SELECT id FROM roles WHERE account_id = current_account_id())
-  );
+  USING (role_id IN (SELECT id FROM roles WHERE account_id = current_account_id()));
 
 CREATE POLICY "Super admin manages permissions"
   ON role_permissions FOR ALL USING (is_super_admin());
 
--- ── Generic multi-tenant policy template for data tables ──
--- Apply to: properties, contractors, construction_projects, tenants, deals, invoices, recurring_tasks
+-- ── Policies: subscription_tiers (publicly readable) ──
+
+CREATE POLICY "Anyone can read tiers"
+  ON subscription_tiers FOR SELECT USING (true);
+
+CREATE POLICY "Super admin manages tiers"
+  ON subscription_tiers FOR ALL USING (is_super_admin());
+
+-- ── Generic multi-tenant policies for data tables ──
 
 DO $$
-DECLARE
-  tbl TEXT;
+DECLARE tbl TEXT;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'properties','contractors','construction_projects',
     'tenants','deals','invoices','recurring_tasks'
   ] LOOP
-    EXECUTE format(
-      'CREATE POLICY "Super admin full access on %1$s" ON %1$s FOR ALL USING (is_super_admin())',
-      tbl
-    );
-    EXECUTE format(
-      'CREATE POLICY "Tenant isolation on %1$s" ON %1$s FOR ALL USING (account_id = current_account_id())',
-      tbl
-    );
+    EXECUTE format('CREATE POLICY "Super admin full access on %1$s" ON %1$s FOR ALL USING (is_super_admin())', tbl);
+    EXECUTE format('CREATE POLICY "Tenant isolation on %1$s" ON %1$s FOR ALL USING (account_id = current_account_id())', tbl);
   END LOOP;
 END $$;
 
@@ -235,11 +271,7 @@ CREATE POLICY "Super admin full access on construction_phases"
 
 CREATE POLICY "Tenant isolation on construction_phases"
   ON construction_phases FOR ALL
-  USING (
-    project_id IN (
-      SELECT id FROM construction_projects WHERE account_id = current_account_id()
-    )
-  );
+  USING (project_id IN (SELECT id FROM construction_projects WHERE account_id = current_account_id()));
 
 -- activity_log
 CREATE POLICY "Super admin sees all activity"
@@ -258,10 +290,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_accounts_updated_at ON accounts;
 CREATE TRIGGER set_accounts_updated_at
   BEFORE UPDATE ON accounts
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS set_user_profiles_updated_at ON user_profiles;
 CREATE TRIGGER set_user_profiles_updated_at
   BEFORE UPDATE ON user_profiles
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -332,3 +366,13 @@ UPDATE tenants              SET account_id = '00000000-0000-0000-0000-0000000000
 UPDATE deals                SET account_id = '00000000-0000-0000-0000-000000000001' WHERE account_id IS NULL;
 UPDATE recurring_tasks      SET account_id = '00000000-0000-0000-0000-000000000001' WHERE account_id IS NULL;
 UPDATE invoices             SET account_id = '00000000-0000-0000-0000-000000000001' WHERE account_id IS NULL;
+
+-- ─── ENFORCE NOT NULL on account_id after migration ────────────────────────
+-- Run these AFTER all existing data has been assigned to an account above.
+ALTER TABLE properties           ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE contractors          ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE construction_projects ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE tenants              ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE deals                ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE recurring_tasks      ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE invoices             ALTER COLUMN account_id SET NOT NULL;

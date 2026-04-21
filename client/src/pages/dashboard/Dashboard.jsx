@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 
 export default function Dashboard() {
-  const { profile, isSuperAdmin } = useAuth();
+  const { profile } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 

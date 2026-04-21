@@ -1,8 +1,17 @@
 const express = require('express')
 const router = express.Router()
 const { supabaseAdmin } = require('../middleware/auth')
+const { stripAccountId } = require('../middleware/permissions')
 
 const db = () => supabaseAdmin
+
+function requireEdit(req, res, next) {
+  if (req.user?.is_super_admin) return next()
+  if (req.user?.permissions?.acquisitions !== 'edit') {
+    return res.status(403).json({ error: 'Edit access required.' })
+  }
+  next()
+}
 
 router.get('/', async (req, res) => {
   try {
@@ -16,9 +25,10 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', requireEdit, async (req, res) => {
   try {
-    const row = { ...req.body, account_id: req.user.account_id }
+    const row = stripAccountId(req.body)
+    row.account_id = req.user.account_id
     if (row.arv && row.asking_price) {
       const totalCost = row.asking_price + (row.labor_estimate || 0) + (row.material_estimate || 0)
       row.roi_estimate = Math.round(((row.arv - totalCost) / totalCost) * 100)
@@ -31,12 +41,14 @@ router.post('/', async (req, res) => {
   }
 })
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireEdit, async (req, res) => {
   try {
-    let query = db().from('deals').update(req.body).eq('id', req.params.id)
+    const updates = stripAccountId(req.body)
+    let query = db().from('deals').update(updates).eq('id', req.params.id)
     if (req.account_filter) query = query.eq('account_id', req.account_filter)
     const { data, error } = await query.select()
     if (error) throw error
+    if (!data || data.length === 0) return res.status(403).json({ error: 'Access denied.' })
     res.json(data[0])
   } catch (error) {
     res.status(500).json({ error: error.message })

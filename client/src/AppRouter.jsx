@@ -4,7 +4,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/dashboard/Dashboard';
-import DepartmentPage from './pages/dashboard/DepartmentPage';
+import PropertiesPage from './pages/dashboard/PropertiesPage';
+import ConstructionPage from './pages/dashboard/ConstructionPage';
+import ContractorsPage from './pages/dashboard/ContractorsPage';
+import AcquisitionsPage from './pages/dashboard/AcquisitionsPage';
+import FinancePage from './pages/dashboard/FinancePage';
+import TasksPage from './pages/dashboard/TasksPage';
+import TenantsPage from './pages/dashboard/TenantsPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Profile from './pages/dashboard/Profile';
 import { Toaster } from 'react-hot-toast';
@@ -21,12 +27,13 @@ export default function AppRouter() {
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/settings/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-          <Route path="/acquisitions" element={<ProtectedRoute department="acquisitions"><DepartmentPage department="acquisitions" /></ProtectedRoute>} />
-          <Route path="/construction" element={<ProtectedRoute department="construction"><DepartmentPage department="construction" /></ProtectedRoute>} />
-          <Route path="/properties" element={<ProtectedRoute department="property_management"><DepartmentPage department="properties" /></ProtectedRoute>} />
-          <Route path="/contractors" element={<ProtectedRoute department="contractors"><DepartmentPage department="contractors" /></ProtectedRoute>} />
-          <Route path="/finance" element={<ProtectedRoute department="finance"><DepartmentPage department="finance" /></ProtectedRoute>} />
-          <Route path="/tasks" element={<ProtectedRoute department="tasks"><DepartmentPage department="tasks" /></ProtectedRoute>} />
+          <Route path="/acquisitions" element={<ProtectedRoute department="acquisitions"><AcquisitionsPage /></ProtectedRoute>} />
+          <Route path="/construction" element={<ProtectedRoute department="construction"><ConstructionPage /></ProtectedRoute>} />
+          <Route path="/properties" element={<ProtectedRoute department="property_management"><PropertiesPage /></ProtectedRoute>} />
+          <Route path="/tenants" element={<ProtectedRoute department="property_management"><TenantsPage /></ProtectedRoute>} />
+          <Route path="/contractors" element={<ProtectedRoute department="contractors"><ContractorsPage /></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute department="finance"><FinancePage /></ProtectedRoute>} />
+          <Route path="/tasks" element={<ProtectedRoute department="tasks"><TasksPage /></ProtectedRoute>} />
 
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
 
