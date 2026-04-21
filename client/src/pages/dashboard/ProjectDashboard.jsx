@@ -1569,6 +1569,8 @@ function NotesSection({ notes, canEdit, canConvert, currentUserId, isAdmin, onAd
 
 function NoteFormModal({ projectId, note, onClose, onSaved }) {
   const { isSuperAdmin, isAccountAdmin } = useAuth();
+  // Only admins can mark a note "Admin Only"; otherwise hide the option so
+  // non-admin authors don't accidentally lock themselves out of their own note.
   const canSetAdminVisibility = isSuperAdmin || isAccountAdmin;
   const [content, setContent] = useState(note?.content || '');
   const [noteType, setNoteType] = useState(note?.note_type || 'note');
