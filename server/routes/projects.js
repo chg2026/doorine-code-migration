@@ -207,6 +207,8 @@ router.post('/', requireEdit, async (req, res) => {
     const { data, error } = await db().from('construction_projects').insert([projectFields]).select()
     if (error) throw error
     const project = data[0]
+    await logActivity(project.id, project.account_id, req.user?.id, 'project_created',
+      `Project "${project.name}" created.`, { status: project.status })
 
     if (Array.isArray(phases) && phases.length > 0) {
       const rows = phases
@@ -254,11 +256,44 @@ router.put('/:id', requireEdit, async (req, res) => {
     const fkErr = await verifyProjectFKs(updates, req.account_filter)
     if (fkErr) return res.status(400).json({ error: fkErr })
 
+    // Snapshot old values to emit precise activity (target date / budget bumps).
+    const { data: prev } = await db().from('construction_projects')
+      .select('target_completion, labor_budget, material_budget, status, name, account_id')
+      .eq('id', req.params.id).single()
+
     let updQuery = db().from('construction_projects').update(updates).eq('id', req.params.id)
     if (req.account_filter) updQuery = updQuery.eq('account_id', req.account_filter)
     const { data, error } = await updQuery.select()
     if (error) throw error
-    res.json(data[0])
+    const next = data[0]
+
+    if (prev && next) {
+      const acct = prev.account_id
+      const events = []
+      if (updates.target_completion !== undefined && prev.target_completion !== next.target_completion) {
+        events.push(['delivery_date_changed',
+          `Target completion changed from ${prev.target_completion || '—'} to ${next.target_completion || '—'}.`])
+      }
+      const oldBudget = (Number(prev.labor_budget) || 0) + (Number(prev.material_budget) || 0)
+      const newBudget = (Number(next.labor_budget) || 0) + (Number(next.material_budget) || 0)
+      if (oldBudget !== newBudget) {
+        events.push(['budget_updated',
+          `Total budget changed from $${oldBudget.toLocaleString()} to $${newBudget.toLocaleString()}.`])
+      }
+      if (updates.status !== undefined && prev.status !== next.status) {
+        events.push(['status_changed', `Status changed from "${prev.status || 'planning'}" to "${next.status}".`])
+      }
+      const docMap = { agreement_url: 'Agreement', w9_url: 'W-9', insurance_url: 'Insurance' }
+      for (const k of Object.keys(docMap)) {
+        if (updates[k] !== undefined && updates[k]) {
+          events.push(['document_uploaded', `${docMap[k]} document uploaded.`])
+        }
+      }
+      for (const [type, desc] of events) {
+        await logActivity(req.params.id, acct, req.user?.id, type, desc)
+      }
+    }
+    res.json(next)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -340,13 +375,24 @@ router.put('/phases/:id', requireEdit, async (req, res) => {
         return res.status(400).json({ error: 'Invalid contractor reference.' })
       }
     }
+    const { data: prev } = await db().from('construction_phases')
+      .select('completion_pct, status, name').eq('id', req.params.id).single()
     const { data, error } = await db()
       .from('construction_phases')
       .update(updates)
       .eq('id', req.params.id)
       .select('*, contractors(id, name)')
     if (error) throw error
-    await rollupProjectCompletion(projectId)
+    const newPct = await rollupProjectCompletion(projectId)
+    const { data: proj } = await db().from('construction_projects').select('account_id').eq('id', projectId).single()
+    if (prev && proj && updates.completion_pct !== undefined && Number(prev.completion_pct || 0) !== Number(updates.completion_pct)) {
+      await logActivity(projectId, proj.account_id, req.user?.id, 'completion_updated',
+        `Phase "${prev.name}" updated to ${updates.completion_pct}%. Project now ${newPct}%.`)
+    }
+    if (prev && proj && updates.status && prev.status !== updates.status) {
+      await logActivity(projectId, proj.account_id, req.user?.id, 'phase_status_changed',
+        `Phase "${prev.name}" marked ${String(updates.status).replace(/_/g, ' ')}.`)
+    }
     res.json(data[0])
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -483,7 +529,7 @@ async function logActivity(projectId, accountId, userId, eventType, description,
       project_id: projectId, account_id: accountId, event_type: eventType,
       description, metadata, created_by: userId || null,
     }])
-  } catch { /* activity log is best-effort; the dedicated activity task wires the UI */ }
+  } catch { /* best effort — never block the user-facing op on audit-log writes */ }
 }
 
 router.get('/:id/invoices', async (req, res) => {
@@ -633,4 +679,127 @@ router.post('/:id/expenses', requireEdit, async (req, res) => {
   }
 })
 
+// ─── NOTES ───────────────────────────────────────────────────────────────────
+
+const NOTE_TYPES = ['note', 'update', 'reminder', 'issue', 'meeting']
+const VISIBILITIES = ['all', 'admin']
+
+function isAdminish(req) {
+  return !!(req.user?.is_super_admin || req.user?.is_account_admin)
+}
+
+// Hydrate user_profiles for a list of rows that have a `created_by` UUID.
+// project_notes/project_activity reference auth.users which Supabase REST
+// can't auto-join, so we fetch profiles in one extra query and stitch them in.
+async function attachAuthors(rows, accountFilter) {
+  const ids = [...new Set((rows || []).map(r => r.created_by).filter(Boolean))]
+  if (ids.length === 0) return rows
+  let pq = db().from('user_profiles').select('id, email, full_name').in('id', ids)
+  if (accountFilter) pq = pq.eq('account_id', accountFilter)
+  const { data: profiles } = await pq
+  const byId = new Map((profiles || []).map(p => [p.id, p]))
+  return (rows || []).map(r => ({ ...r, author: byId.get(r.created_by) || null }))
+}
+
+router.get('/:id/notes', async (req, res) => {
+  try {
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    let q = db().from('project_notes').select('*')
+      .eq('project_id', req.params.id)
+      .order('created_at', { ascending: false })
+    if (req.account_filter) q = q.eq('account_id', req.account_filter)
+    if (!isAdminish(req)) q = q.eq('visibility', 'all')
+    const { data, error } = await q
+    if (error) throw error
+    res.json(await attachAuthors(data, req.account_filter))
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+router.post('/:id/notes', requireEdit, async (req, res) => {
+  try {
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    const body = stripAccountId(req.body || {})
+    const content = (body.content || '').trim()
+    if (!content) return res.status(400).json({ error: 'Note content is required.' })
+    const note_type  = NOTE_TYPES.includes(body.note_type) ? body.note_type : 'note'
+    const visibility = VISIBILITIES.includes(body.visibility) ? body.visibility : 'all'
+
+    const { data: proj } = await db().from('construction_projects').select('account_id').eq('id', req.params.id).single()
+    const accountId = req.account_filter || proj?.account_id
+    const row = {
+      project_id: req.params.id, account_id: accountId,
+      content, note_type, visibility, created_by: req.user?.id || null,
+    }
+    const { data, error } = await db().from('project_notes').insert([row]).select('*').single()
+    if (error) throw error
+    const [hydrated] = await attachAuthors([data], req.account_filter)
+    res.json(hydrated)
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+router.put('/notes/:id', requireEdit, async (req, res) => {
+  try {
+    let q = db().from('project_notes').select('*').eq('id', req.params.id)
+    if (req.account_filter) q = q.eq('account_id', req.account_filter)
+    const { data: existing } = await q.single()
+    if (!existing) return res.status(403).json({ error: 'Access denied.' })
+    // Only the author may edit (admins delete; edits stay author-only to keep
+    // an honest paper trail that nobody silently rewrote someone else's note).
+    if (existing.created_by !== req.user?.id) {
+      return res.status(403).json({ error: 'Only the author can edit this note.' })
+    }
+    const body = stripAccountId(req.body || {})
+    const updates = {}
+    if (body.content !== undefined) {
+      const c = (body.content || '').trim()
+      if (!c) return res.status(400).json({ error: 'Note content is required.' })
+      updates.content = c
+    }
+    if (body.note_type !== undefined && NOTE_TYPES.includes(body.note_type)) updates.note_type = body.note_type
+    if (body.visibility !== undefined && VISIBILITIES.includes(body.visibility)) updates.visibility = body.visibility
+    const { data, error } = await db().from('project_notes').update(updates).eq('id', req.params.id).select('*').single()
+    if (error) throw error
+    const [hydrated] = await attachAuthors([data], req.account_filter)
+    res.json(hydrated)
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+router.delete('/notes/:id', requireEdit, async (req, res) => {
+  try {
+    let q = db().from('project_notes').select('*').eq('id', req.params.id)
+    if (req.account_filter) q = q.eq('account_id', req.account_filter)
+    const { data: existing } = await q.single()
+    if (!existing) return res.status(403).json({ error: 'Access denied.' })
+    if (existing.created_by !== req.user?.id && !isAdminish(req)) {
+      return res.status(403).json({ error: 'Only the author or an admin can delete this note.' })
+    }
+    const { error } = await db().from('project_notes').delete().eq('id', req.params.id)
+    if (error) throw error
+    res.json({ success: true })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// ─── ACTIVITY (read-only) ────────────────────────────────────────────────────
+
+router.get('/:id/activity', async (req, res) => {
+  try {
+    if (!(await verifyProjectOwnership(req.params.id, req.account_filter))) {
+      return res.status(403).json({ error: 'Access denied.' })
+    }
+    let q = db().from('project_activity').select('*')
+      .eq('project_id', req.params.id)
+      .order('created_at', { ascending: false })
+      .limit(200)
+    if (req.account_filter) q = q.eq('account_id', req.account_filter)
+    const { data, error } = await q
+    if (error) throw error
+    res.json(await attachAuthors(data, req.account_filter))
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+router.logActivity = logActivity
 module.exports = router

@@ -366,3 +366,18 @@ CREATE POLICY "Account members delete project-documents"
     bucket_id = 'project-documents'
     AND (storage.foldername(name))[1]::uuid = current_account_id()
   );
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- TASK 10: extend recurring_tasks so notes can convert into real tasks /
+-- reminders linked to a project, assigned to a teammate, with a real due date
+-- ═══════════════════════════════════════════════════════════════════════════
+
+ALTER TABLE recurring_tasks ADD COLUMN IF NOT EXISTS project_id   UUID REFERENCES construction_projects(id) ON DELETE SET NULL;
+ALTER TABLE recurring_tasks ADD COLUMN IF NOT EXISTS description  TEXT;
+ALTER TABLE recurring_tasks ADD COLUMN IF NOT EXISTS due_date     DATE;
+ALTER TABLE recurring_tasks ADD COLUMN IF NOT EXISTS type         TEXT DEFAULT 'task'; -- task | reminder
+ALTER TABLE recurring_tasks ADD COLUMN IF NOT EXISTS assigned_to  UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+ALTER TABLE recurring_tasks ADD COLUMN IF NOT EXISTS source_note_id UUID REFERENCES project_notes(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_recurring_tasks_project  ON recurring_tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_recurring_tasks_assigned ON recurring_tasks(assigned_to);

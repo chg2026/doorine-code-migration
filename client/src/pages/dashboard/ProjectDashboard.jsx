@@ -55,21 +55,34 @@ export default function ProjectDashboard() {
   const [deletingInvoice, setDeletingInvoice] = useState(null);
   const [showAddendumModal, setShowAddendumModal] = useState(false);
   const [reviewingAddendum, setReviewingAddendum] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [assignees, setAssignees] = useState([]);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
+  const [deletingNote, setDeletingNote] = useState(null);
+  const [convertNote, setConvertNote] = useState(null);  // { note, mode: 'task'|'reminder' }
 
   const load = useCallback(async () => {
     try {
-      const [pRes, cRes, mRes, iRes, aRes] = await Promise.all([
+      const [pRes, cRes, mRes, iRes, aRes, nRes, actRes, asRes] = await Promise.all([
         api.get(`/projects/${id}`),
         api.get('/projects/lookups/contractors').catch(() => ({ data: [] })),
         api.get('/master-phases').catch(() => ({ data: [] })),
         api.get(`/projects/${id}/invoices`).catch(() => ({ data: [] })),
         api.get(`/addendums?project_id=${id}`).catch(() => ({ data: [] })),
+        api.get(`/projects/${id}/notes`).catch(() => ({ data: [] })),
+        api.get(`/projects/${id}/activity`).catch(() => ({ data: [] })),
+        api.get('/tasks/lookups/assignees').catch(() => ({ data: [] })),
       ]);
       setProject(pRes.data);
       setContractors(cRes.data || []);
       setMasterPhases(mRes.data || []);
       setInvoices(iRes.data || []);
       setAddendums(aRes.data || []);
+      setNotes(nRes.data || []);
+      setActivity(actRes.data || []);
+      setAssignees(asRes.data || []);
     } catch {
       toast.error('Could not load project');
     }
@@ -80,12 +93,15 @@ export default function ProjectDashboard() {
 
   const reload = async () => {
     try {
-      const [{ data: p }, { data: i }, { data: a }] = await Promise.all([
+      const [{ data: p }, { data: i }, { data: a }, { data: n }, { data: act }] = await Promise.all([
         api.get(`/projects/${id}`),
         api.get(`/projects/${id}/invoices`).catch(() => ({ data: [] })),
         api.get(`/addendums?project_id=${id}`).catch(() => ({ data: [] })),
+        api.get(`/projects/${id}/notes`).catch(() => ({ data: [] })),
+        api.get(`/projects/${id}/activity`).catch(() => ({ data: [] })),
       ]);
       setProject(p); setInvoices(i || []); setAddendums(a || []);
+      setNotes(n || []); setActivity(act || []);
     } catch { /* ignore */ }
   };
 
@@ -284,7 +300,7 @@ export default function ProjectDashboard() {
         <QuickAction icon="📑" label="Request Addendum"
           onClick={() => setShowAddendumModal(true)} disabled={!canEdit} />
         <QuickAction icon="📝" label="Add Note"
-          onClick={() => toast('Notes & activity log arrive in the next step.', { icon: '📝' })} disabled={!canEdit} />
+          onClick={() => setShowNoteModal(true)} disabled={!canEdit} />
         <QuickAction icon="📊" label="Construction Overview"
           onClick={() => navigate('/construction')} />
       </div>
@@ -299,6 +315,17 @@ export default function ProjectDashboard() {
       <AddendumsSection addendums={addendums} canEdit={canEdit} canApprove={canApproveAddendum}
         onAdd={() => setShowAddendumModal(true)}
         onReview={(ad) => setReviewingAddendum(ad)} />
+
+      {/* Notes & Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
+        <NotesSection notes={notes} canEdit={canEdit} currentUserId={profile?.id}
+          isAdmin={canApproveAddendum}
+          onAdd={() => setShowNoteModal(true)}
+          onEdit={(n) => setEditingNote(n)}
+          onDelete={(n) => setDeletingNote(n)}
+          onConvert={(n, mode) => setConvertNote({ note: n, mode })} />
+        <ActivitySection activity={activity} />
+      </div>
 
       {/* Modals */}
       {editingProject && (
@@ -352,6 +379,27 @@ export default function ProjectDashboard() {
         <AddendumReviewModal addendum={reviewingAddendum} canApprove={canApproveAddendum}
           onClose={() => setReviewingAddendum(null)}
           onReviewed={async () => { setReviewingAddendum(null); await reload(); }} />
+      )}
+
+      {(showNoteModal || editingNote) && (
+        <NoteFormModal projectId={id} note={editingNote}
+          onClose={() => { setShowNoteModal(false); setEditingNote(null); }}
+          onSaved={async () => { setShowNoteModal(false); setEditingNote(null); await reload(); toast.success('Note saved'); }} />
+      )}
+      {deletingNote && (
+        <ConfirmModal title="Delete Note" message="Delete this note? This cannot be undone."
+          confirmLabel="Delete" danger
+          onConfirm={async () => {
+            try { await api.delete(`/projects/notes/${deletingNote.id}`); toast.success('Note removed'); setDeletingNote(null); await reload(); }
+            catch (e) { toast.error(e?.response?.data?.error || 'Delete failed'); }
+          }}
+          onCancel={() => setDeletingNote(null)} />
+      )}
+      {convertNote && (
+        <ConvertNoteModal note={convertNote.note} mode={convertNote.mode}
+          projectId={id} assignees={assignees}
+          onClose={() => setConvertNote(null)}
+          onSaved={async () => { setConvertNote(null); await reload(); toast.success(convertNote.mode === 'reminder' ? 'Reminder created' : 'Task created'); }} />
       )}
     </Layout>
   );
@@ -1443,6 +1491,256 @@ function QuickAction({ icon, label, onClick, disabled }) {
       <div className="text-2xl mb-1">{icon}</div>
       <div className="text-sm font-medium text-gray-900">{label}</div>
     </button>
+  );
+}
+
+// ─── Notes ───────────────────────────────────────────────────────────────────
+
+const NOTE_TYPES = [
+  { value: 'note',     label: 'Note',     badge: 'bg-gray-50 text-gray-700 ring-gray-200' },
+  { value: 'update',   label: 'Update',   badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
+  { value: 'reminder', label: 'Reminder', badge: 'bg-amber-50 text-amber-700 ring-amber-200' },
+  { value: 'issue',    label: 'Issue',    badge: 'bg-red-50 text-red-700 ring-red-200' },
+  { value: 'meeting',  label: 'Meeting',  badge: 'bg-purple-50 text-purple-700 ring-purple-200' },
+];
+const noteTypeMeta = (v) => NOTE_TYPES.find(t => t.value === v) || NOTE_TYPES[0];
+const fmtTimestamp = (s) => {
+  if (!s) return '';
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
+const authorName = (a) => a?.full_name || a?.email || 'Teammate';
+
+function NotesSection({ notes, canEdit, currentUserId, isAdmin, onAdd, onEdit, onDelete, onConvert }) {
+  return (
+    <Card>
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">Notes</h3>
+          <p className="text-xs text-gray-500">Updates, reminders, issues, meeting summaries.</p>
+        </div>
+        {canEdit && (
+          <button onClick={onAdd}
+            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary-500 hover:bg-primary-600 text-white">
+            + Add Note
+          </button>
+        )}
+      </div>
+      {notes.length === 0 ? (
+        <EmptyState icon="📝" title="No notes yet"
+          description={canEdit ? 'Capture decisions, issues, and updates here.' : 'Notes will appear here when teammates add them.'}
+          action={canEdit ? '+ Add Note' : null} onAction={onAdd} />
+      ) : (
+        <div className="divide-y divide-gray-100 max-h-[480px] overflow-y-auto">
+          {notes.map(n => {
+            const meta = noteTypeMeta(n.note_type);
+            const isAuthor = n.created_by === currentUserId;
+            return (
+              <div key={n.id} className="p-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset ${meta.badge}`}>{meta.label}</span>
+                    {n.visibility === 'admin' && (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-gray-100 text-gray-600 ring-gray-200">🔒 Admin</span>
+                    )}
+                    <span className="text-xs text-gray-500">{authorName(n.author)}</span>
+                    <span className="text-xs text-gray-400">· {fmtTimestamp(n.created_at)}</span>
+                  </div>
+                  {canEdit && (
+                    <div className="flex items-center gap-1 text-xs">
+                      <button onClick={() => onConvert(n, 'task')} className="px-2 py-1 rounded hover:bg-gray-100 text-gray-600">→ Task</button>
+                      <button onClick={() => onConvert(n, 'reminder')} className="px-2 py-1 rounded hover:bg-gray-100 text-gray-600">→ Reminder</button>
+                      {isAuthor && <button onClick={() => onEdit(n)} className="px-2 py-1 rounded hover:bg-gray-100 text-gray-600">Edit</button>}
+                      {(isAuthor || isAdmin) && <button onClick={() => onDelete(n)} className="px-2 py-1 rounded hover:bg-red-50 text-red-600">Delete</button>}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 text-sm text-gray-800 whitespace-pre-wrap">{n.content}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function NoteFormModal({ projectId, note, onClose, onSaved }) {
+  const [content, setContent] = useState(note?.content || '');
+  const [noteType, setNoteType] = useState(note?.note_type || 'note');
+  const [visibility, setVisibility] = useState(note?.visibility || 'all');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!content.trim()) return toast.error('Note content is required.');
+    setSaving(true);
+    try {
+      if (note?.id) await api.put(`/projects/notes/${note.id}`, { content, note_type: noteType, visibility });
+      else          await api.post(`/projects/${projectId}/notes`, { content, note_type: noteType, visibility });
+      onSaved();
+    } catch (e) { toast.error(e?.response?.data?.error || 'Save failed'); setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <form onSubmit={submit}>
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900">{note ? 'Edit Note' : 'Add Note'}</h3>
+          </div>
+          <div className="p-5 space-y-4">
+            <FormField label="Content" required>
+              <textarea value={content} onChange={e => setContent(e.target.value)} rows={5} required
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="What's the update?" />
+            </FormField>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Type">
+                <select value={noteType} onChange={e => setNoteType(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+                  {NOTE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Visibility">
+                <select value={visibility} onChange={e => setVisibility(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+                  <option value="all">All Team</option>
+                  <option value="admin">Admin Only</option>
+                </select>
+              </FormField>
+            </div>
+          </div>
+          <div className="px-5 py-3 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+            <button type="button" onClick={onClose} className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-100">Cancel</button>
+            <button type="submit" disabled={saving} className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-500 hover:bg-primary-600 text-white disabled:opacity-60">
+              {saving ? 'Saving...' : note ? 'Save Changes' : 'Add Note'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ConvertNoteModal({ note, mode, projectId, assignees, onClose, onSaved }) {
+  const { profile } = useAuth();
+  const isReminder = mode === 'reminder';
+  const [name, setName] = useState((note?.content || '').slice(0, 80));
+  const [description, setDescription] = useState(note?.content || '');
+  const [dueDate, setDueDate] = useState('');
+  // Reminders default to "remind me"; tasks default to unassigned so the
+  // creator must consciously pick the responsible owner.
+  const [assignedTo, setAssignedTo] = useState(isReminder ? (profile?.id || '') : '');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return toast.error('Title is required.');
+    if (isReminder && !assignedTo) return toast.error('Pick a teammate to remind.');
+    setSaving(true);
+    try {
+      await api.post('/tasks', {
+        name, description, type: mode,
+        due_date: dueDate || null,
+        assigned_to: assignedTo || null,
+        project_id: projectId,
+        source_note_id: note?.id || null,
+      });
+      onSaved();
+    } catch (e) { toast.error(e?.response?.data?.error || 'Save failed'); setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <form onSubmit={submit}>
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {isReminder ? 'Schedule Reminder' : 'Convert to Task'}
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">
+              {isReminder ? 'A teammate will see this in their Tasks list on the due date.' : 'Creates a task in the Tasks module linked to this project.'}
+            </p>
+          </div>
+          <div className="p-5 space-y-4">
+            <FormField label="Title" required>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} required maxLength={120}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            </FormField>
+            <FormField label="Details">
+              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            </FormField>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Due Date">
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+              </FormField>
+              <FormField label={isReminder ? 'Remind' : 'Assign To'} required={isReminder}>
+                <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+                  <option value="">{isReminder ? 'Pick teammate…' : 'Unassigned'}</option>
+                  {assignees.map(a => <option key={a.id} value={a.id}>{a.full_name || a.email}</option>)}
+                </select>
+              </FormField>
+            </div>
+          </div>
+          <div className="px-5 py-3 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+            <button type="button" onClick={onClose} className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-100">Cancel</button>
+            <button type="submit" disabled={saving} className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-500 hover:bg-primary-600 text-white disabled:opacity-60">
+              {saving ? 'Creating...' : isReminder ? 'Create Reminder' : 'Create Task'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Activity ────────────────────────────────────────────────────────────────
+
+const ACTIVITY_ICON = {
+  project_created:        '🏗️',
+  completion_updated:     '📈',
+  phase_status_changed:   '🔧',
+  invoice_logged:         '🧾',
+  addendum_requested:     '📑',
+  addendum_approved:      '✅',
+  addendum_rejected:      '❌',
+  document_uploaded:      '📎',
+  delivery_date_changed:  '📅',
+  budget_updated:         '💰',
+  status_changed:         '🔁',
+};
+
+function ActivitySection({ activity }) {
+  return (
+    <Card>
+      <div className="px-4 py-3 border-b border-gray-100">
+        <h3 className="text-sm font-semibold text-gray-900">Activity Log</h3>
+        <p className="text-xs text-gray-500">Auto-generated history of changes on this project.</p>
+      </div>
+      {activity.length === 0 ? (
+        <EmptyState icon="🕒" title="No activity yet" description="Project events will appear here as work happens." />
+      ) : (
+        <div className="divide-y divide-gray-100 max-h-[480px] overflow-y-auto">
+          {activity.map(a => (
+            <div key={a.id} className="p-3 flex items-start gap-3">
+              <span className="text-lg leading-none mt-0.5">{ACTIVITY_ICON[a.event_type] || '•'}</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm text-gray-800">{a.description}</div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  {fmtTimestamp(a.created_at)}
+                  {a.author && <> · by {authorName(a.author)}</>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 
