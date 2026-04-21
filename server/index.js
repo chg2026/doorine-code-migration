@@ -23,6 +23,7 @@ app.use('/api/users', require('./routes/users'))
 app.use('/api/dashboard', requireAuth, require('./routes/dashboard'))
 
 app.use('/api/properties', requireAuth, scopeToAccount, requireDepartment('property_management'), require('./routes/properties'))
+app.use('/api/units', requireAuth, scopeToAccount, requireDepartment('property_management'), require('./routes/units'))
 app.use('/api/contractors', requireAuth, scopeToAccount, requireDepartment('contractors'), require('./routes/contractors'))
 app.use('/api/projects', requireAuth, scopeToAccount, requireDepartment('construction'), require('./routes/projects'))
 app.use('/api/tenants', requireAuth, scopeToAccount, requireDepartment('property_management'), require('./routes/tenants'))

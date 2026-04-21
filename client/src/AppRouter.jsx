@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/dashboard/Dashboard';
 import PropertiesPage from './pages/dashboard/PropertiesPage';
+import PropertyDashboard from './pages/dashboard/PropertyDashboard';
 import ConstructionPage from './pages/dashboard/ConstructionPage';
 import ContractorsPage from './pages/dashboard/ContractorsPage';
 import AcquisitionsPage from './pages/dashboard/AcquisitionsPage';
@@ -32,6 +33,7 @@ export default function AppRouter() {
           <Route path="/acquisitions" element={<ProtectedRoute department="acquisitions"><AcquisitionsPage /></ProtectedRoute>} />
           <Route path="/construction" element={<ProtectedRoute department="construction"><ConstructionPage /></ProtectedRoute>} />
           <Route path="/properties" element={<ProtectedRoute department="property_management"><PropertiesPage /></ProtectedRoute>} />
+          <Route path="/properties/:id" element={<ProtectedRoute department="property_management"><PropertyDashboard /></ProtectedRoute>} />
           <Route path="/tenants" element={<ProtectedRoute department="property_management"><TenantsPage /></ProtectedRoute>} />
           <Route path="/contractors" element={<ProtectedRoute department="contractors"><ContractorsPage /></ProtectedRoute>} />
           <Route path="/finance" element={<ProtectedRoute department="finance"><FinancePage /></ProtectedRoute>} />

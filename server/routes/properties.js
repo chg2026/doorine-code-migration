@@ -7,7 +7,7 @@ const db = () => supabaseAdmin
 
 function clean(body) {
   const out = stripAccountId(body)
-  const skip = ['account_filter', 'id', 'created_at', 'updated_at']
+  const skip = ['account_filter', 'id', 'created_at', 'updated_at', 'unit_labels']
   for (const k of skip) delete out[k]
   for (const k of Object.keys(out)) {
     if (out[k] === '') out[k] = null
@@ -15,6 +15,12 @@ function clean(body) {
   if (out.type && !out.property_type) out.property_type = out.type
   if (out.property_type && !out.type) out.type = out.property_type
   return out
+}
+
+function defaultUnitLabels(propertyType, count) {
+  const n = Math.max(1, parseInt(count || 1, 10) || 1)
+  if (propertyType === 'single_family') return ['Unit 1']
+  return Array.from({ length: n }, (_, i) => `Unit ${i + 1}`)
 }
 
 function requireEdit(req, res, next) {
@@ -53,9 +59,34 @@ router.post('/', requireEdit, async (req, res) => {
   try {
     const row = clean(req.body)
     row.account_id = req.user.account_id
+    if (row.property_type === 'single_family') row.unit_count = 1
+
     const { data, error } = await db().from('properties').insert([row]).select()
     if (error) throw error
-    res.json(data[0])
+    const property = data[0]
+
+    const labels = Array.isArray(req.body.unit_labels) && req.body.unit_labels.length
+      ? req.body.unit_labels
+      : defaultUnitLabels(property.property_type, property.unit_count)
+
+    const unitRows = labels.map((label, i) => ({
+      property_id: property.id,
+      account_id: property.account_id,
+      label: (label || `Unit ${i + 1}`).toString().slice(0, 100),
+      sort_order: i,
+    }))
+    if (unitRows.length) {
+      const { error: unitErr } = await db().from('units').insert(unitRows)
+      if (unitErr) {
+        await db().from('properties').delete().eq('id', property.id)
+        throw new Error(`Unit auto-create failed: ${unitErr.message}`)
+      }
+      // ensure unit_count matches actual rows created
+      await db().from('properties').update({ unit_count: unitRows.length }).eq('id', property.id)
+      property.unit_count = unitRows.length
+    }
+
+    res.json(property)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
