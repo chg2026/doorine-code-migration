@@ -33,6 +33,7 @@ export default function ConstructionPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [contractorFilter, setContractorFilter] = useState('all');
   const [propertyFilter, setPropertyFilter] = useState('all');
+  const [propertyStatusFilter, setPropertyStatusFilter] = useState('all');
   const [healthFilter, setHealthFilter] = useState('all'); // all | on_time | delayed
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -70,6 +71,10 @@ export default function ConstructionPage() {
       if (statusFilter !== 'all' && p.status !== statusFilter) return false;
       if (contractorFilter !== 'all' && p.contractor_id !== contractorFilter) return false;
       if (propertyFilter !== 'all' && p.property_id !== propertyFilter) return false;
+      if (propertyStatusFilter !== 'all') {
+        const prop = properties.find(pr => pr.id === p.property_id);
+        if (!prop || (prop.status || 'vacant') !== propertyStatusFilter) return false;
+      }
       if (healthFilter !== 'all' && p._onTime.state !== healthFilter) return false;
       if (s) {
         const hay = `${p.name || ''} ${p.properties?.name || ''} ${p.properties?.address || ''} ${p.contractors?.name || ''}`.toLowerCase();
@@ -80,7 +85,14 @@ export default function ConstructionPage() {
       if (to && (!start || start > to)) return false;
       return true;
     });
-  }, [decorated, search, statusFilter, contractorFilter, propertyFilter, healthFilter, from, to]);
+  }, [decorated, search, statusFilter, contractorFilter, propertyFilter, propertyStatusFilter, healthFilter, from, to, properties]);
+
+  // Distinct property statuses present on this account, plus standard ones.
+  const propertyStatuses = useMemo(() => {
+    const set = new Set(['vacant', 'occupied', 'under_renovation', 'sold']);
+    properties.forEach(p => p.status && set.add(p.status));
+    return Array.from(set);
+  }, [properties]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -201,6 +213,13 @@ export default function ConstructionPage() {
                 className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
                 <option value="all">All properties</option>
                 {properties.map(p => <option key={p.id} value={p.id}>{p.name || p.address}</option>)}
+              </select>
+              <select value={propertyStatusFilter} onChange={e => setPropertyStatusFilter(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
+                <option value="all">Any property status</option>
+                {propertyStatuses.map(s => (
+                  <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>
+                ))}
               </select>
               <select value={contractorFilter} onChange={e => setContractorFilter(e.target.value)}
                 className="px-3 py-2 text-sm border border-gray-300 rounded-lg">

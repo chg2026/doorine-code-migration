@@ -10,6 +10,7 @@ import {
   PHASE_STATUSES, PROJECT_STATUSES, projectStatusBadge, phaseStatusBadge,
   phaseRowAccent, computeOnTime, budgetHealth, fmtUsd, fmtDate,
 } from '../../lib/projectStatus';
+import RichTextEditor, { RichTextDisplay } from '../../components/RichTextEditor';
 
 const INVOICE_CATEGORIES = [
   { value: 'labor',     label: 'Labor' },
@@ -1556,7 +1557,7 @@ function NotesSection({ notes, canEdit, currentUserId, isAdmin, onAdd, onEdit, o
                     </div>
                   )}
                 </div>
-                <div className="mt-2 text-sm text-gray-800 whitespace-pre-wrap">{n.content}</div>
+                <div className="mt-2"><RichTextDisplay value={n.content} /></div>
               </div>
             );
           })}
@@ -1592,9 +1593,7 @@ function NoteFormModal({ projectId, note, onClose, onSaved }) {
           </div>
           <div className="p-5 space-y-4">
             <FormField label="Content" required>
-              <textarea value={content} onChange={e => setContent(e.target.value)} rows={5} required
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="What's the update?" />
+              <RichTextEditor value={content} onChange={setContent} placeholder="What's the update?" rows={6} required />
             </FormField>
             <div className="grid grid-cols-2 gap-3">
               <FormField label="Type">

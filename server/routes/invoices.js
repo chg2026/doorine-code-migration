@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const { supabaseAdmin } = require('../middleware/auth')
 const { stripAccountId, verifyForeignKey } = require('../middleware/permissions')
+const projectsRouter = require('./projects')
 
 const db = () => supabaseAdmin
 
@@ -36,7 +37,18 @@ router.post('/', requireEdit, async (req, res) => {
     }
     const { data, error } = await db().from('invoices').insert([row]).select()
     if (error) throw error
-    res.json(data[0])
+
+    // If the invoice references a project, mirror the activity event the
+    // project-scoped POST emits — keeps the project activity log consistent
+    // regardless of which invoice entry-point was used.
+    const inv = data[0]
+    if (inv?.project_id && projectsRouter.logActivity) {
+      const amount = Number(inv.amount) || 0
+      await projectsRouter.logActivity(inv.project_id, inv.account_id, req.user?.id, 'invoice_logged',
+        `Invoice ${inv.invoice_number ? '#' + inv.invoice_number + ' ' : ''}from ${inv.vendor || 'Unknown'} ($${amount.toLocaleString()}) logged.`,
+        { invoice_id: inv.id, category: inv.category, amount })
+    }
+    res.json(inv)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
