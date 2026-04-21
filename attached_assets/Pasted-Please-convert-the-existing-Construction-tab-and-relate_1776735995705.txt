@@ -1,0 +1,435 @@
+Please convert the existing Construction tab and related features into a comprehensive, 
+fully-featured construction project management system. Do not rebuild from scratch — 
+analyze the existing codebase first, preserve all existing functionality, and extend it 
+with everything described below. This is the Construction module of a SaaS platform for 
+real estate and construction companies.
+
+---
+
+PART 1 — PROPERTIES
+
+Build a Properties system as the top-level entity everything else lives under.
+
+PROPERTY CREATION FORM:
+- Property name (text)
+- Address (street, city, state, zip)
+- Property type (dropdown):
+  * Single Family
+  * Duplex
+  * Triplex
+  * Multi-Unit / Apartment Building
+  * Commercial Building
+- Number of units (number field — auto-set to 1 if Single Family, locked)
+- Unit labels (dynamically generated based on number of units — e.g. Unit 1, Unit 2, 
+  Unit 3 — each unit label is editable, e.g. "Upper Unit", "Lower Unit", "Unit 1A")
+- Purchase date
+- Purchase price
+- Property status (dropdown): Pre-Construction, Under Construction, Completed, Occupied
+- Property photo upload
+
+PROPERTY LOGIC:
+- If property type is Single Family → system automatically creates 1 unit and 
+  understands this is a single rehab project
+- If property type is Duplex, Triplex, Multi-Unit, or Commercial → system prompts 
+  user to define units and allows multiple projects per unit
+- Each unit is tracked independently for cost accounting purposes — costs, budgets, 
+  invoices, and completion are always broken down per unit even when viewed together
+- Property dashboard shows a summary of ALL units and ALL projects under that property
+
+PROPERTY DASHBOARD (overview when you open a property):
+- Property details at the top (address, type, status, purchase price)
+- Unit cards — one card per unit showing:
+  * Unit label
+  * Active project count
+  * Overall completion % across all projects in that unit
+  * Total budget vs total spent
+  * On Time / Delayed badge
+- Button to add a new project to any unit
+- Total property cost summary: combined budget, combined spent, combined completion
+
+---
+
+PART 2 — PROJECTS (SOW — Scope of Work)
+
+Each project lives under a specific unit of a property. A unit can have multiple 
+projects running simultaneously (e.g. Electrical SOW + Rehab SOW + Exterior SOW).
+
+PROJECT CREATION FORM:
+- Project name (text — e.g. "Electrical SOW", "Full Rehab", "Exterior Work")
+- Property (dropdown — loads from properties)
+- Unit (dropdown — loads units from selected property)
+- Assigned contractor (dropdown — loads from contractors directory)
+- Scope of work description (rich text area)
+- Start date
+- Target delivery date
+- Labor budget (number)
+- Materials budget (number)
+- Total budget (auto-calculated: labor + materials)
+- Project status (dropdown): Not Started, In Progress, Delayed, Stuck, Completed
+- Signed agreement upload (PDF/image — stored in Supabase storage)
+- Contractor W9 upload (PDF — stored in Supabase storage)
+- Contractor insurance certificate upload (PDF — stored in Supabase storage)
+
+PROJECT DASHBOARD (when you open a project):
+Show everything related to this specific project in one view:
+
+1. PROJECT HEADER
+   - Project name, property, unit, contractor name and contact
+   - Status badge (Not Started / In Progress / Delayed / Stuck / Completed)
+   - On Time / Delayed indicator:
+     * Calculate: timeline elapsed % = (days active / total project days) × 100
+     * If completion % >= timeline elapsed % → ON TIME (green badge)
+     * If completion % < timeline elapsed % → DELAYED (red badge)
+   - Start date, target delivery date, days remaining
+   - Quick action buttons: Edit Project, Add Phase, Log Invoice, Add Note
+
+2. BUDGET SUMMARY CARD
+   - Labor budget vs labor spent
+   - Materials budget vs materials spent  
+   - Total budget vs total spent
+   - Visual indicator:
+     * Under Budget → green
+     * Within 10% of budget → amber / warning
+     * Over Budget → red
+   - Budget utilization progress bar
+
+3. COMPLETION SUMMARY CARD
+   - Overall project completion % (average of all phases across all SOWs)
+   - Progress bar
+   - Number of phases complete vs total phases
+
+4. PHASES SECTION (see Part 3)
+
+5. INVOICES SECTION (see Part 4)
+
+6. DOCUMENTS SECTION
+   - Show uploaded files: signed agreement, W9, insurance certificate
+   - Each file shows: file name, upload date, uploaded by
+   - Download button per file
+   - Add additional documents button
+
+7. ADDENDUMS SECTION (see Part 5)
+
+8. NOTES & ACTIVITY SECTION (see Part 6)
+
+---
+
+PART 3 — PHASES
+
+Each project has phases. Phases come from a master list but are fully customizable.
+
+MASTER PHASE LIST (managed by Super Admin in settings):
+Pre-loaded standard phases:
+- Demolition
+- Framing
+- Rough Electrical
+- Rough Plumbing
+- HVAC
+- Insulation
+- Drywall
+- Finish Electrical
+- Finish Plumbing
+- Flooring
+- Painting
+- Trim & Doors
+- Kitchen & Cabinets
+- Bathroom
+- Windows
+- Exterior
+- Landscaping
+- Final Walkthrough
+- Punch List
+
+Admin can add custom phases to the master list and delete any phase from the master list.
+
+ADDING PHASES TO A PROJECT:
+- User selects phases from the master list (multi-select with checkboxes)
+- User can also type and add a custom phase not in the master list
+- Each selected phase gets its own record in this project with:
+  * Phase name
+  * Assigned contractor (can be different from the project-level contractor)
+  * Labor budget for this phase
+  * Materials budget for this phase
+  * Estimated start date
+  * Estimated completion date
+  * Completion % (0–100, editable via slider or number input)
+  * Phase status (dropdown): Not Started, In Progress, Complete, Blocked
+  * Payment approved (toggle: Yes / No) — payment gate, must be approved before 
+    contractor is paid for this phase
+  * Checklist complete (toggle: Yes / No)
+  * Notes field per phase
+
+PHASE DISPLAY:
+- Phases shown as an expandable table or accordion inside the project dashboard
+- Each row shows: phase name, contractor, completion %, status badge, budget vs spent, 
+  payment approved badge, actions (edit, delete)
+- Updating any phase completion % automatically recalculates the project overall %
+- Color coding: complete = green row, in progress = blue, blocked = red, 
+  not started = gray
+
+MULTIPLE SOWs PER PROJECT VIEW:
+- When a unit has multiple projects (SOWs), the unit dashboard shows a 
+  compiled view of ALL projects:
+  * Combined completion % across all SOWs
+  * Each SOW shown as a collapsible section with its own progress
+  * Combined budget and combined spent across all SOWs
+  * One timeline showing all SOWs with their start and end dates
+
+---
+
+PART 4 — INVOICE LOGGING
+
+Each project has its own invoice log. Invoices are the source of truth for 
+actual spending and automatically update the budget dashboard.
+
+INVOICE UPLOAD FORM:
+- File upload (PDF, JPG, PNG — stored in Supabase storage)
+- Invoice date
+- Vendor / payee name (text)
+- Invoice number (text, optional)
+- Amount (number)
+- Category (dropdown):
+  * Labor
+  * Materials
+  * Equipment Rental
+  * Permits & Fees
+  * Other
+- Phase (dropdown — select which phase this invoice belongs to, loads phases 
+  from this project)
+- Notes (text, optional)
+- Submitted by (auto-filled from logged in user)
+- Submission date (auto-filled)
+
+INVOICE LOGIC:
+- When an invoice is saved:
+  * If category = Labor → adds to labor spent for the selected phase and project
+  * If category = Materials → adds to materials spent for the selected phase and project
+  * Dashboard budget cards update automatically in real time
+  * If total spent exceeds budget → trigger over budget warning (amber at 90%, red at 100%+)
+
+INVOICE LIST VIEW (inside project dashboard):
+- Table of all invoices for this project
+- Columns: Date | Vendor | Invoice # | Amount | Category | Phase | Uploaded By | File
+- Filter by: category, phase, date range
+- Total row at bottom: sum of all invoices, split by labor vs materials
+- Click any row to view the uploaded invoice file
+- Edit and delete per row (with confirmation)
+
+---
+
+PART 5 — ADDENDUMS
+
+Addendums are formal changes to the project scope or timeline. They require 
+admin approval before taking effect.
+
+ADDENDUM CREATION FORM:
+- Addendum title (text — e.g. "Additional Bathroom Work", "Timeline Extension")
+- Description (rich text — describe what is changing and why)
+- Change type (multi-select):
+  * Scope change
+  * Budget change
+  * Timeline change
+- If budget change: new budget amount fields (labor delta, materials delta)
+- If timeline change: new proposed delivery date
+- Upload signed addendum document (PDF)
+- Requested by (auto-filled from logged in user)
+- Request date (auto-filled)
+- Status: Pending Approval (default on creation)
+
+ADDENDUM APPROVAL WORKFLOW:
+- When created → status = Pending Approval, admin is notified
+- Admin reviews the addendum and uploaded document
+- Admin can: Approve or Reject with a comment
+- If Approved:
+  * If timeline change → project delivery date automatically updates to new date
+  * If budget change → project budget automatically updates
+  * If scope change → noted in project history
+  * Status = Approved, approval date and approver name recorded
+- If Rejected:
+  * Status = Rejected, rejection reason recorded
+  * Original dates and budget remain unchanged
+
+ADDENDUM DISPLAY (inside project dashboard):
+- List of all addendums for this project
+- Each addendum shows: title, type, status badge, requested by, date, 
+  approved/rejected by, approval date
+- Pending addendums shown with amber badge and "Awaiting Approval" label
+- Approved addendums shown with green badge
+- Rejected addendums shown with red badge and rejection reason
+- Click to expand and see full description and uploaded document
+
+---
+
+PART 6 — NOTES & ACTIVITY LOG
+
+Every project has a notes and activity section. This is a living log of 
+everything happening on the project.
+
+NOTE CREATION:
+- Text input (rich text — supports formatting, bullet points)
+- Type tag (dropdown): Note, Update, Reminder, Issue, Meeting Summary
+- Visibility (dropdown): All Team, Admin Only
+- Submit button
+
+NOTE DISPLAY:
+- Chronological feed, newest first
+- Each note shows:
+  * Author name and avatar/initials
+  * Date and time created
+  * Type tag badge (colored by type)
+  * Full note content
+  * Action buttons: Edit (author only), Delete (author or admin), 
+    Convert to Task, Convert to Reminder
+
+CONVERT TO TASK:
+- Clicking "Convert to Task" opens a modal:
+  * Task title (pre-filled from note content)
+  * Assigned to (dropdown — team members)
+  * Due date
+  * Priority (Low, Medium, High, Urgent)
+- Creates a task in the Task Management module linked back to this project
+
+CONVERT TO REMINDER:
+- Clicking "Convert to Reminder" opens a modal:
+  * Reminder text (pre-filled)
+  * Remind on (date + time)
+  * Remind who (dropdown — team members)
+- Reminder appears in the assigned user's dashboard on the set date
+
+ACTIVITY LOG (separate from notes):
+- Auto-generated entries for all system events on this project:
+  * Project created
+  * Phase completion % updated (by whom, from X% to Y%)
+  * Invoice logged (amount, category, by whom)
+  * Addendum submitted / approved / rejected
+  * Document uploaded
+  * Delivery date changed
+  * Budget updated
+- Activity log is read-only — cannot be edited or deleted
+- Shows full audit trail of the project
+
+---
+
+PART 7 — CONSTRUCTION TAB OVERVIEW DASHBOARD
+
+The main Construction tab (before drilling into a property) shows a 
+high-level overview of all construction activity:
+
+SUMMARY CARDS ROW:
+- Total active projects (across all properties)
+- Total budget across all active projects
+- Total spent across all active projects
+- Projects on time vs delayed count
+
+PROPERTIES LIST:
+- Card grid or table of all properties
+- Each property card shows:
+  * Property address and type
+  * Number of active projects
+  * Combined completion % with progress bar
+  * Combined budget vs spent
+  * On Time / Delayed badge
+  * Click to open property dashboard
+
+FILTERS:
+- Filter by: property status, project status, on time / delayed, contractor, date range
+- Search by property address or project name
+
+ACTIVE PROJECTS TABLE:
+- Flat list of ALL active projects across all properties
+- Columns: Property | Unit | Project Name | Contractor | Completion % | 
+  Budget | Spent | Status | Delivery Date | On Time
+- Sort by any column
+- Click row to open project dashboard
+
+---
+
+PART 8 — CONTRACTORS DIRECTORY
+
+A global directory of all contractors used across projects.
+
+CONTRACTOR PROFILE:
+- Company name
+- Contact name
+- Phone, email
+- Trade / specialty (text)
+- W9 status (dropdown): Not Received, Received, Expired
+- W9 document upload
+- Insurance certificate upload
+- Insurance expiry date (with alert 30 days before expiry)
+- Agreement signed (toggle)
+- Performance score (1–10, manually set by admin)
+- Notes field
+- Project history: list of all projects this contractor has been assigned to
+
+CONTRACTOR ALERTS:
+- If insurance expiry is within 30 days → show amber warning badge on contractor
+- If W9 is expired or not received → show red badge on contractor
+- Alerts visible on contractor list and on any project assigned to that contractor
+
+---
+
+PART 9 — DESIGN REQUIREMENTS
+
+- Clean, professional dashboard aesthetic — data-dense but not cluttered
+- Each project dashboard should feel like a command center for that project
+- Color system:
+  * On Time: green (#057a55)
+  * Delayed / Over Budget: red (#c81e1e)
+  * Warning / Near Budget: amber (#c27803)
+  * In Progress: blue (#1a56db)
+  * Complete: green
+  * Not Started: gray (#6b7280)
+- Progress bars throughout — smooth, colored by status
+- All currency formatted as USD with commas ($32,000 not 32000)
+- All dates formatted as: Apr 20, 2026 (not 2026-04-20)
+- Percentage completion shown as both a number and a visual progress bar
+- Responsive layout — Nicole uses this on her phone at job sites:
+  * All tables collapse to card list on mobile (<768px)
+  * All buttons minimum 44px tap target
+  * Forms single column on mobile
+- Empty states on every list with a clear call to action
+- Loading spinners on all async data fetches
+- Toast notifications on all save, update, delete, and error actions
+- Confirmation modal on all delete actions
+
+---
+
+PART 10 — DATABASE TABLES NEEDED
+
+Extend the existing Supabase schema with these tables 
+(do not drop or modify existing tables):
+
+- properties (id, name, address, city, state, zip, type, unit_count, 
+  purchase_date, purchase_price, status, photo_url, account_id, created_by, created_at)
+- units (id, property_id, label, account_id)
+- projects (id, unit_id, property_id, name, contractor_id, description, 
+  start_date, target_delivery_date, labor_budget, materials_budget, status, 
+  overall_pct, agreement_url, w9_url, insurance_url, account_id, created_by, created_at)
+- phases (id, project_id, name, contractor_id, labor_budget, materials_budget, 
+  labor_spent, materials_spent, completion_pct, status, payment_approved, 
+  checklist_complete, estimated_start, estimated_completion, notes, sort_order)
+- invoices (id, project_id, phase_id, property_id, file_url, invoice_date, 
+  vendor, invoice_number, amount, category, notes, submitted_by, created_at)
+- addendums (id, project_id, title, description, change_types, budget_delta_labor, 
+  budget_delta_materials, proposed_delivery_date, document_url, status, 
+  requested_by, request_date, reviewed_by, review_date, review_comment)
+- project_notes (id, project_id, content, note_type, visibility, 
+  created_by, created_at, updated_at)
+- project_activity (id, project_id, event_type, description, 
+  created_by, created_at)
+- master_phases (id, name, sort_order, is_active, account_id)
+
+---
+
+BUILD ORDER:
+1. Database schema — run migrations for all new tables with RLS policies
+2. Contractors directory — foundation, needed by projects
+3. Properties + Units — create, edit, delete, property dashboard
+4. Projects — create, edit, project dashboard shell
+5. Phases — master list management, add phases to projects, completion tracking
+6. Invoice logging — upload, categorize, auto-update budget dashboard
+7. Addendums — create, approval workflow, auto-update delivery date
+8. Notes + Activity log — notes feed, convert to task/reminder
+9. Construction overview dashboard — summary cards, properties grid, active projects table
+10. Polish — mobile responsiveness, empty states, loading states, toast notifications
