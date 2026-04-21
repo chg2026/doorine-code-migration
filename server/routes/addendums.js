@@ -113,23 +113,42 @@ router.post('/:id/review', requireApprover, async (req, res) => {
       review_comment: comment,
     }
 
-    if (action === 'approve') {
-      const project = await ensureProjectOwnership(addendum.project_id, req.account_filter)
-      if (!project) return res.status(403).json({ error: 'Project access denied.' })
+    // Atomic-claim pattern: only one concurrent reviewer can flip the
+    // status away from 'pending'. Whoever wins the conditional UPDATE
+    // owns the side-effects (budget + delivery date application).
+    const { data: claimed, error: claimErr } = await db()
+      .from('addendums').update(updates)
+      .eq('id', req.params.id).eq('status', 'pending')
+      .select().single()
+    if (claimErr || !claimed) {
+      return res.status(409).json({ error: 'Addendum was just reviewed by someone else. Refresh to see the latest status.' })
+    }
 
-      const projUpdates = {}
-      const dLabor = Number(addendum.budget_delta_labor) || 0
-      const dMats  = Number(addendum.budget_delta_materials) || 0
-      if (dLabor !== 0) projUpdates.labor_budget    = (Number(project.labor_budget)    || 0) + dLabor
-      if (dMats  !== 0) projUpdates.material_budget = (Number(project.material_budget) || 0) + dMats
-      if (addendum.proposed_delivery_date) projUpdates.target_completion = addendum.proposed_delivery_date
-      if (Object.keys(projUpdates).length > 0) {
-        await db().from('construction_projects').update(projUpdates).eq('id', addendum.project_id)
+    if (action === 'approve') {
+      try {
+        const project = await ensureProjectOwnership(addendum.project_id, req.account_filter)
+        if (!project) throw new Error('Project access denied.')
+
+        const projUpdates = {}
+        const dLabor = Number(addendum.budget_delta_labor) || 0
+        const dMats  = Number(addendum.budget_delta_materials) || 0
+        if (dLabor !== 0) projUpdates.labor_budget    = (Number(project.labor_budget)    || 0) + dLabor
+        if (dMats  !== 0) projUpdates.material_budget = (Number(project.material_budget) || 0) + dMats
+        if (addendum.proposed_delivery_date) projUpdates.target_completion = addendum.proposed_delivery_date
+        if (Object.keys(projUpdates).length > 0) {
+          const { error: pErr } = await db().from('construction_projects').update(projUpdates).eq('id', addendum.project_id)
+          if (pErr) throw pErr
+        }
+      } catch (sideErr) {
+        // Roll back the claim so the addendum stays actionable
+        await db().from('addendums').update({
+          status: 'pending', reviewed_by: null, review_date: null, review_comment: null,
+        }).eq('id', req.params.id)
+        return res.status(500).json({ error: 'Approval failed: ' + (sideErr.message || sideErr) })
       }
     }
 
-    const { data, error } = await db().from('addendums').update(updates).eq('id', req.params.id).select().single()
-    if (error) throw error
+    const data = claimed
 
     await logActivity(addendum.project_id, addendum.account_id, req.user?.id,
       action === 'approve' ? 'addendum_approved' : 'addendum_rejected',

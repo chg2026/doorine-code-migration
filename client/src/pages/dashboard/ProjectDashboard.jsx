@@ -387,7 +387,7 @@ function InvoicesSection({ invoices, phases, canEdit, project, onAdd, onEdit, on
     const list = [];
     const test = (label, spent, budget) => {
       if (budget <= 0) return;
-      if (spent > budget) list.push({ tone: 'red',   text: `${label} is over budget (${Math.round(spent/budget*100)}%).` });
+      if (spent >= budget) list.push({ tone: 'red',   text: `${label} is at ${Math.round(spent/budget*100)}% of budget.` });
       else if (spent / budget >= 0.9) list.push({ tone: 'amber', text: `${label} at ${Math.round(spent/budget*100)}% of budget.` });
     };
     test('Labor', laborSpent, laborBudget);
@@ -454,8 +454,13 @@ function InvoicesSection({ invoices, phases, canEdit, project, onAdd, onEdit, on
                 {canEdit && <th className="px-2 py-2"></th>}
               </tr></thead>
               <tbody>
-                {filtered.map(i => (
-                  <tr key={i.id} className="border-b border-gray-100 hover:bg-gray-50">
+                {filtered.map(i => {
+                  const openFile = () => { if (i.file_url) window.open(i.file_url, '_blank', 'noopener,noreferrer'); };
+                  return (
+                  <tr key={i.id}
+                    className={`border-b border-gray-100 hover:bg-gray-50 ${i.file_url ? 'cursor-pointer' : ''}`}
+                    onClick={i.file_url ? openFile : undefined}
+                    title={i.file_url ? 'Open invoice file' : undefined}>
                     <td className="px-4 py-2 text-gray-600">{fmtDate(i.invoice_date || i.created_at)}</td>
                     <td className="px-4 py-2 font-medium text-gray-900">{i.vendor || '—'}</td>
                     <td className="px-4 py-2 text-gray-600">{i.invoice_number || '—'}</td>
@@ -463,16 +468,19 @@ function InvoicesSection({ invoices, phases, canEdit, project, onAdd, onEdit, on
                     <td className="px-4 py-2 text-gray-600">{i.construction_phases?.name || '—'}</td>
                     <td className="px-4 py-2 text-right font-medium text-gray-900">{fmtUsd(i.amount)}</td>
                     <td className="px-4 py-2 text-right">
-                      {i.file_url ? <a href={i.file_url} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline">View</a> : <span className="text-gray-300">—</span>}
+                      {i.file_url
+                        ? <a href={i.file_url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-primary-600 hover:underline">View</a>
+                        : <span className="text-gray-300">—</span>}
                     </td>
                     {canEdit && (
                       <td className="px-2 py-2 text-right whitespace-nowrap">
-                        <button onClick={() => onEdit(i)} className="text-xs text-gray-500 hover:text-primary-600 px-1">Edit</button>
-                        <button onClick={() => onDelete(i)} className="text-xs text-gray-500 hover:text-danger-600 px-1">Delete</button>
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(i); }} className="text-xs text-gray-500 hover:text-primary-600 px-1">Edit</button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(i); }} className="text-xs text-gray-500 hover:text-danger-600 px-1">Delete</button>
                       </td>
                     )}
                   </tr>
-                ))}
+                  );
+                })}
                 <tr className="bg-gray-50 font-medium">
                   <td className="px-4 py-2 text-gray-700" colSpan={5}>Totals · Labor {fmtUsd(totalLabor)} · Materials {fmtUsd(totalMats)} · Other {fmtUsd(totalOther)}</td>
                   <td className="px-4 py-2 text-right text-gray-900">{fmtUsd(totalLabor + totalMats + totalOther)}</td>
