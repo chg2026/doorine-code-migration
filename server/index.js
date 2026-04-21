@@ -26,6 +26,7 @@ app.use('/api/properties', requireAuth, scopeToAccount, requireDepartment('prope
 app.use('/api/units', requireAuth, scopeToAccount, requireDepartment('property_management'), require('./routes/units'))
 app.use('/api/contractors', requireAuth, scopeToAccount, requireDepartment('contractors'), require('./routes/contractors'))
 app.use('/api/projects', requireAuth, scopeToAccount, requireDepartment('construction'), require('./routes/projects'))
+app.use('/api/master-phases', requireAuth, scopeToAccount, requireDepartment('construction'), require('./routes/master-phases'))
 app.use('/api/tenants', requireAuth, scopeToAccount, requireDepartment('property_management'), require('./routes/tenants'))
 app.use('/api/deals', requireAuth, scopeToAccount, requireDepartment('acquisitions'), require('./routes/deals'))
 app.use('/api/tasks', requireAuth, scopeToAccount, requireDepartment('tasks'), require('./routes/tasks'))

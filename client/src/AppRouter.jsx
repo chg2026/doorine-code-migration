@@ -9,6 +9,8 @@ import PropertiesPage from './pages/dashboard/PropertiesPage';
 import PropertyDashboard from './pages/dashboard/PropertyDashboard';
 import UnitDashboard from './pages/dashboard/UnitDashboard';
 import ConstructionPage from './pages/dashboard/ConstructionPage';
+import ProjectDashboard from './pages/dashboard/ProjectDashboard';
+import MasterPhasesPage from './pages/dashboard/MasterPhasesPage';
 import ContractorsPage from './pages/dashboard/ContractorsPage';
 import ContractorDetail from './pages/dashboard/ContractorDetail';
 import AcquisitionsPage from './pages/dashboard/AcquisitionsPage';
@@ -34,6 +36,8 @@ export default function AppRouter() {
 
           <Route path="/acquisitions" element={<ProtectedRoute department="acquisitions"><AcquisitionsPage /></ProtectedRoute>} />
           <Route path="/construction" element={<ProtectedRoute department="construction"><ConstructionPage /></ProtectedRoute>} />
+          <Route path="/projects/:id" element={<ProtectedRoute department="construction"><ProjectDashboard /></ProtectedRoute>} />
+          <Route path="/settings/master-phases" element={<ProtectedRoute department="construction"><MasterPhasesPage /></ProtectedRoute>} />
           <Route path="/properties" element={<ProtectedRoute department="property_management"><PropertiesPage /></ProtectedRoute>} />
           <Route path="/properties/:id" element={<ProtectedRoute department="property_management"><PropertyDashboard /></ProtectedRoute>} />
           <Route path="/properties/:propId/units/:unitId" element={<ProtectedRoute department="property_management"><UnitDashboard /></ProtectedRoute>} />
