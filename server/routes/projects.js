@@ -121,7 +121,7 @@ async function verifyProjectFKs(updates, accountFilter) {
 
 router.get('/lookups/properties', async (req, res) => {
   try {
-    let q = db().from('properties').select('id, name, address, street, city').order('name', { ascending: true })
+    let q = db().from('properties').select('id, name, address, street, city, status').order('name', { ascending: true })
     if (req.account_filter) q = q.eq('account_id', req.account_filter)
     const { data, error } = await q
     if (error) throw error
