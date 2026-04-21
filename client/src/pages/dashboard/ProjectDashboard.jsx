@@ -369,7 +369,9 @@ function InvoicesSection({ invoices, phases, canEdit, project, onAdd, onEdit, on
     if (filterCat !== 'all' && i.category !== filterCat) return false;
     if (filterPhase === 'none' && i.phase_id) return false;
     if (filterPhase !== 'all' && filterPhase !== 'none' && i.phase_id !== filterPhase) return false;
-    const d = i.invoice_date || i.created_at;
+    // Normalize to YYYY-MM-DD so range filters compare apples to apples.
+    const raw = i.invoice_date || i.created_at;
+    const d = raw ? String(raw).slice(0, 10) : '';
     if (filterFrom && (!d || d < filterFrom)) return false;
     if (filterTo && (!d || d > filterTo)) return false;
     return true;

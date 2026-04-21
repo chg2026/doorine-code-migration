@@ -6,7 +6,6 @@ const { stripAccountId } = require('../middleware/permissions')
 const db = () => supabaseAdmin
 
 const CHANGE_TYPES = ['scope', 'budget', 'timeline']
-const STATUSES = ['pending', 'approved', 'rejected']
 
 function requireEdit(req, res, next) {
   if (req.user?.is_super_admin) return next()
