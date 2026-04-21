@@ -37,7 +37,7 @@ export default function ProjectDashboard() {
     try {
       const [pRes, cRes, mRes] = await Promise.all([
         api.get(`/projects/${id}`),
-        api.get('/contractors').catch(() => ({ data: [] })),
+        api.get('/projects/lookups/contractors').catch(() => ({ data: [] })),
         api.get('/master-phases').catch(() => ({ data: [] })),
       ]);
       setProject(pRes.data);

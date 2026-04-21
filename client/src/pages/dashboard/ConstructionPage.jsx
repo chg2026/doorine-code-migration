@@ -25,7 +25,7 @@ export default function ConstructionPage() {
     try {
       const [pRes, cRes] = await Promise.all([
         api.get('/projects'),
-        api.get('/contractors').catch(() => ({ data: [] })),
+        api.get('/projects/lookups/contractors').catch(() => ({ data: [] })),
       ]);
       setProjects(pRes.data || []);
       setContractors(cRes.data || []);

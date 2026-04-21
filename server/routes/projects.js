@@ -129,6 +129,16 @@ router.get('/lookups/properties', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+router.get('/lookups/contractors', async (req, res) => {
+  try {
+    let q = db().from('contractors').select('id, name, trade, company_name').order('name', { ascending: true })
+    if (req.account_filter) q = q.eq('account_id', req.account_filter)
+    const { data, error } = await q
+    if (error) throw error
+    res.json(data || [])
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
 router.get('/lookups/units', async (req, res) => {
   try {
     if (!req.query.property_id) return res.json([])
