@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DealLink — Wireframes</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0eee9; font-family: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif; color: #111; }
+    * { box-sizing: border-box; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="wire-kit.jsx"></script>
+  <script type="text/babel" src="deal-data.jsx"></script>
+  <script type="text/babel" src="screens/public-profile.jsx"></script>
+  <script type="text/babel" src="screens/detail-lead-empty.jsx"></script>
+  <script type="text/babel" src="screens/admin.jsx"></script>
+  <script type="text/babel" src="screens/csv-import.jsx"></script>
+
+  <script type="text/babel">
+    // ─────────── Tweaks state ───────────
+    const TWEAKS = /*EDITMODE-BEGIN*/{
+      "theme": "light",
+      "showNotes": true,
+      "phoneFrame": true
+    }/*EDITMODE-END*/;
+
+    function useTweaks() {
+      const [t, setT] = React.useState(TWEAKS);
+      React.useEffect(() => {
+        const handler = (e) => {
+          if (!e.data || typeof e.data !== 'object') return;
+          if (e.data.type === '__activate_edit_mode') setPanelOpen(true);
+          if (e.data.type === '__deactivate_edit_mode') setPanelOpen(false);
+        };
+        window.addEventListener('message', handler);
+        window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+        return () => window.removeEventListener('message', handler);
+      }, []);
+      const [panelOpen, setPanelOpen] = React.useState(false);
+      const update = (patch) => {
+        setT(prev => {
+          const next = { ...prev, ...patch };
+          applyTheme(next.theme);
+          window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');
+          return next;
+        });
+      };
+      React.useEffect(() => { applyTheme(t.theme); }, []);
+      return { t, update, panelOpen };
+    }
+
+    function TweakPanel({ t, update, open }) {
+      if (!open) return null;
+      return (
+        <div style={{
+          position: 'fixed', bottom: 16, right: 16, zIndex: 1000,
+          background: '#fff', border: '1px solid #E5E3DE', padding: 14, width: 220,
+          fontFamily: '-apple-system, system-ui', fontSize: 12,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+        }}>
+          <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: '#666', marginBottom: 10 }}>Tweaks</div>
+
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Theme</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {['light','dark'].map(v => (
+                <button key={v} onClick={() => { update({ theme: v }); setTimeout(() => location.reload(), 30); }}
+                  style={{ flex: 1, border: `1px solid ${t.theme===v?'#111':'#E5E3DE'}`, background: t.theme===v?'#111':'#fff', color: t.theme===v?'#fff':'#111', padding: '6px 0', fontSize: 11, cursor: 'pointer', textTransform: 'capitalize' }}>{v}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Phone frame</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[['on',true],['off',false]].map(([l,v]) => (
+                <button key={l} onClick={() => update({ phoneFrame: v })}
+                  style={{ flex: 1, border: `1px solid ${t.phoneFrame===v?'#111':'#E5E3DE'}`, background: t.phoneFrame===v?'#111':'#fff', color: t.phoneFrame===v?'#fff':'#111', padding: '6px 0', fontSize: 11, cursor: 'pointer' }}>{l}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>Design notes</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[['show',true],['hide',false]].map(([l,v]) => (
+                <button key={l} onClick={() => update({ showNotes: v })}
+                  style={{ flex: 1, border: `1px solid ${t.showNotes===v?'#111':'#E5E3DE'}`, background: t.showNotes===v?'#111':'#fff', color: t.showNotes===v?'#fff':'#111', padding: '6px 0', fontSize: 11, cursor: 'pointer' }}>{l}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────── Wrappers ───────────
+    // Mobile artboard: optionally wrap in iOS device frame
+    function Mobile({ children, frame, w = 320, h = 660 }) {
+      if (frame) {
+        // Scale down the iOS device to fit our artboard width
+        const scale = w / 402;
+        return (
+          <div style={{ width: w, height: h, overflow: 'hidden', position: 'relative' }}>
+            <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: 402, height: h/scale }}>
+              <IOSDevice width={402} height={h/scale} dark={WK.ink === '#F2EFE8'}>
+                {children}
+              </IOSDevice>
+            </div>
+          </div>
+        );
+      }
+      return <div style={{ width: w, height: h, background: WK.bg, border: `1px solid ${WK.line}` }}>{children}</div>;
+    }
+
+    function Desk({ children, w = 720, h = 500 }) {
+      return (
+        <div style={{ width: w, height: h, background: WK.card, border: `1px solid ${WK.line}`, overflow: 'hidden' }}>
+          {/* Browser chrome */}
+          <div style={{ height: 28, background: WK.bg, borderBottom: `1px solid ${WK.line}`, display: 'flex', alignItems: 'center', padding: '0 10px', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 4, background: WK.line }} />
+            <span style={{ width: 8, height: 8, borderRadius: 4, background: WK.line }} />
+            <span style={{ width: 8, height: 8, borderRadius: 4, background: WK.line }} />
+            <div style={{ marginLeft: 16, flex: 1, height: 16, background: WK.card, border: `1px solid ${WK.line}`, padding: '0 8px', fontFamily: WK.mono, fontSize: 9, display: 'flex', alignItems: 'center', color: WK.dim }}>deallink.io/admin</div>
+          </div>
+          <div style={{ width: '100%', height: 'calc(100% - 28px)' }}>{children}</div>
+        </div>
+      );
+    }
+
+    function App() {
+      const { t, update, panelOpen } = useTweaks();
+      const [,force] = React.useReducer(x => x+1, 0);
+      React.useEffect(() => { force(); }, [t.theme]);
+
+      const showNotes = t.showNotes;
+      const frame = t.phoneFrame;
+
+      return (
+        <>
+          <DesignCanvas>
+            <DCSection id="public" title="Public Profile" subtitle="Buyer-first · 4 directions · mobile">
+              <DCArtboard id="A" label="A · Linktree-stacked" width={320} height={660}>
+                <Mobile frame={frame}><PublicA /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · Data-forward list" width={320} height={660}>
+                <Mobile frame={frame}><PublicB /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="C" label="C · Featured + list" width={320} height={660}>
+                <Mobile frame={frame}><PublicC /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="D" label="D · Editorial masthead" width={320} height={660}>
+                <Mobile frame={frame}><PublicD /></Mobile>
+              </DCArtboard>
+              {showNotes && <DCPostIt top={-10} right={30} rotate={2}>
+                Cash buyers want to SCAN. B is fastest; D is most memorable. A is most familiar (Linktree).
+              </DCPostIt>}
+            </DCSection>
+
+            <DCSection id="detail" title="Deal Detail" subtitle="What a buyer sees when they tap a deal">
+              <DCArtboard id="A" label="A · Photo hero" width={320} height={660}>
+                <Mobile frame={frame}><DetailA /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · Spec sheet" width={320} height={660}>
+                <Mobile frame={frame}><DetailB /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="C" label="C · Editorial split" width={320} height={660}>
+                <Mobile frame={frame}><DetailC /></Mobile>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="lead" title="Lead Capture" subtitle="'I'm interested' flow">
+              <DCArtboard id="A" label="A · Bottom sheet" width={320} height={660}>
+                <Mobile frame={frame}><LeadA /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · One-tap channels" width={320} height={660}>
+                <Mobile frame={frame}><LeadB /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="C" label="C · Success state" width={320} height={660}>
+                <Mobile frame={frame}><LeadC /></Mobile>
+              </DCArtboard>
+              {showNotes && <DCPostIt top={-10} right={20} rotate={-3} width={200}>
+                B (channel-picker) beats traditional forms for mobile cash buyers — SMS wins.
+              </DCPostIt>}
+            </DCSection>
+
+            <DCSection id="empty" title="Empty / First Run" subtitle="Wholesaler onboarding + no-deals public state">
+              <DCArtboard id="A" label="A · Admin onboarding" width={320} height={660}>
+                <Mobile frame={frame}><EmptyA /></Mobile>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · Public no-deals" width={320} height={660}>
+                <Mobile frame={frame}><EmptyB /></Mobile>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="login" title="Login / Signup" subtitle="Desktop flow">
+              <DCArtboard id="A" label="A · Split editorial" width={720} height={460}>
+                <Desk w={720} h={460}><LoginA /></Desk>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · Handle-first claim" width={720} height={460}>
+                <Desk w={720} h={460}><LoginB /></Desk>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="admin" title="Admin Dashboard" subtitle="Deal management — desktop">
+              <DCArtboard id="A" label="A · Table / spreadsheet" width={860} height={540}>
+                <Desk w={860} h={540}><AdminA /></Desk>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · Card grid" width={860} height={540}>
+                <Desk w={860} h={540}><AdminB /></Desk>
+              </DCArtboard>
+              <DCArtboard id="C" label="C · List + live preview" width={860} height={540}>
+                <Desk w={860} h={540}><AdminC /></Desk>
+              </DCArtboard>
+              {showNotes && <DCPostIt top={-10} right={40} rotate={2} width={200}>
+                A is fastest to work in. C shows wholesaler exactly what buyers see. B = prettiest demo.
+              </DCPostIt>}
+            </DCSection>
+
+            <DCSection id="form" title="Add / Edit Deal" subtitle="The main authoring screen">
+              <DCArtboard id="A" label="A · Full-page sectioned" width={860} height={540}>
+                <Desk w={860} h={540}><FormA /></Desk>
+              </DCArtboard>
+              <DCArtboard id="B" label="B · Form + live preview" width={860} height={540}>
+                <Desk w={860} h={540}><FormB /></Desk>
+              </DCArtboard>
+              <DCArtboard id="C" label="C · Quick-add modal" width={860} height={540}>
+                <Desk w={860} h={540}><FormC /></Desk>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="csv" title="CSV Bulk Import" subtitle="3-step flow · upload → map → validate">
+              <DCArtboard id="A" label="1 · Upload" width={860} height={540}>
+                <Desk w={860} h={540}><CsvUpload /></Desk>
+              </DCArtboard>
+              <DCArtboard id="B" label="2 · Map columns" width={860} height={540}>
+                <Desk w={860} h={540}><CsvMap /></Desk>
+              </DCArtboard>
+              <DCArtboard id="C" label="3 · Preview + validate" width={860} height={540}>
+                <Desk w={860} h={540}><CsvPreview /></Desk>
+              </DCArtboard>
+              {showNotes && <DCPostIt top={-10} right={40} rotate={-2} width={220}>
+                Auto-map column headers on upload. Dup detection by normalized address. Errors excluded from import; warnings still import.
+              </DCPostIt>}
+            </DCSection>
+          </DesignCanvas>
+
+          <TweakPanel t={t} update={update} open={panelOpen} />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
