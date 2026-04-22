@@ -1,0 +1,206 @@
+---
+name: replit-git-workflow
+description: Safely commit and push code changes from a Replit project to its connected GitHub repository using a feature-branch and pull-request workflow. Use this skill whenever the user approves or signals they are done with a round of changes in Replit — triggers include "push", "commit", "push to github", "save to github", "ship it", "commit and push", "backup to github", "sync with github", "update the repo", or approval phrases after edits like "looks good, push it", "yes go ahead", "perfect, save it". Also use when the user says Replit crashed or they worry about losing work and want a backup. This skill is specific to Replit environments where the shell is bash and the repo is already connected to GitHub as origin.
+---
+
+# Replit Git Workflow
+
+This skill captures a safe, repeatable workflow for pushing changes from a Replit project to its connected GitHub repository. The goal is to keep GitHub as a reliable backup of Replit work, so if Replit ever crashes or corrupts the project, nothing meaningful is lost.
+
+The workflow is deliberately cautious: it uses a feature branch and a pull request rather than pushing straight to `main`. This gives the user a chance to review a diff on GitHub before anything touches their source of truth.
+
+## When to run this skill
+
+Run the full workflow when the user says any of:
+
+- "push", "commit", "push to github", "commit and push", "ship it", "save to github"
+- "backup to github", "sync with github", "update the repo"
+- Approval phrases *right after* a round of edits: "looks good, push it", "yes go ahead", "perfect, save it"
+
+Do NOT run the workflow if:
+
+- The user is still actively iterating on code and hasn't signaled they're done.
+- There are no uncommitted changes (check with `git status` first — if clean, tell the user there's nothing to push).
+
+## Before you start: pre-flight checks
+
+Always run these checks first. They take seconds and prevent 90% of problems.
+
+### 1. Confirm git is initialized and connected
+
+```bash
+git status
+```
+
+If you see `fatal: not a git repository`, the Repl is not connected to GitHub yet. Stop the workflow and tell the user — they need to initialize git and connect a remote before this skill can help. Do not try to `git init` automatically; setting up the remote requires decisions only the user can make (which repo, which branch).
+
+### 2. Confirm there's a remote called `origin`
+
+```bash
+git remote -v
+```
+
+If no `origin` appears, stop and ask the user which GitHub repo to use. Do not guess.
+
+### 3. Confirm what's about to be committed
+
+```bash
+git status
+```
+
+Look at the output carefully. Flag anything suspicious to the user **before** staging:
+
+- Files that look like secrets (`.env`, `*.key`, `*.pem`, files named `secrets.*` or `credentials.*`)
+- Replit-specific internals that shouldn't go to GitHub (`.replit`, `replit.nix`, `attached_assets/`, `.cache/`, `.agents/`, `.local/`)
+- Unexpected large files, binaries, or zips the user probably doesn't want versioned
+- Anything the user didn't appear to actually edit this session
+
+If anything looks off, pause and ask the user before continuing.
+
+## The workflow
+
+### Step 1: Create a descriptive feature branch
+
+Never commit directly to `main`. Branch names should describe the work in kebab-case, prefixed by a category:
+
+- `feature/add-login-page`
+- `fix/broken-csv-import`
+- `design/wireframe-updates`
+- `refactor/cleanup-deal-data`
+
+```bash
+git checkout -b <category>/<short-description>
+```
+
+If the user is already on a non-main feature branch (check the first line of `git status`), skip creating a new branch and reuse the existing one unless the user asks otherwise.
+
+### Step 2: Stage only the intended files
+
+Prefer staging specific paths over `git add .`, because `git add .` can sweep in Replit junk. Stage the folder or files the user actually changed:
+
+```bash
+git add <specific-path>
+```
+
+Use `git add .` only when the user's `.gitignore` is known to exclude all Replit internals and the user explicitly asks to stage everything.
+
+### Step 3: Verify the staged diff before committing
+
+This is the most important checkpoint:
+
+```bash
+git status
+```
+
+Confirm the "Changes to be committed:" list contains only expected files. Confirm Replit internals (`.replit`, `replit.nix`, `attached_assets/`, etc.) are NOT staged — they should appear under "Untracked files" but not under staged changes.
+
+If anything unexpected is staged, unstage it:
+
+```bash
+git restore --staged <path>
+```
+
+### Step 4: Commit with a clear message
+
+Use a concise, descriptive commit message in the imperative mood:
+
+**Good:** `Add DealLink wireframes`, `Fix CSV import bug`, `Refactor deal-data helpers`
+**Bad:** `stuff`, `changes`, `wip`, `asdf`
+
+```bash
+git commit -m "Clear descriptive message"
+```
+
+### Step 5: Push the branch to GitHub
+
+```bash
+git push -u origin <branch-name>
+```
+
+GitHub usually returns a direct "Create pull request" URL in the push output. Copy it from the output and share it with the user.
+
+**Handling authentication issues:** If the push fails with a permission error, Replit's GitHub integration may not be authorized. Tell the user they need either:
+1. To reconnect GitHub in Replit's Tools → Version Control UI, or
+2. Generate a GitHub Personal Access Token with `repo` scope and paste it when prompted for a password.
+
+Do not invent credentials or hardcode tokens.
+
+### Step 6: Direct the user to open a Pull Request
+
+Paste the PR creation URL from the push output, for example:
+
+```
+https://github.com/<user>/<repo>/pull/new/<branch-name>
+```
+
+Tell the user to:
+1. Open that URL in their browser.
+2. Add a title and short description.
+3. Click **Create pull request**.
+4. Review the **Files changed** tab as a final sanity check.
+5. Click **Merge pull request** → **Confirm merge**.
+
+### Step 7: Sync local `main` after the user merges
+
+After the user confirms the PR is merged, bring their local Replit `main` up to date:
+
+```bash
+git checkout main
+git pull origin main
+```
+
+Optionally clean up the merged local branch:
+
+```bash
+git branch -d <branch-name>
+```
+
+Do NOT run these commands until the user confirms the merge happened. Pulling before the merge just pulls an unchanged `main` and does nothing useful.
+
+## Example runs
+
+### Example 1: Typical feature push
+
+User: *"Looks good, push it to github"*
+
+Claude:
+1. Runs `git status` → sees edits in `src/components/Login.jsx`.
+2. Runs `git remote -v` → confirms `origin` points to the right repo.
+3. Flags nothing suspicious.
+4. Runs `git checkout -b feature/add-login-page`.
+5. Runs `git add src/components/Login.jsx`.
+6. Runs `git status` → confirms only the login file is staged.
+7. Runs `git commit -m "Add login page component"`.
+8. Runs `git push -u origin feature/add-login-page`.
+9. Shares the PR URL from the push output with the user.
+10. Waits for the user to confirm merge, then syncs `main`.
+
+### Example 2: Pre-flight catches a problem
+
+User: *"Ship it"*
+
+Claude runs `git status` and sees `.env` appears as a modified tracked file.
+
+Claude's response: *"Before pushing — I see `.env` is staged for commit. That file usually contains API keys and shouldn't go to GitHub. Want me to unstage it and add it to `.gitignore` first?"*
+
+### Example 3: Nothing to push
+
+User: *"Back this up to github"*
+
+Claude runs `git status` and sees "nothing to commit, working tree clean."
+
+Claude's response: *"Nothing new to push — your working directory is already in sync with the last commit. If you made changes in another session, want me to check if the remote is ahead?"*
+
+## Why this matters
+
+Replit's filesystem is ephemeral relative to what most users expect — Repls can be archived, crashed, or accidentally deleted. GitHub is the durable copy. Every push is a recovery point. Every PR is an opportunity to catch a mistake (a committed secret, an unintended deletion, a wrong file) before it becomes part of the permanent history on `main`.
+
+The feature-branch + PR workflow is slightly more steps than pushing directly to `main`, but it's the professional default for a reason: `main` stays in a known-good state, and the GitHub diff view is a much easier place to spot problems than the Replit shell.
+
+## Things to avoid
+
+- **Don't use `git push --force`** unless the user explicitly asks and understands the consequences — it can erase history on GitHub.
+- **Don't commit Replit internals** (`.replit`, `replit.nix`, `attached_assets/`, `.cache/`, `.agents/`, `.local/`). If they keep showing up as untracked, offer to add them to `.gitignore`.
+- **Don't hardcode secrets** in any commit. If you see what looks like an API key in a file being staged, stop and warn the user. Suggest moving it to Replit Secrets and referencing it via `process.env.KEY_NAME`.
+- **Don't push to `main` directly** unless the user explicitly requests it and the change is trivial (like a typo fix in the README).
+- **Don't run `git init`** on a Repl that isn't yet connected to GitHub — stop and ask the user which repo to connect to first.
