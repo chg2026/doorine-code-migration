@@ -1,0 +1,23 @@
+{
+  "name": "@rei-code/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared Express API server for Gold Bridge platform (CHG + Deal Link)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.2",
+    "node-cron": "^3.0.3",
+    "pg": "^8.20.0"
+  }
+}
