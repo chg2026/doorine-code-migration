@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Bridge Platform — Atlassian Reference Architecture</title>
+<style>
+  :root {
+    --ink: #111;
+    --mute: #666;
+    --dim: #999;
+    --faint: #BDB8B0;
+    --line: #E5E3DE;
+    --bg: #FAF8F4;
+    --card: #FFFFFF;
+    --stripe: repeating-linear-gradient(45deg, #E5E3DE 0 1px, transparent 1px 8px);
+    --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    --serif: 'Tiempos Text', 'Source Serif Pro', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.55; }
+  body { padding: 0 0 120px 0; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 48px; }
+  .hair { border-top: 1px solid var(--line); }
+  .kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--mute); }
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; color: var(--ink); }
+  h1 { font-size: 56px; line-height: 1.05; }
+  h2 { font-size: 34px; line-height: 1.15; }
+  h3 { font-size: 22px; line-height: 1.25; }
+  h4 { font-size: 16px; line-height: 1.3; font-weight: 500; font-family: var(--sans); letter-spacing: 0; }
+  p { font-family: var(--serif); font-size: 16px; line-height: 1.65; color: var(--ink); max-width: 72ch; }
+  p.small { font-family: var(--sans); font-size: 13px; color: var(--mute); line-height: 1.55; }
+  .mono { font-family: var(--mono); }
+  .sans { font-family: var(--sans); }
+  .muted { color: var(--mute); }
+  .dim { color: var(--dim); }
+  .ink { color: var(--ink); }
+
+  /* Cover */
+  .cover { padding: 140px 0 100px; border-bottom: 1px solid var(--line); }
+  .cover .kicker { margin-bottom: 32px; }
+  .cover h1 { margin-bottom: 28px; max-width: 18ch; }
+  .cover .lede { font-family: var(--serif); font-size: 20px; color: var(--mute); max-width: 58ch; line-height: 1.55; }
+  .cover .meta { margin-top: 80px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim); }
+  .cover .meta div span { display: block; color: var(--ink); font-family: var(--sans); font-size: 13px; letter-spacing: 0; text-transform: none; margin-top: 6px; }
+
+  /* Section base */
+  section { padding: 80px 0; border-bottom: 1px solid var(--line); }
+  section .sec-num { font-family: var(--mono); font-size: 10px; letter-spacing: 1.4px; color: var(--dim); text-transform: uppercase; margin-bottom: 20px; display: flex; gap: 16px; align-items: center; }
+  section .sec-num b { color: var(--ink); font-weight: 500; letter-spacing: 1.4px; }
+  section h2 { margin-bottom: 14px; max-width: 24ch; }
+  section .sec-sub { font-family: var(--serif); font-size: 18px; color: var(--mute); max-width: 64ch; margin-bottom: 48px; line-height: 1.55; font-style: italic; }
+
+  /* Two-col layout */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .four { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+
+  /* Card */
+  .card { background: var(--card); border: 1px solid var(--line); padding: 28px; }
+  .card.plain { background: transparent; }
+  .card .kicker { margin-bottom: 14px; }
+  .card h3 { margin-bottom: 10px; font-size: 18px; }
+  .card p { font-size: 14px; line-height: 1.6; }
+
+  /* Layer row */
+  .layer-row { display: grid; grid-template-columns: 170px 1fr 1fr; gap: 40px; padding: 24px 0; border-top: 1px solid var(--line); align-items: start; }
+  .layer-row:last-child { border-bottom: 1px solid var(--line); }
+  .layer-row .lh { }
+  .layer-row .lh .kicker { margin-bottom: 8px; }
+  .layer-row .lh h3 { font-size: 19px; font-family: var(--serif); }
+  .layer-row .lc { font-family: var(--serif); font-size: 14.5px; line-height: 1.65; color: var(--ink); }
+  .layer-row .lc.right { color: var(--mute); border-left: 1px solid var(--line); padding-left: 32px; }
+
+  /* Hierarchy tree */
+  .tree { background: var(--card); border: 1px solid var(--line); padding: 40px; margin-top: 24px; }
+  .tree ul { list-style: none; padding-left: 0; }
+  .tree > ul { padding-left: 0; }
+  .tree ul ul { padding-left: 28px; border-left: 1px solid var(--line); margin-left: 10px; }
+  .tree li { padding: 8px 0 8px 16px; position: relative; font-family: var(--mono); font-size: 12px; letter-spacing: 0.3px; color: var(--ink); }
+  .tree li::before { content: ""; position: absolute; left: 0; top: 18px; width: 10px; height: 1px; background: var(--line); }
+  .tree > ul > li::before { display: none; }
+  .tree li .nm { color: var(--ink); font-weight: 600; }
+  .tree li .dn { color: var(--mute); margin-left: 8px; font-weight: 400; }
+  .tree li .tag { display: inline-block; margin-left: 10px; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--line); padding: 2px 6px; color: var(--mute); }
+  .tree li .tag.new { color: var(--ink); border-color: var(--ink); }
+
+  /* Schema diff */
+  .schema-table { background: var(--card); border: 1px solid var(--line); }
+  .schema-row { display: grid; grid-template-columns: 220px 1fr 1fr 120px; gap: 0; border-top: 1px solid var(--line); }
+  .schema-row:first-child { border-top: none; }
+  .schema-row > div { padding: 16px 20px; border-left: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .schema-row > div:first-child { border-left: none; font-weight: 600; }
+  .schema-row.head > div { background: #F4F1EC; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--mute); font-weight: 500; padding: 14px 20px; }
+  .schema-row .col-status { text-align: right; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; }
+  .schema-row .col-status.keep { color: var(--mute); }
+  .schema-row .col-status.modify { color: var(--ink); }
+  .schema-row .col-status.add { color: var(--ink); font-weight: 600; }
+
+  /* Domain boxes */
+  .domain-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 24px; }
+  .domain { background: var(--card); border: 1px solid var(--line); padding: 24px; }
+  .domain .url { font-family: var(--mono); font-size: 14px; color: var(--ink); font-weight: 600; margin-bottom: 6px; }
+  .domain .role { font-family: var(--mono); font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--mute); margin-bottom: 14px; }
+  .domain p { font-size: 13px; font-family: var(--sans); color: var(--mute); line-height: 1.55; }
+
+  /* Admin levels */
+  .levels { display: grid; grid-template-columns: 80px 1fr; gap: 0; margin-top: 24px; }
+  .levels .lv { display: contents; }
+  .levels .lv-num { grid-column: 1; font-family: var(--serif); font-size: 52px; color: var(--faint); line-height: 1; padding: 28px 24px 28px 0; border-top: 1px solid var(--line); }
+  .levels .lv:first-child .lv-num { border-top: none; }
+  .levels .lv-body { grid-column: 2; padding: 32px 0 28px 32px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .levels .lv:first-child .lv-body { border-top: none; }
+  .levels .lv-body .kicker { margin-bottom: 8px; }
+  .levels .lv-body h3 { font-family: var(--serif); font-size: 22px; margin-bottom: 8px; }
+  .levels .lv-body p { font-size: 14px; font-family: var(--sans); color: var(--mute); line-height: 1.6; max-width: 72ch; }
+  .levels .lv-body .ex { margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.2px; }
+
+  /* App switcher wireframe */
+  .switcher-demo { background: var(--card); border: 1px solid var(--line); padding: 32px; position: relative; min-height: 360px; }
+  .sw-header { display: flex; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .sw-grid-icon { width: 20px; height: 20px; display: grid; grid-template-columns: repeat(3, 4px); grid-template-rows: repeat(3, 4px); gap: 2px; }
+  .sw-grid-icon span { background: var(--ink); display: block; }
+  .sw-brand { font-family: var(--sans); font-weight: 600; font-size: 15px; }
+  .sw-dropdown { position: absolute; left: 32px; top: 72px; width: 280px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0,0,0,0.08); padding: 16px 0; }
+  .sw-section-label { font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--dim); padding: 8px 20px 6px; }
+  .sw-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; cursor: pointer; }
+  .sw-item:hover { background: var(--bg); }
+  .sw-item.cur { background: var(--bg); }
+  .sw-item-ico { width: 22px; height: 22px; background: var(--stripe); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 600; color: var(--ink); }
+  .sw-item-nm { font-family: var(--sans); font-size: 13px; color: var(--ink); }
+  .sw-item.rec .sw-item-nm { color: var(--mute); }
+  .sw-divider { border-top: 1px solid var(--line); margin: 10px 0; }
+
+  /* Admin console wireframe */
+  .ac-frame { background: var(--card); border: 1px solid var(--line); display: grid; grid-template-columns: 220px 1fr; min-height: 480px; }
+  .ac-side { border-right: 1px solid var(--line); padding: 24px 16px; }
+  .ac-side .ac-org { font-family: var(--sans); font-size: 12px; font-weight: 600; padding: 8px 12px; border: 1px solid var(--line); margin-bottom: 20px; }
+  .ac-nav { display: flex; flex-direction: column; gap: 2px; }
+  .ac-nav a { padding: 8px 12px; font-family: var(--sans); font-size: 13px; color: var(--mute); text-decoration: none; border-left: 2px solid transparent; }
+  .ac-nav a.on { color: var(--ink); border-left-color: var(--ink); background: var(--bg); }
+  .ac-body { padding: 36px 40px; }
+  .ac-crumb { font-family: var(--mono); font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .ac-body h3 { font-family: var(--serif); font-size: 26px; margin-bottom: 24px; }
+  .ac-body .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .ac-body .stat { border: 1px solid var(--line); padding: 16px; }
+  .ac-body .stat .k { font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--dim); }
+  .ac-body .stat .v { font-family: var(--serif); font-size: 26px; margin-top: 4px; }
+  .ac-body .tbl { border: 1px solid var(--line); }
+  .ac-body .tbl-row { display: grid; grid-template-columns: 2fr 1fr 1fr 100px; padding: 12px 16px; border-top: 1px solid var(--line); font-family: var(--sans); font-size: 13px; }
+  .ac-body .tbl-row:first-child { border-top: none; background: #F4F1EC; font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--mute); padding: 10px 16px; }
+
+  /* Flow diagram */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; margin-top: 24px; }
+  .flow-step { padding: 24px 20px; border: 1px solid var(--line); background: var(--card); margin-right: -1px; position: relative; z-index: 1; }
+  .flow-step .n { font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; color: var(--dim); margin-bottom: 10px; }
+  .flow-step h4 { font-family: var(--serif); font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+  .flow-step p { font-family: var(--sans); font-size: 12px; color: var(--mute); line-height: 1.55; }
+
+  /* Roadmap */
+  .road { margin-top: 24px; }
+  .phase { display: grid; grid-template-columns: 110px 1fr 180px; gap: 32px; padding: 28px 0; border-top: 1px solid var(--line); }
+  .phase:last-child { border-bottom: 1px solid var(--line); }
+  .phase-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--dim); padding-top: 4px; }
+  .phase-tag b { display: block; color: var(--ink); font-size: 24px; font-family: var(--serif); letter-spacing: -0.02em; margin-bottom: 2px; font-weight: 400; }
+  .phase-body h4 { font-family: var(--serif); font-size: 20px; margin-bottom: 10px; font-weight: 400; }
+  .phase-body p { font-size: 14px; font-family: var(--sans); color: var(--mute); line-height: 1.6; margin-bottom: 12px; max-width: 72ch; }
+  .phase-body .touches { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.2px; }
+  .phase-body .touches span { color: var(--ink); }
+  .phase-meta { font-family: var(--mono); font-size: 10px; letter-spacing: 1.1px; text-transform: uppercase; color: var(--mute); padding-top: 8px; }
+  .phase-meta .row { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--line); }
+  .phase-meta .row:first-child { border-top: none; padding-top: 0; }
+  .phase-meta .row b { color: var(--ink); font-weight: 500; }
+
+  /* Risk table */
+  .risk-tbl { margin-top: 24px; border: 1px solid var(--line); }
+  .risk-row { display: grid; grid-template-columns: 1fr 2fr 140px 1fr; padding: 16px 20px; border-top: 1px solid var(--line); font-size: 13px; font-family: var(--sans); line-height: 1.55; align-items: start; }
+  .risk-row:first-child { border-top: none; background: #F4F1EC; font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--mute); padding: 12px 20px; }
+  .risk-row .risk-title { font-weight: 600; padding-right: 20px; }
+  .risk-row .risk-sev { font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; }
+  .risk-row .risk-sev.hi { color: var(--ink); font-weight: 600; }
+  .risk-row .risk-sev.med { color: var(--mute); }
+  .risk-row .risk-sev.lo { color: var(--dim); }
+  .risk-row .risk-mit { color: var(--mute); font-size: 12px; }
+
+  /* Open decisions */
+  .decisions { margin-top: 24px; }
+  .decision { display: grid; grid-template-columns: 40px 1fr; gap: 20px; padding: 20px 0; border-top: 1px solid var(--line); }
+  .decision:last-child { border-bottom: 1px solid var(--line); }
+  .decision .dnum { font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 2px; }
+  .decision .dbody h4 { font-family: var(--serif); font-size: 17px; margin-bottom: 6px; font-weight: 400; }
+  .decision .dbody p { font-size: 13px; font-family: var(--sans); color: var(--mute); line-height: 1.6; max-width: 80ch; }
+  .decision .dbody .rec { font-family: var(--mono); font-size: 11px; color: var(--ink); margin-top: 8px; letter-spacing: 0.3px; }
+
+  /* Footer */
+  footer { padding: 80px 0 40px; text-align: left; }
+  footer .kicker { margin-bottom: 12px; }
+  footer .f-note { font-family: var(--serif); font-size: 14px; color: var(--mute); line-height: 1.6; max-width: 64ch; font-style: italic; }
+
+  /* Mirror diagram */
+  .mirror { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 0; margin-top: 24px; align-items: stretch; }
+  .mirror .side { background: var(--card); border: 1px solid var(--line); padding: 28px; }
+  .mirror .side .kicker { margin-bottom: 20px; }
+  .mirror .side h4 { font-family: var(--serif); font-size: 20px; margin-bottom: 24px; font-weight: 400; }
+  .mirror .side .row { display: flex; flex-direction: column; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .mirror .side .row:first-of-type { border-top: none; padding-top: 0; }
+  .mirror .side .row .lb { font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--dim); }
+  .mirror .side .row .vl { font-family: var(--sans); font-size: 13px; color: var(--ink); }
+  .mirror .arrow { display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; letter-spacing: 1.4px; color: var(--dim); text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  /* Reputation */
+  .rep-box { background: var(--card); border: 1px solid var(--line); padding: 32px; margin-top: 24px; }
+  .rep-flow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin-top: 24px; }
+  .rep-col .kicker { margin-bottom: 12px; }
+  .rep-col ul { list-style: none; padding: 0; }
+  .rep-col li { padding: 8px 0; border-top: 1px solid var(--line); font-family: var(--sans); font-size: 13px; color: var(--ink); line-height: 1.5; }
+  .rep-col li:first-child { border-top: none; }
+  .rep-col li span { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.3px; color: var(--mute); margin-top: 4px; }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 24px; }
+    h1 { font-size: 40px; }
+    .two, .three, .four, .domain-grid, .rep-flow { grid-template-columns: 1fr; }
+    .mirror { grid-template-columns: 1fr; }
+    .mirror .arrow { writing-mode: horizontal-tb; transform: none; padding: 12px 0; }
+    .flow { grid-template-columns: 1fr; }
+    .flow-step { margin-right: 0; margin-bottom: -1px; }
+    .levels { grid-template-columns: 1fr; }
+    .levels .lv-num { border-left: none; padding: 16px 0 0; }
+    .levels .lv-body { border-left: none; padding: 8px 0 24px; }
+    .phase { grid-template-columns: 1fr; gap: 16px; }
+    .cover .meta { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ───────────── COVER ───────────── -->
+<div class="wrap cover">
+  <div class="kicker">Internal Planning Document · v0.1 · Draft for Nicole</div>
+  <h1>Gold Bridge Platform Blueprint.</h1>
+  <p class="lede">A reference architecture for running CHG and Deal Link as two products under one parent account system — modeled on how Atlassian operates Loom, Trello, Jira, and Confluence under a single identity and org layer.</p>
+  <div class="meta">
+    <div>Prepared for<span>Nicole Gomez</span></div>
+    <div>Parent entity<span>Gold Bridge</span></div>
+    <div>Products in scope<span>CHG · Deal Link</span></div>
+    <div>Status<span>Pre-implementation · Awaiting confirmation</span></div>
+  </div>
+</div>
+
+<!-- ───────────── 01 — THE QUESTION ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>01</b> The question we're answering</div>
+  <h2>One identity, many products, one funnel.</h2>
+  <div class="sec-sub">Deal Link is the free lead magnet. CHG is the paid enterprise tool. If they're two separate apps with two separate user bases, the funnel breaks. We need them to share identity, data, and reputation without sharing brand.</div>
+
+  <div class="three">
+    <div class="card">
+      <div class="kicker">Option 1 — rejected</div>
+      <h3>Shared DB, two backends</h3>
+      <p class="small">Two repos, two deploy pipelines, two sets of middleware. Same database underneath. Doubles infrastructure work for no user-facing gain.</p>
+    </div>
+    <div class="card">
+      <div class="kicker">Option 3 — rejected</div>
+      <h3>SSO bridge between two apps</h3>
+      <p class="small">Federates login but not data. Reputation scores and deal records can't cleanly cross the boundary. Breaks the lead magnet.</p>
+    </div>
+    <div class="card" style="border-color: var(--ink); border-width: 1px;">
+      <div class="kicker" style="color: var(--ink);">Option 2 — chosen · Atlassian model</div>
+      <h3>One account, many products</h3>
+      <p class="small">Single database, single API, single auth. Two separately-branded front-end apps. Users, billing, and reputation belong to a shared organization layer. The app switcher drives upsell.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 02 — WHAT ATLASSIAN DOES ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>02</b> What Atlassian is actually doing</div>
+  <h2>Five layers, only one visible to users.</h2>
+  <div class="sec-sub">Observed from the chg2026 organization across Loom, Trello, and the Atlassian Admin console. The pattern is consistent across every Atlassian product and is the public blueprint we're mirroring.</div>
+
+  <div class="layer-row">
+    <div class="lh"><div class="kicker">Layer 1</div><h3>Atlassian Account</h3></div>
+    <div class="lc">The identity layer. One email, one password, one session — decoupled from any specific product. You log in once and every product you have access to is unlocked.</div>
+    <div class="lc right">"My Atlassian account is the same whether I'm in Loom or Trello. The products don't own my identity."</div>
+  </div>
+
+  <div class="layer-row">
+    <div class="lh"><div class="kicker">Layer 2</div><h3>Organization</h3></div>
+    <div class="lc">The customer's company. Named <span class="mono">chg2026</span> in the screenshots. Owns billing, directory, security policy, and product entitlements. One organization can have many products active in parallel.</div>
+    <div class="lc right">Visible at <span class="mono">admin.atlassian.com</span>. This is where a customer's IT admin manages the whole estate — not inside any one product.</div>
+  </div>
+
+  <div class="layer-row">
+    <div class="lh"><div class="kicker">Layer 3</div><h3>Products</h3></div>
+    <div class="lc">Separately branded apps on separate domains — <span class="mono">loom.com</span>, <span class="mono">trello.com</span>, <span class="mono">atlassian.net</span>. Each product has its own plan tier per organization (Loom has a "Business-ai" plan independent of what Trello is on).</div>
+    <div class="lc right">Products share identity and org, but keep their own UX, pricing, domain, and positioning. Trello is a brand. Loom is a brand. Atlassian is the parent.</div>
+  </div>
+
+  <div class="layer-row">
+    <div class="lh"><div class="kicker">Layer 4</div><h3>Groups & Roles</h3></div>
+    <div class="lc">Each product in each org gets its own groups: <span class="mono">loom-admins-chg2026</span>, <span class="mono">loom-users-chg2026</span>, <span class="mono">loom-access-admins-chg2026</span>. Three built-in roles — App admin, User access admin, User — scoped to that product only.</div>
+    <div class="lc right">Being a Loom admin gives no authority in Trello. Cleanly separates who-can-do-what per product while keeping a unified user record.</div>
+  </div>
+
+  <div class="layer-row">
+    <div class="lh"><div class="kicker">Layer 5</div><h3>App Switcher</h3></div>
+    <div class="lc">The 3×3 grid icon in the top-left of every Atlassian product. Dropdown shows products the user already has access to, plus "Recommended for your team" — Jira Service Management, Confluence, etc. — which are the unpaid products the org could add.</div>
+    <div class="lc right">The switcher is the upsell funnel. This is the mechanism that turns a Trello user into a Jira user. It's our lead magnet surface.</div>
+  </div>
+
+  <div class="layer-row">
+    <div class="lh"><div class="kicker">Invisible</div><h3>Platform Super Admin</h3></div>
+    <div class="lc">Atlassian-internal staff who can see and intervene across every organization in the system. Not exposed to customers. Sits above organization admins.</div>
+    <div class="lc right">This is where Gold Bridge operations sits. Not the same as a customer's org admin.</div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 03 — OUR MIRROR ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>03</b> The Gold Bridge mirror</div>
+  <h2>Same pattern, our naming.</h2>
+  <div class="sec-sub">One-to-one translation of the Atlassian layers into Gold Bridge entities. Where we already have the concept in the current CHG codebase, it's marked. Where it's new, it's marked.</div>
+
+  <div class="mirror">
+    <div class="side">
+      <div class="kicker">Atlassian</div>
+      <h4>What they call it</h4>
+      <div class="row"><span class="lb">Layer 1 — Identity</span><span class="vl">Atlassian Account</span></div>
+      <div class="row"><span class="lb">Layer 2 — Tenant</span><span class="vl">Organization (chg2026)</span></div>
+      <div class="row"><span class="lb">Layer 3 — Product</span><span class="vl">Loom / Trello / Jira / Confluence</span></div>
+      <div class="row"><span class="lb">Layer 4 — Access</span><span class="vl">Groups with product-scoped roles</span></div>
+      <div class="row"><span class="lb">Layer 5 — Nav</span><span class="vl">App switcher + recommended</span></div>
+      <div class="row"><span class="lb">Org admin</span><span class="vl">admin.atlassian.com</span></div>
+      <div class="row"><span class="lb">Platform admin</span><span class="vl">Atlassian internal staff</span></div>
+    </div>
+    <div class="arrow">Mirrors to</div>
+    <div class="side">
+      <div class="kicker">Gold Bridge</div>
+      <h4>What we call it</h4>
+      <div class="row"><span class="lb">Layer 1 — Identity</span><span class="vl">Supabase Auth user · <span class="mono muted">user_profiles</span> · exists</span></div>
+      <div class="row"><span class="lb">Layer 2 — Tenant</span><span class="vl"><span class="mono">accounts</span> row · exists</span></div>
+      <div class="row"><span class="lb">Layer 3 — Product</span><span class="vl">CHG · Deal Link · future products · <span class="mono ink">NEW</span></span></div>
+      <div class="row"><span class="lb">Layer 4 — Access</span><span class="vl"><span class="mono">roles</span> extended with <span class="mono">product_id</span> · MODIFY</span></div>
+      <div class="row"><span class="lb">Layer 5 — Nav</span><span class="vl">Shared header app switcher · <span class="mono ink">NEW</span></span></div>
+      <div class="row"><span class="lb">Org admin</span><span class="vl">admin.goldbridge.io · <span class="mono ink">NEW</span></span></div>
+      <div class="row"><span class="lb">Platform admin</span><span class="vl">Gold Bridge super admin · partially exists</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 04 — ENTITY HIERARCHY ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>04</b> Entity hierarchy</div>
+  <h2>How the pieces nest.</h2>
+  <div class="sec-sub">Reading top-down: the platform contains organizations, each organization contains product entitlements and users, each product entitlement has its own groups and roles, each user can belong to many groups across many products.</div>
+
+  <div class="tree">
+    <ul>
+      <li><span class="nm">Gold Bridge Platform</span> <span class="dn">— holding layer, operated by us</span>
+        <ul>
+          <li><span class="nm">platform_super_admins</span> <span class="dn">(staff)</span> <span class="tag">existing</span></li>
+          <li><span class="nm">Organization</span> <span class="dn">— a customer company ("Jane's Flips LLC")</span> <span class="tag">existing accounts</span>
+            <ul>
+              <li><span class="nm">account_products</span> <span class="dn">— which products this org has access to</span> <span class="tag new">NEW</span>
+                <ul>
+                  <li><span class="nm">chg</span> <span class="dn">· plan: professional · seats: 5</span></li>
+                  <li><span class="nm">deallink</span> <span class="dn">· plan: free · seats: unlimited</span></li>
+                </ul>
+              </li>
+              <li><span class="nm">users</span> <span class="dn">— people in the org</span> <span class="tag">existing user_profiles</span>
+                <ul>
+                  <li><span class="nm">Jane Doe</span> <span class="dn">· org_admin · chg:admin · deallink:admin</span></li>
+                  <li><span class="nm">Sam Chen</span> <span class="dn">· user · chg:acquisitions_edit · deallink:user</span></li>
+                </ul>
+              </li>
+              <li><span class="nm">groups / roles</span> <span class="dn">— product-scoped</span> <span class="tag new">MODIFY</span>
+                <ul>
+                  <li><span class="nm">chg-admins-{org_id}</span></li>
+                  <li><span class="nm">chg-acquisitions-{org_id}</span></li>
+                  <li><span class="nm">deallink-admins-{org_id}</span></li>
+                  <li><span class="nm">deallink-users-{org_id}</span></li>
+                </ul>
+              </li>
+              <li><span class="nm">data rows</span> <span class="dn">— deals, properties, tenants, invoices, etc.</span> <span class="tag">existing</span></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 05 — SCHEMA DIFF ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>05</b> Schema diff — today vs Atlassian-style</div>
+  <h2>What changes in the database.</h2>
+  <div class="sec-sub">The multi-tenant foundation from <span class="mono">saas-migration.sql</span> is already the right shape. We're not rebuilding. We're extending with a product dimension, collapsing the flat subscription into a per-product entitlement table, and scoping roles by product.</div>
+
+  <div class="schema-table">
+    <div class="schema-row head">
+      <div>Table</div>
+      <div>Today</div>
+      <div>After</div>
+      <div>Action</div>
+    </div>
+    <div class="schema-row">
+      <div>user_profiles</div>
+      <div>id, email, full_name, account_id, role_id, status</div>
+      <div>same — now also the reputation score home</div>
+      <div class="col-status keep">Keep</div>
+    </div>
+    <div class="schema-row">
+      <div>accounts</div>
+      <div>id, name, subdomain, subscription_tier, status</div>
+      <div>id, name, status — tier moves out to account_products</div>
+      <div class="col-status modify">Modify</div>
+    </div>
+    <div class="schema-row">
+      <div>products</div>
+      <div>—</div>
+      <div>id, code ('chg', 'deallink'), name, brand_domain, icon</div>
+      <div class="col-status add">+ Add</div>
+    </div>
+    <div class="schema-row">
+      <div>account_products</div>
+      <div>—</div>
+      <div>account_id, product_id, plan, status, seats, trial_ends_at, started_at</div>
+      <div class="col-status add">+ Add</div>
+    </div>
+    <div class="schema-row">
+      <div>roles</div>
+      <div>id, account_id, name, is_system</div>
+      <div>id, account_id, <b>product_id</b>, name, is_system</div>
+      <div class="col-status modify">Modify</div>
+    </div>
+    <div class="schema-row">
+      <div>role_permissions</div>
+      <div>role_id, department, level</div>
+      <div>role_id, <b>product_id</b>, department, level</div>
+      <div class="col-status modify">Modify</div>
+    </div>
+    <div class="schema-row">
+      <div>subscription_tiers</div>
+      <div>account_id, tier, seats</div>
+      <div>— deprecated, data migrates to account_products</div>
+      <div class="col-status modify">Drop</div>
+    </div>
+    <div class="schema-row">
+      <div>deallink_profiles</div>
+      <div>—</div>
+      <div>user_id, handle, bio, public, reputation_score, review_count</div>
+      <div class="col-status add">+ Add</div>
+    </div>
+    <div class="schema-row">
+      <div>reputation_reviews</div>
+      <div>—</div>
+      <div>id, subject_user_id, author_user_id, rating, comment, deal_id, created_at</div>
+      <div class="col-status add">+ Add</div>
+    </div>
+    <div class="schema-row">
+      <div>RLS helpers</div>
+      <div>is_super_admin(), current_account_id()</div>
+      <div>+ has_product_access(product_code)</div>
+      <div class="col-status modify">Extend</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 06 — DOMAINS ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>06</b> Domain & routing strategy</div>
+  <h2>Four domains, one session.</h2>
+  <div class="sec-sub">Atlassian keeps each product on its own brand domain — loom.com, trello.com, atlassian.net — and lets a shared session cookie carry identity between them. We do the same. The holding company's own site stays quiet.</div>
+
+  <div class="domain-grid">
+    <div class="domain">
+      <div class="role">Product · public + authed</div>
+      <div class="url">deallink.io</div>
+      <p>The free lead-magnet product. Wholesaler-facing. Public profile pages live here (deallink.io/@handle). Own brand, own marketing, own URL.</p>
+    </div>
+    <div class="domain">
+      <div class="role">Product · authed only</div>
+      <div class="url">app.chg.io <span class="dim">(or chg.com)</span></div>
+      <p>The paid enterprise CRM. Gated behind login. Confirm final domain in open decisions section.</p>
+    </div>
+    <div class="domain">
+      <div class="role">Admin · authed only</div>
+      <div class="url">admin.goldbridge.io</div>
+      <p>Unified admin console. Mirrors admin.atlassian.com. Used by both org admins (to manage their org) and platform super admins (to manage all orgs).</p>
+    </div>
+    <div class="domain">
+      <div class="role">Corporate · silent</div>
+      <div class="url">goldbridge.io</div>
+      <p>The parent holding company's presence. Low-traffic. Legal, investor relations, careers. Atlassian's equivalent is atlassian.com — you barely visit it unless you're researching the company.</p>
+    </div>
+  </div>
+
+  <p style="margin-top: 32px; max-width: 80ch;">Under the hood, one Express API server handles all four domains, routing by hostname. Supabase Auth issues a session cookie scoped to <span class="mono">.goldbridge.io</span> for all Gold Bridge surfaces; Deal Link runs on its own domain and coordinates session via a token exchange on first visit (same pattern Atlassian uses between Loom and the rest of the estate). One database. One source of truth.</p>
+</div>
+</section>
+
+<!-- ───────────── 07 — FOUR ADMIN LEVELS ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>07</b> Four levels of admin</div>
+  <h2>Who can see what, and who they serve.</h2>
+  <div class="sec-sub">Today the codebase distinguishes two: super admin vs account admin. The Atlassian pattern needs four. This is the single biggest permissions change in the plan.</div>
+
+  <div class="levels">
+    <div class="lv"><div class="lv-num">01</div><div class="lv-body">
+      <div class="kicker">Platform tier · internal</div>
+      <h3>Gold Bridge Super Admin</h3>
+      <p>You and future platform engineering. Can see every organization, impersonate any user, force password resets, adjust any plan, investigate abuse, restore from backups. Invisible to customers.</p>
+      <div class="ex">Lives in admin.goldbridge.io under a separate "Platform" nav · <span class="mono">is_super_admin()</span> returns true</div>
+    </div></div>
+
+    <div class="lv"><div class="lv-num">02</div><div class="lv-body">
+      <div class="kicker">Customer tier · per-org</div>
+      <h3>Organization Admin</h3>
+      <p>The customer's own admin — typically the principal at a real-estate company. Manages their organization's directory, invites and removes users, controls billing, configures SSO, manages product entitlements. Can't see other organizations.</p>
+      <div class="ex">admin.goldbridge.io scoped to their org_id · existing <span class="mono">isAccountAdmin</span> flag</div>
+    </div></div>
+
+    <div class="lv"><div class="lv-num">03</div><div class="lv-body">
+      <div class="kicker">Customer tier · per-product</div>
+      <h3>Product Admin</h3>
+      <p>Manages a single product within an org. "CHG admin" can configure departments, approve contractor access, and adjust CHG-specific settings — but can't touch billing or the Deal Link side. Mirrors Atlassian's "App admin" role.</p>
+      <div class="ex">New role dimension · <span class="mono">roles.product_id</span> · permissions scoped to one product</div>
+    </div></div>
+
+    <div class="lv"><div class="lv-num">04</div><div class="lv-body">
+      <div class="kicker">End user</div>
+      <h3>User</h3>
+      <p>Ordinary user with product-scoped department roles. An acquisitions editor in CHG. A poster in Deal Link. Access is controlled by group membership and permission level (view / edit / admin) per department.</p>
+      <div class="ex">Existing <span class="mono">hasDepartmentAccess()</span> and <span class="mono">canEditDepartment()</span> extended to be product-aware</div>
+    </div></div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 08 — APP SWITCHER ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>08</b> The app switcher</div>
+  <h2>The 3×3 grid. The lead magnet lives here.</h2>
+  <div class="sec-sub">Shared header component, identical in CHG and Deal Link, rendering dynamically from the user's entitlements. Available products shown in full; unpaid products shown as "Recommended" with a one-click trial CTA. This is exactly how Atlassian gets a Trello user to become a Jira user.</div>
+
+  <div class="two">
+    <div>
+      <div class="kicker" style="margin-bottom: 14px;">Scenario A — Wholesaler on Deal Link free</div>
+      <div class="switcher-demo">
+        <div class="sw-header">
+          <div class="sw-grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="sw-brand">Deal Link</div>
+        </div>
+        <p class="small">Header of deallink.io. User clicks 3×3 icon →</p>
+        <div class="sw-dropdown">
+          <div class="sw-section-label">Your products</div>
+          <div class="sw-item cur"><div class="sw-item-ico">DL</div><div class="sw-item-nm">Deal Link</div></div>
+          <div class="sw-divider"></div>
+          <div class="sw-section-label">Recommended for your team</div>
+          <div class="sw-item rec"><div class="sw-item-ico">CHG</div><div class="sw-item-nm">CHG — Manage your whole portfolio</div></div>
+          <div class="sw-item rec"><div class="sw-item-ico">?</div><div class="sw-item-nm">More from Gold Bridge</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kicker" style="margin-bottom: 14px;">Scenario B — Paid customer on CHG</div>
+      <div class="switcher-demo">
+        <div class="sw-header">
+          <div class="sw-grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="sw-brand">CHG</div>
+        </div>
+        <p class="small">Header of app.chg.io. User clicks 3×3 icon →</p>
+        <div class="sw-dropdown">
+          <div class="sw-section-label">Your products</div>
+          <div class="sw-item cur"><div class="sw-item-ico">CHG</div><div class="sw-item-nm">CHG</div></div>
+          <div class="sw-item"><div class="sw-item-ico">DL</div><div class="sw-item-nm">Deal Link</div></div>
+          <div class="sw-divider"></div>
+          <div class="sw-section-label">Admin tools</div>
+          <div class="sw-item"><div class="sw-item-ico">⚙</div><div class="sw-item-nm">Administration</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top: 32px; max-width: 80ch;">The switcher is rendered by one React component reading from <span class="mono">/auth/me</span>, which returns the user's full entitlement payload (which products, which plans, which roles). The "Recommended" section is driven by a <span class="mono">recommendations</span> array the API adds based on org size, tenure, and plan — simple heuristics to start, can become ML-driven later.</p>
+</div>
+</section>
+
+<!-- ───────────── 09 — ADMIN CONSOLE ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>09</b> Admin console — admin.goldbridge.io</div>
+  <h2>Mirroring admin.atlassian.com.</h2>
+  <div class="sec-sub">Separate React app on its own subdomain. Single nav, but the tabs a user sees depend on whether they're a platform super admin or an organization admin. This replaces and expands the current /admin route inside CHG.</div>
+
+  <div class="ac-frame">
+    <div class="ac-side">
+      <div class="ac-org">Jane's Flips LLC</div>
+      <nav class="ac-nav">
+        <a class="on">Overview</a>
+        <a>Directory</a>
+        <a>Apps</a>
+        <a>Billing</a>
+        <a>Security</a>
+        <a>Activity log</a>
+        <a style="margin-top: 20px; color: var(--dim); font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase; font-family: var(--mono); padding-bottom: 4px;">Platform · super admin only</a>
+        <a>All organizations</a>
+        <a>Platform settings</a>
+        <a>Impersonate</a>
+      </nav>
+    </div>
+    <div class="ac-body">
+      <div class="ac-crumb">Overview</div>
+      <h3>Jane's Flips LLC</h3>
+      <div class="stat-row">
+        <div class="stat"><div class="k">Users</div><div class="v">7</div></div>
+        <div class="stat"><div class="k">Products active</div><div class="v">2</div></div>
+        <div class="stat"><div class="k">Monthly spend</div><div class="v">$249</div></div>
+        <div class="stat"><div class="k">Storage used</div><div class="v">3.1 GB</div></div>
+      </div>
+
+      <div class="tbl">
+        <div class="tbl-row">
+          <div>Product</div><div>Plan</div><div>Licensed users</div><div>Status</div>
+        </div>
+        <div class="tbl-row">
+          <div>CHG</div><div>Professional</div><div>5 of 10</div><div>Active</div>
+        </div>
+        <div class="tbl-row">
+          <div>Deal Link</div><div>Free</div><div>7 unlimited</div><div>Active</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top: 32px; max-width: 80ch;">The six tabs at the top — Overview, Directory, Apps, Billing, Security, Activity log — are identical to what's shown in screenshot three. The three extra tabs below the divider are only visible when <span class="mono">is_super_admin()</span> is true. This is how one console serves both audiences without building two.</p>
+</div>
+</section>
+
+<!-- ───────────── 10 — LEAD MAGNET FLOW ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>10</b> The lead magnet flow</div>
+  <h2>Free to paid, without data migration.</h2>
+  <div class="sec-sub">Because Deal Link and CHG share one account record and one database, upgrading is a plan change — not a data migration. The wholesaler's deals, contacts, buyer relationships, and reputation carry over automatically.</div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="n">Step 1</div>
+      <h4>Sign up on Deal Link</h4>
+      <p>Wholesaler lands at deallink.io, signs up with email. Supabase creates the auth user. Trigger creates an <span class="mono">accounts</span> row and an <span class="mono">account_products</span> entry: product = deallink, plan = free.</p>
+    </div>
+    <div class="flow-step">
+      <div class="n">Step 2</div>
+      <h4>Use the free product</h4>
+      <p>Posts deals. Gets a public profile at deallink.io/@handle. Starts capturing buyer leads. Earns initial reputation reviews.</p>
+    </div>
+    <div class="flow-step">
+      <div class="n">Step 3</div>
+      <h4>Clicks CHG in switcher</h4>
+      <p>Sees CHG in the "Recommended for your team" section of the app switcher. Clicks. Lands on a CHG trial CTA explaining portfolio management, construction tracking, full CRM.</p>
+    </div>
+    <div class="flow-step">
+      <div class="n">Step 4</div>
+      <h4>Starts CHG trial</h4>
+      <p>One click adds a new row to <span class="mono">account_products</span>: product = chg, plan = trial, trial_ends_at = +14 days. Same account. Same user. No new signup flow.</p>
+    </div>
+    <div class="flow-step">
+      <div class="n">Step 5</div>
+      <h4>Converts to paid</h4>
+      <p>Enters payment info. Plan changes to professional. Deal Link stays active on free. The wholesaler now runs both products from one login, with shared reputation and shared contact data.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 11 — REPUTATION ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>11</b> Where reputation lives</div>
+  <h2>One score, visible across products.</h2>
+  <div class="sec-sub">The trustability score attaches to the user, not to the product or the organization. It's written by Deal Link (wholesalers rate buyers, buyers rate wholesalers) and readable anywhere — on the public Deal Link profile, inside CHG's contact records, in the admin console for disputes.</div>
+
+  <div class="rep-box">
+    <div class="rep-flow">
+      <div class="rep-col">
+        <div class="kicker">Where it's stored</div>
+        <ul>
+          <li>deallink_profiles.reputation_score<span>Aggregate, denormalized for read speed</span></li>
+          <li>deallink_profiles.review_count<span>How many reviews make up the score</span></li>
+          <li>reputation_reviews table<span>Immutable log of individual ratings</span></li>
+        </ul>
+      </div>
+      <div class="rep-col">
+        <div class="kicker">Where it's written</div>
+        <ul>
+          <li>Deal Link — after a deal closes<span>Wholesaler rates buyer, buyer rates wholesaler</span></li>
+          <li>Deal Link — buyer drops interest<span>Silent signal, not a rating but influences score</span></li>
+          <li>Admin console — dispute outcomes<span>Platform can adjust after review</span></li>
+        </ul>
+      </div>
+      <div class="rep-col">
+        <div class="kicker">Where it's read</div>
+        <ul>
+          <li>Deal Link public profile<span>Visible to anyone browsing wholesaler's page</span></li>
+          <li>CHG contact records<span>Shown when wholesaler reviews a buyer lead</span></li>
+          <li>Admin console<span>Platform-wide for trust & safety work</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 12 — ROADMAP ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>12</b> Implementation roadmap</div>
+  <h2>Eight phases, sequenced by dependency.</h2>
+  <div class="sec-sub">Each phase is self-contained and shippable. Later phases depend on earlier ones — you can't build the app switcher before the products table exists, can't build the admin console before product-scoped roles exist. Timeframes are working estimates, assume one engineer at AI-assisted pace.</div>
+
+  <div class="road">
+
+    <div class="phase">
+      <div class="phase-tag"><b>0</b>Prep</div>
+      <div class="phase-body">
+        <h4>Audit & staging</h4>
+        <p>Freeze the current schema. Document what's actually running in production Supabase (confirm tier, confirm fix-trigger.sql ran, confirm RLS policies match saas-migration.sql). Stand up a second Supabase project as staging. Export current production data to staging for migration rehearsal.</p>
+        <div class="touches">Touches: <span>Supabase dashboard, docs, no code changes</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>1 week</b></div>
+        <div class="row"><span>Risk</span><b>Low</b></div>
+        <div class="row"><span>Blocks</span><b>All phases</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>1</b>Schema</div>
+      <div class="phase-body">
+        <h4>Add the product dimension</h4>
+        <p>New tables: products, account_products. Modify: roles and role_permissions gain product_id. Backfill: every existing account gets an account_products row for CHG. Deprecate subscription_tiers after backfill. Add has_product_access RLS helper. Run on staging first, rehearse restore, then apply to production during a maintenance window.</p>
+        <div class="touches">Touches: <span>scripts/product-migration.sql · Supabase production · rollback script</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>1 week</b></div>
+        <div class="row"><span>Risk</span><b>High</b></div>
+        <div class="row"><span>Blocks</span><b>2, 3, 4, 5</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>2</b>API</div>
+      <div class="phase-body">
+        <h4>Product-aware middleware</h4>
+        <p>Add requireProduct(code) middleware. Extend requireDepartment to also take a product scope. Update /auth/me to return full entitlements payload (array of products + per-product role + permissions). Keep existing routes working by wrapping them in an implicit product='chg' check during transition.</p>
+        <div class="touches">Touches: <span>server/middleware/permissions.js · server/routes/auth.js · every existing route gets product='chg'</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>3 days</b></div>
+        <div class="row"><span>Risk</span><b>Medium</b></div>
+        <div class="row"><span>Blocks</span><b>3, 4, 5</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>3</b>UI</div>
+      <div class="phase-body">
+        <h4>App switcher component</h4>
+        <p>Build as a shared React component in a new packages/ui folder (or shared copy in both client repos initially). Renders from /auth/me entitlements. Drops into the header of CHG immediately. Behind a feature flag — can flip on without disrupting existing users.</p>
+        <div class="touches">Touches: <span>client/src/components/AppSwitcher.jsx · client/src/components/Topbar.jsx · /auth/me response shape</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>1 week</b></div>
+        <div class="row"><span>Risk</span><b>Low</b></div>
+        <div class="row"><span>Blocks</span><b>5, 6</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>4</b>Admin</div>
+      <div class="phase-body">
+        <h4>Admin console on its own subdomain</h4>
+        <p>New React app at admin.goldbridge.io. Migrate the existing /admin routes out of CHG into this new app. Add Directory, Apps (entitlements), Billing, Security, Activity log tabs. Keep the super-admin-only "All organizations" and "Impersonate" tabs gated. Shared auth cookie so users don't need to re-login.</p>
+        <div class="touches">Touches: <span>new admin-client/ React app · server routing by hostname · DNS for admin.goldbridge.io</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>2 weeks</b></div>
+        <div class="row"><span>Risk</span><b>Medium</b></div>
+        <div class="row"><span>Blocks</span><b>6, 7</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>5</b>Product</div>
+      <div class="phase-body">
+        <h4>Deal Link client app</h4>
+        <p>New React app for deallink.io. Public marketing pages, public profile routes (deallink.io/@handle), authed posting flow, authed leads inbox, billing page. Reuses shared auth, shared API, shared AppSwitcher. Does NOT reuse CHG's nav or layout — different brand, different chrome.</p>
+        <div class="touches">Touches: <span>new deallink-client/ React app · server routing by hostname · public CDN for marketing pages</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>3–4 weeks</b></div>
+        <div class="row"><span>Risk</span><b>Medium</b></div>
+        <div class="row"><span>Blocks</span><b>6, 7</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>6</b>Funnel</div>
+      <div class="phase-body">
+        <h4>Lead magnet wiring</h4>
+        <p>Recommendations engine that populates the "Recommended" slot of the app switcher. Trial-start flow that adds a row to account_products without requiring signup. Data-continuity checks so a wholesaler's Deal Link contacts surface automatically in CHG's leads table. Analytics on switcher clicks and conversion.</p>
+        <div class="touches">Touches: <span>server/routes/recommendations.js · client AppSwitcher · analytics events</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>1 week</b></div>
+        <div class="row"><span>Risk</span><b>Low</b></div>
+        <div class="row"><span>Blocks</span><b>—</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>7</b>Trust</div>
+      <div class="phase-body">
+        <h4>Reputation score</h4>
+        <p>deallink_profiles and reputation_reviews tables. Rating UX after deal close (both sides). Score computation (simple weighted average v1, adjustable model later). Public display on profile. Admin dispute tooling in the console. Decision needed on public visibility before this phase starts.</p>
+        <div class="touches">Touches: <span>new tables · server/routes/reputation.js · deallink-client profile · admin-client disputes</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>2 weeks</b></div>
+        <div class="row"><span>Risk</span><b>Medium</b></div>
+        <div class="row"><span>Blocks</span><b>—</b></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-tag"><b>8</b>Ops</div>
+      <div class="phase-body">
+        <h4>Launch prep</h4>
+        <p>Upgrade Supabase to Pro tier for PITR backups. Install Sentry on all three front-ends and the server. Set up UptimeRobot or similar for the four domains. Replace the in-memory rate limiter with a Supabase-backed or Redis-backed one. Write the runbook: how to restore, how to impersonate, how to rotate service role keys, how to handle a locked-out org admin.</p>
+        <div class="touches">Touches: <span>Supabase billing · Sentry · UptimeRobot · ops/runbook.md · rate-limit refactor</span></div>
+      </div>
+      <div class="phase-meta">
+        <div class="row"><span>Duration</span><b>2 weeks</b></div>
+        <div class="row"><span>Risk</span><b>Low</b></div>
+        <div class="row"><span>Blocks</span><b>Public launch</b></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 13 — RISK REGISTER ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>13</b> Risk register</div>
+  <h2>What could go wrong, and how we reduce it.</h2>
+  <div class="sec-sub">Not an exhaustive list — the things I think deserve conscious attention before phase 1 starts.</div>
+
+  <div class="risk-tbl">
+    <div class="risk-row">
+      <div>Risk</div><div>What happens</div><div>Severity</div><div>Mitigation</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Schema migration breaks production</div>
+      <div class="risk-mit">Adding product_id to roles and role_permissions is a structural change. If RLS policies reference the old shape, queries start returning nothing.</div>
+      <div class="risk-sev hi">High</div>
+      <div class="risk-mit">Rehearse on staging. Keep rollback script ready. Run during maintenance window. Keep CHG-as-default product assumption until all routes migrated.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Shared session across domains</div>
+      <div class="risk-mit">Cookie-domain config for shared auth between goldbridge.io subdomains and deallink.io is non-trivial. Get this wrong, users see login walls mid-flow.</div>
+      <div class="risk-sev hi">High</div>
+      <div class="risk-mit">Use token-exchange pattern for the cross-domain hop (deallink.io exchanges a short-lived Supabase JWT on first visit). Test on staging subdomains before DNS goes live.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Two React apps drift over time</div>
+      <div class="risk-mit">Deal Link and CHG share components, but if they live in separate repos the AppSwitcher, Topbar, and auth plumbing will diverge within months.</div>
+      <div class="risk-sev med">Medium</div>
+      <div class="risk-mit">Monorepo from day one, or a published shared package. Same linter, same TypeScript config. Component library for anything cross-product.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Billing complexity</div>
+      <div class="risk-mit">Per-product subscriptions means Stripe products per Gold Bridge product, plus proration when a customer adds or removes products mid-cycle.</div>
+      <div class="risk-sev med">Medium</div>
+      <div class="risk-mit">Use Stripe's metered + subscription items model, not separate customer records. One Stripe customer per organization, many subscription items. Confirm with Stripe docs before phase 8.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">In-memory rate limiter</div>
+      <div class="risk-mit">Current signup rate limit uses an in-memory Map. Resets every deploy. Doesn't scale past one Replit instance.</div>
+      <div class="risk-sev med">Medium</div>
+      <div class="risk-mit">Replace in phase 8 with a Postgres-backed or Redis-backed counter. Not a blocker for MVP but must ship before public launch.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Reputation dispute volume</div>
+      <div class="risk-mit">Disputes can spike fast once scores are public. Without tooling, platform admins get buried.</div>
+      <div class="risk-sev med">Medium</div>
+      <div class="risk-mit">Ship dispute queue in admin console as part of phase 7, not after. Start with manual review, consider SLA and auto-resolution later.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Tier defaults drift across three sources</div>
+      <div class="risk-mit">Today subscription tier defaults live in admin.js, auth.js, and the subscription_tiers seed. Three sources of truth.</div>
+      <div class="risk-sev lo">Low</div>
+      <div class="risk-mit">Collapse into a single products + plans seed file in phase 1. One import, one source of truth.</div>
+    </div>
+    <div class="risk-row">
+      <div class="risk-title">Gstack in repo</div>
+      <div class="risk-mit">~79 unrelated files in chg-crm-main/gstack/. Clutters the repo, confuses future agents, adds to CI time.</div>
+      <div class="risk-sev lo">Low</div>
+      <div class="risk-mit">Move to ~/.claude/skills/ before phase 1. Git history can stay; just remove from active tree.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── 14 — OPEN DECISIONS ───────────── -->
+<section>
+<div class="wrap">
+  <div class="sec-num"><b>14</b> Open decisions — need from Nicole</div>
+  <h2>Nine answers before phase 1.</h2>
+  <div class="sec-sub">Not blocking for this blueprint, but blocking for implementation. My recommendation is listed under each — push back where you disagree.</div>
+
+  <div class="decisions">
+    <div class="decision">
+      <div class="dnum">01</div>
+      <div class="dbody">
+        <h4>CHG's final domain</h4>
+        <p>Today it runs at chg-crm.replit.app. For production we need a real domain. Options: chg.com, chg.io, chgplatform.com, app.chg.io.</p>
+        <div class="rec">Recommendation: app.chg.io if you can secure chg.io; otherwise chg-platform.com.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">02</div>
+      <div class="dbody">
+        <h4>Gold Bridge corporate domain</h4>
+        <p>Is goldbridge.io available? Alternatives: goldbridgeholdings.com, goldbridgeco.com, goldbridgerei.com (already used for your email).</p>
+        <div class="rec">Recommendation: register goldbridge.io if available; fall back to goldbridgeco.com.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">03</div>
+      <div class="dbody">
+        <h4>Deal Link's final domain</h4>
+        <p>The wireframes say deallink.io. Confirm registered and available to us.</p>
+        <div class="rec">Recommendation: confirm ownership before we hardcode the domain anywhere.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">04</div>
+      <div class="dbody">
+        <h4>Monorepo or three repos</h4>
+        <p>Today chg-crm-main is one repo. Deal Link is wireframes, no repo yet. Admin console doesn't exist. Three apps, three repos — or one monorepo with packages.</p>
+        <div class="rec">Recommendation: monorepo. Easier shared components, one CI pipeline, one deploy story.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">05</div>
+      <div class="dbody">
+        <h4>Supabase tier upgrade timing</h4>
+        <p>Free tier has no backups. Pro tier ($25/mo) has 7-day daily + PITR. Team tier has 14-day + longer PITR window.</p>
+        <div class="rec">Recommendation: upgrade to Pro before phase 1 migration. You cannot run a schema migration on an un-backed-up production database.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">06</div>
+      <div class="dbody">
+        <h4>Billing provider</h4>
+        <p>Stripe is the default. Alternatives exist but come with friction. Needed for phase 8, decision earlier helps shape the products / plans schema.</p>
+        <div class="rec">Recommendation: Stripe, one customer per organization, metered subscription items per product.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">07</div>
+      <div class="dbody">
+        <h4>Reputation score visibility</h4>
+        <p>Public (on the Deal Link profile, visible to anyone)? Gated (visible only to logged-in users)? Asymmetric (wholesalers see all buyer scores, buyers only see wholesalers they've interacted with)?</p>
+        <div class="rec">Recommendation: public for wholesalers, gated for buyers. Wholesalers WANT their score visible — it's their credibility. Buyers would be uncomfortable.</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">08</div>
+      <div class="dbody">
+        <h4>Reputation dispute policy</h4>
+        <p>If a user disputes a rating, does it auto-hide pending review? Or stay live with a "disputed" badge? Who reviews?</p>
+        <div class="rec">Recommendation: stays live with a small "disputed" indicator. Platform super admin reviews and either clears the dispute, removes the rating, or removes the rater (repeat offenders).</div>
+      </div>
+    </div>
+    <div class="decision">
+      <div class="dnum">09</div>
+      <div class="dbody">
+        <h4>Gstack folder location</h4>
+        <p>79 unrelated files sitting inside chg-crm-main/gstack/. Belongs in ~/.claude/skills/ or a separate toolkit repo — not shipped with the product.</p>
+        <div class="rec">Recommendation: move to ~/.claude/skills/ before phase 1. Lower CI time, cleaner repo for future agents.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ───────────── FOOTER ───────────── -->
+<footer>
+<div class="wrap">
+  <div class="kicker">End of blueprint</div>
+  <p class="f-note">This document is a planning artifact, not an implementation contract. Every phase will generate its own tighter spec before coding starts. Nothing here is built yet. The point of this blueprint is alignment on direction — once confirmed, phase 0 begins.</p>
+  <div style="margin-top: 40px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim);">
+    Gold Bridge · Internal Planning · Draft v0.1
+  </div>
+</div>
+</footer>
+
+</body>
+</html>
