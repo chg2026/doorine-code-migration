@@ -1,2 +1,33 @@
+modules = ["nodejs-20", "postgresql-16"]
+
 [agent]
 expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Server"
+
+[[workflows.workflow]]
+name = "Server"
+mode = "sequential"
+author = "rei-code"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev --workspace=server"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+build = ["sh", "-c", "npm install && npm run build:prod --workspace=apps/chg"]
+run = ["npm", "run", "start", "--workspace=server"]
