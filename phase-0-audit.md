@@ -119,7 +119,13 @@ WHERE proname = 'handle_new_user';
 Once results are pasted, I will diff against `schema.sql` + `saas-migration.sql` + `construction-migration.sql` + `fix-trigger.sql` and report the exact delta. **This is the single biggest unknown blocking Phase 1.**
 
 ### 2.1 Production schema snapshot
-*(awaiting Nicole's paste)*
+
+✅ **Captured 2026-04-23.** See [`docs/phase-1/prod-schema-snapshot-2026-04-23.md`](docs/phase-1/prod-schema-snapshot-2026-04-23.md) for the full delta analysis against the dev SQL files. Key findings:
+
+- **3 ghost tables** exist in prod with no code references (`users` with plaintext passwords, `maintenance_requests`, `utility_logs`) — Phase 1 drops them after confirming row counts
+- **Multi-tenant posture solid** — all 14 business tables have proper `account_id` scoping and RLS policies matching the dev SQL
+- **`handle_new_user()` vulnerability CONFIRMED** — live in prod, fixed in `fix/security-hotfix-p0` (see §7 #2)
+- **Supabase public signup was ON** (2026-04-23) — Nicole toggled OFF as immediate mitigation while the trigger fix deploys
 
 ---
 
@@ -249,14 +255,14 @@ Not part of Task 5 itself; flagged here for Nicole's decision on whether to add 
 
 ### 🚨 Critical (fix before Phase 1 migration)
 
-**#1 — `/api/users` is mounted without `requireAuth`**
-- [`server/index.js:22`](apps/chg/server/index.js) mounts the router without middleware. The only handler is `PUT /profile` which calls `requireAuth` internally, so it's currently safe, **but the mount pattern breaks the invariant** — any future route added to this file inherits no auth.
-- **Fix:** `app.use('/api/users', requireAuth, require('./routes/users'))`
+**#1 — `/api/users` is mounted without `requireAuth`** — ✅ **FIXED in `fix/security-hotfix-p0`**
+- Was: [`server/index.js:22`](server/index.js) mounted the router without middleware.
+- Fixed: one-line change to `app.use('/api/users', requireAuth, require('./routes/users'))`.
 
-**#2 — Role self-promotion via signup metadata**
-- [`handle_new_user()`](apps/chg/scripts/saas-migration.sql:308) reads `raw_user_meta_data->>'role_id'` and writes it directly to `user_profiles.role_id`.
-- If the signup endpoint allows user-supplied metadata (Supabase Auth API lets clients pass arbitrary `user_metadata` unless the app strips it), **a signup can assign themselves any role including a superadmin-equivalent role**.
-- **Fix:** Validate the role_id server-side inside `handle_new_user()` (check it belongs to the account's roles and isn't a system role), OR remove `role_id` from metadata handling entirely and assign roles only via `/api/admin`.
+**#2 — Role self-promotion via signup metadata** — ✅ **FIXED in `fix/security-hotfix-p0`** (SQL pending deploy)
+- Was: [`handle_new_user()`](apps/chg/scripts/saas-migration.sql:308) read `raw_user_meta_data->>'role_id'` and `>>'account_id'` directly. Query 3 of the prod schema snapshot (2026-04-23) confirmed the vulnerable function body was live in prod. Combined with Supabase public signup being enabled, this was an exploitable cross-tenant takeover path.
+- Fixed: new trigger in [`apps/chg/scripts/security-hotfix-handle-new-user.sql`](apps/chg/scripts/security-hotfix-handle-new-user.sql) creates a bare profile stub only. Privilege fields are never trusted from metadata. Legitimate server signup path (which sets them via service role) is unaffected.
+- Deploy order: apply to staging → verify → apply to prod. Nicole also applied an immediate mitigation by toggling "Allow new users to sign up" OFF in Supabase Auth.
 
 **#3 — `subscription_tiers` RLS policy is `USING (true)`**
 - [`saas-migration.sql:248`](apps/chg/scripts/saas-migration.sql) grants SELECT to any authenticated user. Exposes pricing and full feature matrix to every customer.
