@@ -19,7 +19,7 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/admin', requireAuth, require('./routes/admin'))
-app.use('/api/users', require('./routes/users'))
+app.use('/api/users', requireAuth, require('./routes/users'))
 app.use('/api/dashboard', requireAuth, require('./routes/dashboard'))
 
 app.use('/api/properties', requireAuth, scopeToAccount, requireDepartment('property_management'), require('./routes/properties'))
