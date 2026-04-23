@@ -29,9 +29,24 @@ async function requireAuth(req, res, next) {
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
     if (error || !user) return res.status(401).json({ error: 'Invalid or expired session.' })
 
+    // Load profile + role (with its product) + account.
+    // roles.product_id joins to products(code) — tells us which product this role belongs to.
     const { data: profile } = await supabaseAdmin
       .from('user_profiles')
-      .select('*, roles(name), accounts(name, plan_tier, status, allowed_departments)')
+      .select(`
+        *,
+        roles (
+          name,
+          product_id,
+          products:product_id ( code, name )
+        ),
+        accounts (
+          name,
+          plan_tier,
+          status,
+          allowed_departments
+        )
+      `)
       .eq('id', user.id)
       .single()
 
@@ -50,6 +65,41 @@ async function requireAuth(req, res, next) {
       .select('department, permission_level')
       .eq('role_id', profile.role_id)
 
+    // Load active product entitlements for this account. Super admins get all
+    // active entitlements across their account (same shape). Used by
+    // requireProduct middleware and /auth/me response.
+    const entitlements = []
+    if (profile.account_id) {
+      const { data: rows } = await supabaseAdmin
+        .from('account_products')
+        .select(`
+          plan,
+          status,
+          seats,
+          trial_ends_at,
+          started_at,
+          products:product_id ( code, name, brand_domain )
+        `)
+        .eq('account_id', profile.account_id)
+        .eq('status', 'active')
+
+      if (rows) {
+        for (const row of rows) {
+          if (!row.products?.code) continue
+          entitlements.push({
+            code: row.products.code,
+            name: row.products.name,
+            brand_domain: row.products.brand_domain,
+            plan: row.plan,
+            status: row.status,
+            seats: row.seats,
+            trial_ends_at: row.trial_ends_at,
+            started_at: row.started_at,
+          })
+        }
+      }
+    }
+
     req.user = {
       id: user.id,
       email: user.email,
@@ -57,6 +107,8 @@ async function requireAuth(req, res, next) {
       account_id: profile.account_id,
       is_super_admin: profile.is_super_admin,
       is_account_admin: profile.is_account_admin,
+      role_product_code: profile.roles?.products?.code || null,
+      entitlements,
       permissions: (perms || []).reduce((acc, p) => { acc[p.department] = p.permission_level; return acc }, {}),
     }
 

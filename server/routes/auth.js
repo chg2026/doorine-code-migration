@@ -163,8 +163,10 @@ router.get('/me', requireAuth, async (req, res) => {
         plan_tier: profile.accounts?.plan_tier || null,
         role_name: profile.roles?.name || null,
         role_id: profile.role_id,
+        role_product_code: req.user.role_product_code,
       },
       permissions: req.user.permissions,
+      entitlements: req.user.entitlements,
     }
 
     if (supabaseAdmin) {
