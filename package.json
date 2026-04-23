@@ -1,0 +1,22 @@
+{
+  "name": "rei-code",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Gold Bridge platform monorepo — CHG CRM and Deal Link",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "server"
+  ],
+  "scripts": {
+    "dev:chg": "npm run dev --workspace=apps/chg",
+    "dev:deallink": "npm run dev --workspace=apps/deallink",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
