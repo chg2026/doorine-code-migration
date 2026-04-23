@@ -1,0 +1,17 @@
+{
+  "name": "@rei-code/ui",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared React component library for CHG and Deal Link — AppSwitcher, Topbar, editorial primitives",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "lint": "echo \"no lint configured yet\" && exit 0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

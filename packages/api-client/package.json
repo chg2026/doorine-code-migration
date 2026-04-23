@@ -1,0 +1,13 @@
+{
+  "name": "@rei-code/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared API client for the Gold Bridge Express server — wraps /api/* endpoints for CHG and Deal Link frontends",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "lint": "echo \"no lint configured yet\" && exit 0"
+  }
+}
