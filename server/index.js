@@ -46,8 +46,18 @@ const buildPath = path.join(__dirname, '..', 'apps', 'chg', 'client', 'build')
 const hasBuild = fs.existsSync(path.join(buildPath, 'index.html'))
 
 if (hasBuild) {
-  app.use(express.static(buildPath))
+  // Hashed assets under /static/* are immutable — safe to cache for a year.
+  // index.html must NEVER be cached, or browsers keep pointing at stale JS
+  // filenames from prior deploys (this bit us in Phase 3 preview on Replit).
+  app.use('/static', express.static(path.join(buildPath, 'static'), {
+    immutable: true,
+    maxAge: '1y',
+  }))
+  app.use(express.static(buildPath, { index: false, etag: false, maxAge: 0 }))
   app.get('/{*splat}', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    res.set('Pragma', 'no-cache')
+    res.set('Expires', '0')
     res.sendFile(path.join(buildPath, 'index.html'))
   })
 } else {
