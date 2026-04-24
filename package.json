@@ -9,6 +9,7 @@
     "server"
   ],
   "scripts": {
+    "dev": "npm run dev --workspace=server",
     "dev:chg": "npm run dev --workspace=apps/chg",
     "dev:deallink": "npm run dev --workspace=apps/deallink",
     "dev:server": "npm run dev --workspace=server",
