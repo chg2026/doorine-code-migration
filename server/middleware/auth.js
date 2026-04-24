@@ -42,9 +42,7 @@ async function requireAuth(req, res, next) {
         ),
         accounts (
           name,
-          plan_tier,
-          status,
-          allowed_departments
+          status
         )
       `)
       .eq('id', user.id)

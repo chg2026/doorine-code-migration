@@ -4,10 +4,9 @@ const { requireSuperAdmin, supabaseAdmin } = require('../middleware/auth')
 
 router.use(requireSuperAdmin)
 
-// Until Phase 2.5 drops accounts.plan_tier, admin writes must keep both the
-// legacy column and the new account_products entitlement in sync. This helper
-// upserts a CHG entitlement for an account at the given plan. Safe to call
-// repeatedly — row is keyed on (account_id, product_id).
+// Plan metadata now lives on account_products. This helper upserts a CHG
+// entitlement at the given plan so admin writes land in the right place.
+// Safe to call repeatedly — row is keyed on (account_id, product_id).
 async function syncChgEntitlement(accountId, plan) {
   if (!accountId || !plan) return
   try {
@@ -70,6 +69,20 @@ router.get('/accounts', async (req, res) => {
       .from('user_profiles')
       .select('account_id')
 
+    // Load CHG entitlements so we can project plan_tier onto each account
+    // row. The admin UI still reads `plan_tier` from this response — the
+    // shape stays stable even though the column is gone in Phase 2.5.
+    const { data: chgEntitlements } = await supabaseAdmin
+      .from('account_products')
+      .select('account_id, plan, status, products:product_id ( code )')
+
+    const chgPlanByAccount = {}
+    for (const row of chgEntitlements || []) {
+      if (row.products?.code === 'chg' && row.status === 'active') {
+        chgPlanByAccount[row.account_id] = row.plan
+      }
+    }
+
     const countMap = {}
     for (const u of userCounts || []) {
       countMap[u.account_id] = (countMap[u.account_id] || 0) + 1
@@ -77,6 +90,7 @@ router.get('/accounts', async (req, res) => {
 
     const result = (accounts || []).map(a => ({
       ...a,
+      plan_tier: chgPlanByAccount[a.id] || null,
       user_count: countMap[a.id] || 0,
     }))
 
@@ -91,16 +105,10 @@ router.post('/accounts', async (req, res) => {
     const { name, plan_tier = 'starter', status = 'active', billing_email } = req.body
     if (!name) return res.status(400).json({ error: 'Account name is required.' })
 
-    const tierDefaults = {
-      starter: { max_users: 5, allowed_departments: ['acquisitions', 'construction'] },
-      professional: { max_users: 20, allowed_departments: ['acquisitions', 'construction', 'property_management', 'contractors'] },
-      enterprise: { max_users: 9999, allowed_departments: ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks'] },
-    }
-    const tier = tierDefaults[plan_tier] || tierDefaults.starter
-
+    // accounts row is identity + status only now; plan lives on account_products.
     const { data, error } = await supabaseAdmin
       .from('accounts')
-      .insert({ name, plan_tier, status, billing_email, ...tier })
+      .insert({ name, status, billing_email })
       .select()
       .single()
 
@@ -108,7 +116,8 @@ router.post('/accounts', async (req, res) => {
 
     await syncChgEntitlement(data.id, plan_tier)
 
-    res.status(201).json(data)
+    // Project plan_tier back onto the response so the admin UI shape is stable.
+    res.status(201).json({ ...data, plan_tier })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
@@ -117,36 +126,48 @@ router.post('/accounts', async (req, res) => {
 router.put('/accounts/:id', async (req, res) => {
   try {
     const { name, plan_tier, status, billing_email } = req.body
+    // plan_tier no longer lives on accounts — it routes to account_products.
     const updates = {}
     if (name !== undefined) updates.name = name
-    if (plan_tier !== undefined) {
-      updates.plan_tier = plan_tier
-      const tierDefaults = {
-        starter: { max_users: 5, allowed_departments: ['acquisitions', 'construction'] },
-        professional: { max_users: 20, allowed_departments: ['acquisitions', 'construction', 'property_management', 'contractors'] },
-        enterprise: { max_users: 9999, allowed_departments: ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks'] },
-      }
-      const t = tierDefaults[plan_tier] || {}
-      if (t.max_users) updates.max_users = t.max_users
-      if (t.allowed_departments) updates.allowed_departments = t.allowed_departments
-    }
     if (status !== undefined) updates.status = status
     if (billing_email !== undefined) updates.billing_email = billing_email
 
-    const { data, error } = await supabaseAdmin
-      .from('accounts')
-      .update(updates)
-      .eq('id', req.params.id)
-      .select()
-      .single()
-
-    if (error) throw error
+    let data
+    if (Object.keys(updates).length > 0) {
+      const result = await supabaseAdmin
+        .from('accounts')
+        .update(updates)
+        .eq('id', req.params.id)
+        .select()
+        .single()
+      if (result.error) throw result.error
+      data = result.data
+    } else {
+      const result = await supabaseAdmin
+        .from('accounts')
+        .select('*')
+        .eq('id', req.params.id)
+        .single()
+      if (result.error) throw result.error
+      data = result.data
+    }
 
     if (plan_tier !== undefined) {
       await syncChgEntitlement(req.params.id, plan_tier)
     }
 
-    res.json(data)
+    // Project plan_tier back onto the response. If it wasn't changed in this
+    // request, look up the current CHG entitlement so the UI doesn't see null.
+    let responsePlan = plan_tier
+    if (responsePlan === undefined) {
+      const { data: ent } = await supabaseAdmin
+        .from('account_products')
+        .select('plan, status, products:product_id ( code )')
+        .eq('account_id', req.params.id)
+      responsePlan = (ent || []).find(e => e.products?.code === 'chg' && e.status === 'active')?.plan || null
+    }
+
+    res.json({ ...data, plan_tier: responsePlan })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }

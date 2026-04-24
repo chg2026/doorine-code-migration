@@ -85,16 +85,16 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
     accountId = crypto.randomUUID()
     roleId = crypto.randomUUID()
 
+    // Phase 2.5: plan/seat metadata moved to account_products. The accounts
+    // row is just identity + status now; the CHG entitlement insert below
+    // carries the plan ('starter' for new signups).
     const { error: accountError } = await supabaseAdmin
       .from('accounts')
       .insert({
         id: accountId,
         name: sanitizedCompany,
-        plan_tier: 'starter',
         status: 'active',
         billing_email: email.toLowerCase().trim(),
-        max_users: 5,
-        allowed_departments: ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks'],
       })
     if (accountError) throw accountError
 
@@ -211,6 +211,10 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const profile = req.user.profile
+    // Derive plan_tier from the CHG entitlement now that accounts.plan_tier
+    // has been dropped. Keeps the response shape stable for client code that
+    // reads profile.plan_tier (Profile.jsx etc.).
+    const chgEntitlement = (req.user.entitlements || []).find(e => e.code === 'chg')
     const result = {
       profile: {
         id: profile.id,
@@ -223,7 +227,7 @@ router.get('/me', requireAuth, async (req, res) => {
         status: profile.status,
         account_id: profile.account_id,
         account_name: profile.accounts?.name || null,
-        plan_tier: profile.accounts?.plan_tier || null,
+        plan_tier: chgEntitlement?.plan || null,
         role_name: profile.roles?.name || null,
         role_id: profile.role_id,
         role_product_code: req.user.role_product_code,
