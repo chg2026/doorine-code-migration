@@ -3,21 +3,58 @@ const router = express.Router()
 const { requireAuth, supabaseAdmin } = require('../middleware/auth')
 const crypto = require('crypto')
 
-const signupAttempts = new Map()
+// Postgres-backed rate limiter — shared across server instances and survives
+// deploys, unlike the previous in-memory Map. Requires the signup_attempts
+// table from apps/chg/scripts/phase-2-signup-rate-limit.sql.
+//
+// If Supabase is unreachable, we fail OPEN (allow the signup through) rather
+// than locking every signup out on a DB blip. The tradeoff: a rate-limit
+// bypass during a DB outage is less bad than blocking all new customers.
 const SIGNUP_WINDOW_MS = 15 * 60 * 1000
 const MAX_SIGNUPS_PER_IP = 5
 
-function checkSignupRateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress
-  const now = Date.now()
-  const attempts = signupAttempts.get(ip) || []
-  const recent = attempts.filter(t => now - t < SIGNUP_WINDOW_MS)
-  if (recent.length >= MAX_SIGNUPS_PER_IP) {
-    return res.status(429).json({ error: 'Too many signup attempts. Please try again later.' })
+async function checkSignupRateLimit(req, res, next) {
+  const ip = req.ip || req.connection?.remoteAddress || 'unknown'
+  if (!supabaseAdmin) return next()
+
+  try {
+    const windowStart = new Date(Date.now() - SIGNUP_WINDOW_MS).toISOString()
+
+    // Opportunistic prune: drop stale rows for this IP so the table doesn't
+    // grow unbounded. Missed rows (other IPs) are pruned by future requests.
+    await supabaseAdmin
+      .from('signup_attempts')
+      .delete()
+      .eq('ip_address', ip)
+      .lt('attempted_at', windowStart)
+
+    const { count, error: countError } = await supabaseAdmin
+      .from('signup_attempts')
+      .select('id', { count: 'exact', head: true })
+      .eq('ip_address', ip)
+      .gte('attempted_at', windowStart)
+
+    if (countError) {
+      console.error('[auth/signup] Rate-limit count error (fail-open):', countError.message)
+      return next()
+    }
+
+    if ((count || 0) >= MAX_SIGNUPS_PER_IP) {
+      return res.status(429).json({ error: 'Too many signup attempts. Please try again later.' })
+    }
+
+    const { error: insertError } = await supabaseAdmin
+      .from('signup_attempts')
+      .insert({ ip_address: ip })
+    if (insertError) {
+      console.error('[auth/signup] Rate-limit insert error (fail-open):', insertError.message)
+    }
+
+    next()
+  } catch (e) {
+    console.error('[auth/signup] Rate-limit threw (fail-open):', e.message)
+    next()
   }
-  recent.push(now)
-  signupAttempts.set(ip, recent)
-  next()
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -61,6 +98,16 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
       })
     if (accountError) throw accountError
 
+    // Look up CHG product — we need its id for the role scope AND the entitlement.
+    const { data: chgProduct, error: productLookupError } = await supabaseAdmin
+      .from('products')
+      .select('id')
+      .eq('code', 'chg')
+      .single()
+    if (productLookupError || !chgProduct?.id) {
+      throw new Error('CHG product row missing — cannot complete signup')
+    }
+
     const { error: roleError } = await supabaseAdmin
       .from('roles')
       .insert({
@@ -68,14 +115,29 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
         name: 'Admin',
         account_id: accountId,
         is_system: false,
+        product_id: chgProduct.id,
       })
     if (roleError) throw roleError
 
     const departments = ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks']
     const { error: permError } = await supabaseAdmin
       .from('role_permissions')
-      .insert(departments.map(dept => ({ role_id: roleId, department: dept, permission_level: 'edit' })))
+      .insert(departments.map(dept => ({ role_id: roleId, department: dept, permission_level: 'edit', product_id: chgProduct.id })))
     if (permError) throw permError
+
+    // Grant the CHG entitlement so requireProduct('chg') admits this account on
+    // first login. Without this, a brand-new signup would be locked out of every
+    // CHG business route.
+    const { error: entitlementError } = await supabaseAdmin
+      .from('account_products')
+      .insert({
+        account_id: accountId,
+        product_id: chgProduct.id,
+        plan: 'starter',
+        status: 'active',
+        started_at: new Date().toISOString(),
+      })
+    if (entitlementError) throw entitlementError
 
     const normalizedEmail = email.toLowerCase().trim()
 
@@ -132,6 +194,7 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
         await supabaseAdmin.from('roles').delete().eq('id', roleId)
       }
       if (accountId) {
+        await supabaseAdmin.from('account_products').delete().eq('account_id', accountId)
         await supabaseAdmin.from('accounts').delete().eq('id', accountId)
       }
     } catch (cleanupErr) {

@@ -4,6 +4,40 @@ const { requireSuperAdmin, supabaseAdmin } = require('../middleware/auth')
 
 router.use(requireSuperAdmin)
 
+// Until Phase 2.5 drops accounts.plan_tier, admin writes must keep both the
+// legacy column and the new account_products entitlement in sync. This helper
+// upserts a CHG entitlement for an account at the given plan. Safe to call
+// repeatedly — row is keyed on (account_id, product_id).
+async function syncChgEntitlement(accountId, plan) {
+  if (!accountId || !plan) return
+  try {
+    const { data: product } = await supabaseAdmin
+      .from('products')
+      .select('id')
+      .eq('code', 'chg')
+      .single()
+    if (!product?.id) {
+      console.warn('[admin] CHG product row missing — entitlement sync skipped')
+      return
+    }
+    const { error } = await supabaseAdmin
+      .from('account_products')
+      .upsert(
+        {
+          account_id: accountId,
+          product_id: product.id,
+          plan,
+          status: 'active',
+          started_at: new Date().toISOString(),
+        },
+        { onConflict: 'account_id,product_id' }
+      )
+    if (error) console.error('[admin] Entitlement sync error:', error.message)
+  } catch (e) {
+    console.error('[admin] Entitlement sync threw:', e.message)
+  }
+}
+
 router.get('/stats', async (req, res) => {
   try {
     const [accounts, users] = await Promise.all([
@@ -71,6 +105,9 @@ router.post('/accounts', async (req, res) => {
       .single()
 
     if (error) throw error
+
+    await syncChgEntitlement(data.id, plan_tier)
+
     res.status(201).json(data)
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -104,6 +141,11 @@ router.put('/accounts/:id', async (req, res) => {
       .single()
 
     if (error) throw error
+
+    if (plan_tier !== undefined) {
+      await syncChgEntitlement(req.params.id, plan_tier)
+    }
+
     res.json(data)
   } catch (e) {
     res.status(500).json({ error: e.message })
