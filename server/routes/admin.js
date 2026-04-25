@@ -4,36 +4,91 @@ const { requireSuperAdmin, supabaseAdmin } = require('../middleware/auth')
 
 router.use(requireSuperAdmin)
 
-// Plan metadata now lives on account_products. This helper upserts a CHG
-// entitlement at the given plan so admin writes land in the right place.
-// Safe to call repeatedly — row is keyed on (account_id, product_id).
+// ─── Entitlement helpers ────────────────────────────────────────────────────
+//
+// Plan metadata lives on account_products. These helpers are product-agnostic
+// — Phase 4 generalizes the old CHG-only path so the admin console can manage
+// CHG, Deal Link, and any future product the same way.
+
+// Allowed plans per product. Hardcoded for now; can move to the products
+// table as a JSON column when Phase 5 brings real Deal Link tiers.
+const PLANS_BY_PRODUCT = {
+  chg: ['starter', 'pro', 'enterprise'],
+  deallink: ['free', 'pro'],
+}
+
+function isValidPlan(productCode, plan) {
+  const allowed = PLANS_BY_PRODUCT[productCode]
+  return Array.isArray(allowed) && allowed.includes(plan)
+}
+
+async function getProductByCode(code) {
+  if (!code) return null
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('id, code, name')
+    .eq('code', code)
+    .single()
+  if (error || !data?.id) return null
+  return data
+}
+
+// Upsert an active entitlement at the given plan. Used by:
+//   - signup flow (via existing helper, eventually consolidated here)
+//   - admin POST /entitlements (grant)
+//   - admin PUT /accounts/:id with plan_tier (legacy CHG path)
+async function syncEntitlement(accountId, productCode, plan) {
+  if (!accountId || !productCode || !plan) return { error: 'missing params' }
+  const product = await getProductByCode(productCode)
+  if (!product) {
+    console.warn(`[admin] Product '${productCode}' not found — entitlement sync skipped`)
+    return { error: `product '${productCode}' not found` }
+  }
+  const { data, error } = await supabaseAdmin
+    .from('account_products')
+    .upsert(
+      {
+        account_id: accountId,
+        product_id: product.id,
+        plan,
+        status: 'active',
+        started_at: new Date().toISOString(),
+        // Re-granting a previously disabled entitlement clears the audit fields
+        // so they reflect the CURRENT lifecycle, not a stale revocation.
+        disabled_at: null,
+        disabled_by: null,
+      },
+      { onConflict: 'account_id,product_id' }
+    )
+    .select('account_id, product_id, plan, status, started_at')
+    .single()
+  if (error) console.error('[admin] Entitlement sync error:', error.message)
+  return { data, error, product }
+}
+
+// Thin back-compat wrapper for the CHG-only callsites that already exist
+// in this file (POST /accounts, PUT /accounts/:id with plan_tier). Keeps
+// the diff minimal until Phase 4 PR C.
 async function syncChgEntitlement(accountId, plan) {
   if (!accountId || !plan) return
+  await syncEntitlement(accountId, 'chg', plan)
+}
+
+// Append-only audit trail for entitlement changes. activity_log has
+// SELECT-only RLS; supabaseAdmin uses the service role and bypasses it.
+// Failures here MUST NOT block the underlying admin write — log + swallow.
+async function logEntitlementActivity({ actorId, accountId, action, metadata }) {
   try {
-    const { data: product } = await supabaseAdmin
-      .from('products')
-      .select('id')
-      .eq('code', 'chg')
-      .single()
-    if (!product?.id) {
-      console.warn('[admin] CHG product row missing — entitlement sync skipped')
-      return
-    }
-    const { error } = await supabaseAdmin
-      .from('account_products')
-      .upsert(
-        {
-          account_id: accountId,
-          product_id: product.id,
-          plan,
-          status: 'active',
-          started_at: new Date().toISOString(),
-        },
-        { onConflict: 'account_id,product_id' }
-      )
-    if (error) console.error('[admin] Entitlement sync error:', error.message)
+    const { error } = await supabaseAdmin.from('activity_log').insert({
+      user_id: actorId || null,
+      account_id: accountId,
+      action,
+      entity_type: 'account_product',
+      metadata: metadata || {},
+    })
+    if (error) console.warn('[admin] activity_log insert failed:', error.message)
   } catch (e) {
-    console.error('[admin] Entitlement sync threw:', e.message)
+    console.warn('[admin] activity_log threw:', e.message)
   }
 }
 
@@ -69,16 +124,31 @@ router.get('/accounts', async (req, res) => {
       .from('user_profiles')
       .select('account_id')
 
-    // Load CHG entitlements so we can project plan_tier onto each account
-    // row. The admin UI still reads `plan_tier` from this response — the
-    // shape stays stable even though the column is gone in Phase 2.5.
-    const { data: chgEntitlements } = await supabaseAdmin
+    // Load every entitlement once. We use this for two things:
+    //   (1) project plan_tier from the active CHG row (back-compat for
+    //       admin UI fields that still read .plan_tier — Phase 2.5 shape)
+    //   (2) attach a per-account entitlements array so the admin list
+    //       UI can render product pills without a second round-trip
+    const { data: allEntitlements } = await supabaseAdmin
       .from('account_products')
-      .select('account_id, plan, status, products:product_id ( code )')
+      .select('account_id, plan, status, started_at, disabled_at, products:product_id ( code, name )')
 
     const chgPlanByAccount = {}
-    for (const row of chgEntitlements || []) {
-      if (row.products?.code === 'chg' && row.status === 'active') {
+    const entitlementsByAccount = {}
+    for (const row of allEntitlements || []) {
+      const code = row.products?.code
+      if (!code) continue
+      const flat = {
+        code,
+        name: row.products?.name || code,
+        plan: row.plan,
+        status: row.status,
+        started_at: row.started_at,
+        disabled_at: row.disabled_at,
+      }
+      if (!entitlementsByAccount[row.account_id]) entitlementsByAccount[row.account_id] = []
+      entitlementsByAccount[row.account_id].push(flat)
+      if (code === 'chg' && row.status === 'active') {
         chgPlanByAccount[row.account_id] = row.plan
       }
     }
@@ -92,9 +162,177 @@ router.get('/accounts', async (req, res) => {
       ...a,
       plan_tier: chgPlanByAccount[a.id] || null,
       user_count: countMap[a.id] || 0,
+      entitlements: entitlementsByAccount[a.id] || [],
     }))
 
     res.json(result)
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// ─── Entitlement management (Phase 4) ───────────────────────────────────────
+//
+// All four routes operate on a single account's entitlements. Mounted under
+// /admin/accounts/:id/entitlements so the URL itself enforces the account
+// scope and the UI can construct paths predictably.
+
+router.get('/accounts/:id/entitlements', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('account_products')
+      .select('account_id, plan, status, started_at, disabled_at, disabled_by, products:product_id ( id, code, name, brand_domain, status )')
+      .eq('account_id', req.params.id)
+      .order('started_at', { ascending: true })
+    if (error) throw error
+    const flat = (data || []).map(r => ({
+      account_id: r.account_id,
+      product_id: r.products?.id,
+      product_code: r.products?.code,
+      product_name: r.products?.name,
+      product_status: r.products?.status,
+      plan: r.plan,
+      status: r.status,
+      started_at: r.started_at,
+      disabled_at: r.disabled_at,
+      disabled_by: r.disabled_by,
+    }))
+    res.json(flat)
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+router.post('/accounts/:id/entitlements', async (req, res) => {
+  try {
+    const { product_code, plan } = req.body
+    if (!product_code || !plan) {
+      return res.status(400).json({ error: 'product_code and plan are required.' })
+    }
+    if (!isValidPlan(product_code, plan)) {
+      return res.status(400).json({ error: `Invalid plan '${plan}' for product '${product_code}'.` })
+    }
+
+    // Confirm the account exists before granting — surfaces a clean 404
+    // instead of a confusing FK error from the upsert.
+    const { data: account, error: acctError } = await supabaseAdmin
+      .from('accounts').select('id').eq('id', req.params.id).single()
+    if (acctError || !account) return res.status(404).json({ error: 'Account not found.' })
+
+    // Capture prior state so the audit log can record what changed (e.g.
+    // re-granting a previously disabled entitlement, or upgrading a plan).
+    const product = await getProductByCode(product_code)
+    if (!product) return res.status(400).json({ error: `Unknown product '${product_code}'.` })
+
+    const { data: existing } = await supabaseAdmin
+      .from('account_products')
+      .select('plan, status')
+      .eq('account_id', req.params.id)
+      .eq('product_id', product.id)
+      .maybeSingle()
+
+    const { data, error } = await syncEntitlement(req.params.id, product_code, plan)
+    if (error) throw error
+
+    await logEntitlementActivity({
+      actorId: req.user?.id,
+      accountId: req.params.id,
+      action: existing ? 'entitlement.regrant' : 'entitlement.grant',
+      metadata: {
+        product_code,
+        new_plan: plan,
+        prior_plan: existing?.plan || null,
+        prior_status: existing?.status || null,
+      },
+    })
+
+    res.status(201).json(data)
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+router.patch('/accounts/:id/entitlements/:product_code', async (req, res) => {
+  try {
+    const { plan } = req.body
+    const { id: accountId, product_code } = req.params
+    if (!plan) return res.status(400).json({ error: 'plan is required.' })
+    if (!isValidPlan(product_code, plan)) {
+      return res.status(400).json({ error: `Invalid plan '${plan}' for product '${product_code}'.` })
+    }
+
+    const product = await getProductByCode(product_code)
+    if (!product) return res.status(404).json({ error: `Unknown product '${product_code}'.` })
+
+    const { data: existing, error: existErr } = await supabaseAdmin
+      .from('account_products')
+      .select('plan, status')
+      .eq('account_id', accountId)
+      .eq('product_id', product.id)
+      .single()
+    if (existErr || !existing) return res.status(404).json({ error: 'Entitlement not found.' })
+
+    const { data, error } = await supabaseAdmin
+      .from('account_products')
+      .update({ plan })
+      .eq('account_id', accountId)
+      .eq('product_id', product.id)
+      .select()
+      .single()
+    if (error) throw error
+
+    await logEntitlementActivity({
+      actorId: req.user?.id,
+      accountId,
+      action: 'entitlement.plan_change',
+      metadata: { product_code, prior_plan: existing.plan, new_plan: plan },
+    })
+
+    res.json(data)
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+router.delete('/accounts/:id/entitlements/:product_code', async (req, res) => {
+  try {
+    const { id: accountId, product_code } = req.params
+
+    const product = await getProductByCode(product_code)
+    if (!product) return res.status(404).json({ error: `Unknown product '${product_code}'.` })
+
+    const { data: existing, error: existErr } = await supabaseAdmin
+      .from('account_products')
+      .select('plan, status')
+      .eq('account_id', accountId)
+      .eq('product_id', product.id)
+      .single()
+    if (existErr || !existing) return res.status(404).json({ error: 'Entitlement not found.' })
+    if (existing.status === 'disabled') {
+      // Idempotent: revoking an already-disabled entitlement is a no-op,
+      // not an error. Lets the UI's revoke button be safely retried.
+      return res.json({ ok: true, already_disabled: true })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('account_products')
+      .update({
+        status: 'disabled',
+        disabled_at: new Date().toISOString(),
+        disabled_by: req.user?.id || null,
+      })
+      .eq('account_id', accountId)
+      .eq('product_id', product.id)
+    if (error) throw error
+
+    await logEntitlementActivity({
+      actorId: req.user?.id,
+      accountId,
+      action: 'entitlement.revoke',
+      metadata: { product_code, prior_plan: existing.plan },
+    })
+
+    res.json({ ok: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
