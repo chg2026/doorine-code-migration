@@ -3,6 +3,9 @@ import Layout from '../../components/Layout';
 import { StatCard, Card, StatusBadge, LoadingSpinner, EmptyState, ConfirmModal } from '../../components/ui';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
+import EntitlementsPanel from './EntitlementsPanel';
+
+const PRODUCT_SHORT_LABEL = { chg: 'CHG', deallink: 'Deal Link' };
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
@@ -63,6 +66,7 @@ function AccountsTab() {
   const [filterStatus, setFilterStatus] = useState('');
   const [editAccount, setEditAccount] = useState(null);
   const [deleteAccount, setDeleteAccount] = useState(null);
+  const [entitlementsAccount, setEntitlementsAccount] = useState(null);
 
   const fetchAccounts = () => {
     setLoading(true);
@@ -144,6 +148,7 @@ function AccountsTab() {
               <thead><tr className="border-b border-gray-200 text-left">
                 <th className="px-4 py-3 font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Plan</th>
+                <th className="px-4 py-3 font-medium text-gray-500">Products</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Status</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Users</th>
                 <th className="px-4 py-3 font-medium text-gray-500">Created</th>
@@ -157,11 +162,28 @@ function AccountsTab() {
                       {a.billing_email && <div className="text-xs text-gray-500">{a.billing_email}</div>}
                     </td>
                     <td className="px-4 py-3 capitalize">{a.plan_tier}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(a.entitlements || []).filter(e => e.status === 'active').map(e => (
+                          <span key={e.product_code}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700"
+                            title={`${PRODUCT_SHORT_LABEL[e.product_code] || e.product_code} · ${e.plan}`}>
+                            {PRODUCT_SHORT_LABEL[e.product_code] || e.product_code}
+                          </span>
+                        ))}
+                        {(a.entitlements || []).filter(e => e.status === 'active').length === 0 && (
+                          <span className="text-xs text-gray-400">None</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
                     <td className="px-4 py-3">{a.user_count ?? 0}</td>
                     <td className="px-4 py-3 text-gray-500">{new Date(a.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-1">
+                        <button onClick={() => setEntitlementsAccount(a)} className="text-gray-400 hover:text-primary-500 p-1" title="Manage entitlements">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" /></svg>
+                        </button>
                         <button onClick={() => setEditAccount(a)} className="text-gray-400 hover:text-primary-500 p-1" title="Edit">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
                         </button>
@@ -183,6 +205,13 @@ function AccountsTab() {
 
       {editAccount !== null && <AccountFormModal account={editAccount} onClose={() => setEditAccount(null)} onSave={handleSave} />}
       {deleteAccount && <ConfirmModal title="Delete Account" message={`Are you sure you want to delete "${deleteAccount.name}"? This will remove all users and data.`} confirmLabel="Delete Account" danger onConfirm={handleDelete} onCancel={() => setDeleteAccount(null)} />}
+      {entitlementsAccount && (
+        <EntitlementsPanel
+          account={entitlementsAccount}
+          onClose={() => setEntitlementsAccount(null)}
+          onChanged={fetchAccounts}
+        />
+      )}
     </div>
   );
 }
