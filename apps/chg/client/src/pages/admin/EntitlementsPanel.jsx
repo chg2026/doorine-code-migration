@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 // Mirrors server/routes/admin.js → PLANS_BY_PRODUCT.
 // Keep in sync; the server is authoritative and will reject mismatches.
 const PLANS_BY_PRODUCT = {
-  chg: ['starter', 'pro', 'enterprise'],
+  chg: ['starter', 'professional', 'enterprise'],
   deallink: ['free', 'pro'],
 };
 
