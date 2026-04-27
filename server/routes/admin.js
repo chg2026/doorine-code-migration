@@ -13,7 +13,7 @@ router.use(requireSuperAdmin)
 // Allowed plans per product. Hardcoded for now; can move to the products
 // table as a JSON column when Phase 5 brings real Deal Link tiers.
 const PLANS_BY_PRODUCT = {
-  chg: ['starter', 'pro', 'enterprise'],
+  chg: ['starter', 'professional', 'enterprise'],
   deallink: ['free', 'pro'],
 }
 
@@ -139,8 +139,10 @@ router.get('/accounts', async (req, res) => {
       const code = row.products?.code
       if (!code) continue
       const flat = {
-        code,
-        name: row.products?.name || code,
+        // Field name aligned with GET /admin/accounts/:id/entitlements so the
+        // admin UI can use a single shape across both list + detail endpoints.
+        product_code: code,
+        product_name: row.products?.name || code,
         plan: row.plan,
         status: row.status,
         started_at: row.started_at,
