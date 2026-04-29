@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
     }).catch(() => { settle(); clearTimeout(safetyTimer); setLoading(false); });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, s) => {
+      (_event, s) => {
         setSession(s);
         setUser(s?.user ?? null);
         if (s?.user) {
@@ -58,15 +58,23 @@ export function AuthProvider({ children }) {
           // (loading=false, user=set, profile=null) for a fresh sign-in
           // (e.g. phone OTP setSession()) and force an unwanted signOut.
           setLoading(true);
-          await fetchProfile(s.user.id);
+          // IMPORTANT: do NOT await fetchProfile here. supabase-js v2 calls
+          // this subscriber while holding its internal auth lock (during
+          // setSession/signInWithPassword), and our axios interceptor calls
+          // supabase.auth.getSession() which needs that same lock. Awaiting
+          // a network call here would deadlock setSession() in PhoneAuth.
+          // Returning synchronously releases the lock so /auth/me can run.
+          fetchProfile(s.user.id).finally(() => {
+            settle();
+            clearTimeout(safetyTimer);
+            setLoading(false);
+          });
         } else {
           setProfile(null); setPermissions({}); setEntitlements([]);
+          settle();
+          clearTimeout(safetyTimer);
+          setLoading(false);
         }
-        // Make sure the spinner clears even if getSession() never resolved
-        // (e.g. brand-new session arriving via setSession() after phone OTP).
-        settle();
-        clearTimeout(safetyTimer);
-        setLoading(false);
       }
     );
 
