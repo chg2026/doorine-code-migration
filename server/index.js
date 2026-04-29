@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
+const cron = require('node-cron')
 require('dotenv').config()
 
 const app = express()
@@ -73,6 +74,42 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`CHG CRM server running on port ${PORT}`)
+})
+
+// Daily SMS nudge for phone-only users who haven't added their email.
+// Runs at 10:00 AM UTC. Sends nudges at day 3, 7, and 14 after signup.
+// TODO: replace console.log with Twilio REST call once Twilio is configured.
+//   Message: "Complete your Gold Bridge profile — add your email to unlock
+//   reports and deal tools: [your-app-url]/settings/profile"
+//   Use env vars: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID
+cron.schedule('0 10 * * *', async () => {
+  const { supabaseAdmin } = require('./middleware/auth')
+  if (!supabaseAdmin) return
+
+  const now = new Date()
+  const targets = [3, 7, 14]
+
+  for (const daysAgo of targets) {
+    const start = new Date(now)
+    start.setDate(start.getDate() - daysAgo)
+    start.setHours(0, 0, 0, 0)
+    const end = new Date(start)
+    end.setHours(23, 59, 59, 999)
+
+    const { data: users } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id, phone')
+      .is('email', null)
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString())
+
+    if (!users?.length) continue
+
+    for (const user of users) {
+      if (!user.phone) continue
+      console.log(`[nudge-cron] Would SMS ${user.phone} at day ${daysAgo}`)
+    }
+  }
 })
 
 module.exports = app

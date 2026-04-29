@@ -3,6 +3,7 @@ import Layout from '../../components/Layout';
 import { StatCard, Card, LoadingSpinner } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
+import ProfileCompletionBanner from '../../components/ProfileCompletionBanner';
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -22,6 +23,7 @@ export default function Dashboard() {
 
   return (
     <Layout title="Dashboard">
+      <ProfileCompletionBanner profileScore={profile?.profile_score} />
       <div className="mb-6">
         <h2 className="text-xl font-bold text-gray-900">Welcome back, {profile?.full_name || 'there'}</h2>
         <p className="text-sm text-gray-500 mt-1">Here's what's happening across your portfolio.</p>

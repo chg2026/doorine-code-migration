@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ResetPassword from './pages/ResetPassword';
+import PhoneAuth from './pages/PhoneAuth';
 import Dashboard from './pages/dashboard/Dashboard';
 import PropertiesPage from './pages/dashboard/PropertiesPage';
 import PropertyDashboard from './pages/dashboard/PropertyDashboard';
@@ -29,6 +30,7 @@ export default function AppRouter() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/phone-auth" element={<PhoneAuth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
