@@ -28,12 +28,25 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    let settled = false;
+    const settle = () => { settled = true; };
+
+    // Safety net: if getSession() or the subsequent /auth/me both hang
+    // (e.g. Supabase token-refresh stalls), stop the spinner after 8 s
+    // so ProtectedRoute can redirect to /login rather than spinning forever.
+    const safetyTimer = setTimeout(() => {
+      if (!settled) setLoading(false);
+    }, 8000);
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) fetchProfile(s.user.id).finally(() => setLoading(false));
-      else setLoading(false);
-    });
+      if (s?.user) {
+        fetchProfile(s.user.id).finally(() => { settle(); clearTimeout(safetyTimer); setLoading(false); });
+      } else {
+        settle(); clearTimeout(safetyTimer); setLoading(false);
+      }
+    }).catch(() => { settle(); clearTimeout(safetyTimer); setLoading(false); });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, s) => {
@@ -44,7 +57,7 @@ export function AuthProvider({ children }) {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(safetyTimer); subscription.unsubscribe(); };
   }, [fetchProfile]);
 
   const signIn = async (email, password) => {
