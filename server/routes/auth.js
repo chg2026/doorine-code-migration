@@ -238,11 +238,23 @@ router.get('/me', requireAuth, async (req, res) => {
       entitlements: req.user.entitlements,
     }
 
-    if (supabaseAdmin) {
-      await supabaseAdmin.from('user_profiles').update({ last_login: new Date().toISOString() }).eq('id', profile.id)
-    }
-
     res.json(result)
+
+    // Fire-and-forget: don't block the response on the last_login bookkeeping
+    // update. A slow Supabase write here used to add hundreds of ms to every
+    // /auth/me call, which delayed first paint of the dashboard.
+    if (supabaseAdmin) {
+      supabaseAdmin
+        .from('user_profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', profile.id)
+        .then(({ error }) => {
+          if (error) console.error('[auth/me] last_login update error:', error.message)
+        })
+        .catch((err) => {
+          console.error('[auth/me] last_login update threw:', err?.message || err)
+        })
+    }
   } catch (e) {
     console.error('[auth/me] Error:', e.message)
     res.status(500).json({ error: 'Failed to fetch profile.' })

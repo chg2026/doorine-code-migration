@@ -52,8 +52,21 @@ export function AuthProvider({ children }) {
       async (_event, s) => {
         setSession(s);
         setUser(s?.user ?? null);
-        if (s?.user) await fetchProfile(s.user.id);
-        else { setProfile(null); setPermissions({}); setEntitlements([]); }
+        if (s?.user) {
+          // Re-enter loading state while we hydrate the profile for this new
+          // session. Without this, ProtectedRoute would briefly see
+          // (loading=false, user=set, profile=null) for a fresh sign-in
+          // (e.g. phone OTP setSession()) and force an unwanted signOut.
+          setLoading(true);
+          await fetchProfile(s.user.id);
+        } else {
+          setProfile(null); setPermissions({}); setEntitlements([]);
+        }
+        // Make sure the spinner clears even if getSession() never resolved
+        // (e.g. brand-new session arriving via setSession() after phone OTP).
+        settle();
+        clearTimeout(safetyTimer);
+        setLoading(false);
       }
     );
 

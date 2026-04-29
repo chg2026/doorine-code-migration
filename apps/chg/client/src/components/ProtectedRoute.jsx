@@ -1,8 +1,19 @@
+import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 export default function ProtectedRoute({ children, department, requireEdit, requireAdmin, requireSuperAdmin }) {
-  const { user, profile, loading, isSuperAdmin, isAccountAdmin, hasDepartmentAccess, canEditDepartment } = useAuth();
+  const { user, profile, loading, signOut, isSuperAdmin, isAccountAdmin, hasDepartmentAccess, canEditDepartment } = useAuth();
+
+  // If loading completed but the profile fetch failed (auth token valid but
+  // /auth/me returned null), the dashboard would render with broken data.
+  // Force a sign-out so the user lands on /login with a clean slate.
+  const profileFetchFailed = !loading && !profile && !!user;
+  useEffect(() => {
+    if (profileFetchFailed) {
+      signOut();
+    }
+  }, [profileFetchFailed, signOut]);
 
   if (loading) {
     return (
@@ -12,6 +23,7 @@ export default function ProtectedRoute({ children, department, requireEdit, requ
     );
   }
 
+  if (profileFetchFailed) return <Navigate to="/login" replace />;
   if (!user) return <Navigate to="/login" replace />;
 
   if (profile?.status === 'suspended') {

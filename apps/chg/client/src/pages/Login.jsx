@@ -85,6 +85,22 @@ export default function Login() {
             Forgot password?
           </button>
 
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-2 text-gray-400 uppercase tracking-wider">or</span>
+            </div>
+          </div>
+
+          <Link
+            to="/phone-auth"
+            className="w-full block text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+          >
+            Sign in with phone number
+          </Link>
+
           <p className="text-center text-sm text-gray-500">
             Don't have an account?{' '}
             <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">
