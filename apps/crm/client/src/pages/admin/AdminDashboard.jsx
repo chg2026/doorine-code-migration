@@ -14,6 +14,7 @@ export default function AdminDashboard() {
     { id: 'accounts',    label: 'Accounts' },
     { id: 'users',       label: 'Users' },
     { id: 'roles',       label: 'Roles & Permissions' },
+    { id: 'products',    label: 'Products' },
   ];
 
   return (
@@ -35,7 +36,99 @@ export default function AdminDashboard() {
       {tab === 'accounts'  && <AccountsTab />}
       {tab === 'users'     && <UsersTab />}
       {tab === 'roles'     && <RolesTab />}
+      {tab === 'products'  && <ProductsTab />}
     </Layout>
+  );
+}
+
+// Products tab — global product registry. Edits the `brand_domain` field
+// the AppSwitcher uses to build the production link for each product's
+// tile. Setting Deal Link's domain here is what makes the AppSwitcher
+// tile go live for every account with an active entitlement.
+function ProductsTab() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingCode, setSavingCode] = useState(null);
+  const [drafts, setDrafts] = useState({});
+
+  const load = () => {
+    setLoading(true);
+    api.get('/admin/products')
+      .then(r => {
+        setProducts(r.data || []);
+        const next = {};
+        for (const p of r.data || []) next[p.code] = p.brand_domain || '';
+        setDrafts(next);
+      })
+      .catch(() => toast.error('Failed to load products'))
+      .finally(() => setLoading(false));
+  };
+  useEffect(load, []);
+
+  const save = async (code) => {
+    setSavingCode(code);
+    try {
+      const value = (drafts[code] || '').trim();
+      await api.patch(`/admin/products/${code}`, { brand_domain: value || null });
+      toast.success('Brand domain saved');
+      load();
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Save failed');
+    } finally {
+      setSavingCode(null);
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+  if (products.length === 0) return <EmptyState title="No products" description="Run the platform migration." />;
+
+  return (
+    <Card>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-gray-200 text-left">
+            <th className="px-4 py-3 font-medium text-gray-500">Code</th>
+            <th className="px-4 py-3 font-medium text-gray-500">Name</th>
+            <th className="px-4 py-3 font-medium text-gray-500">Status</th>
+            <th className="px-4 py-3 font-medium text-gray-500">Brand domain</th>
+            <th className="px-4 py-3 font-medium text-gray-500 text-right">Actions</th>
+          </tr></thead>
+          <tbody>
+            {products.map(p => {
+              const draft = drafts[p.code] ?? '';
+              const dirty = (draft || '') !== (p.brand_domain || '');
+              return (
+                <tr key={p.code} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="px-4 py-3 font-mono text-xs text-gray-700">{p.code}</td>
+                  <td className="px-4 py-3 text-gray-900">{p.name}</td>
+                  <td className="px-4 py-3"><StatusBadge status={p.status || 'unknown'} /></td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="text"
+                      value={draft}
+                      onChange={e => setDrafts(d => ({ ...d, [p.code]: e.target.value }))}
+                      placeholder="app.example.com"
+                      className="w-64 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => save(p.code)}
+                      disabled={!dirty || savingCode === p.code}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed">
+                      {savingCode === p.code ? 'Saving…' : 'Save'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-500 mt-3 px-1">
+        The AppSwitcher uses <code>brand_domain</code> to build the production link for each tile. Leave blank to fall back to the dev cross-port URL (Replit dev only) or "Coming soon".
+      </p>
+    </Card>
   );
 }
 

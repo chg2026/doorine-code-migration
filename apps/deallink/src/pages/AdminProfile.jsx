@@ -9,10 +9,29 @@ export default function AdminProfile() {
   const { show, node } = useToast();
   const [form, setForm] = React.useState(state.profile);
 
+  // The store hydrates async (`/api/deallink/profile`). On first render
+  // `state.profile` is the empty default — without this sync the form
+  // mounts blank and a save would overwrite the persisted profile with
+  // empty fields. Re-init the form whenever the underlying profile
+  // identity changes (hydrate, refetch, or another tab edit).
+  React.useEffect(() => {
+    if (state.loaded) setForm(state.profile);
+  }, [state.loaded, state.profile]);
+
   function save(e) {
     e.preventDefault();
     dispatch({ type: 'update_profile', patch: form });
     show('Profile saved');
+  }
+
+  if (!state.loaded) {
+    return (
+      <AdminShell tab="profile">
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--mute)', fontFamily: 'var(--mono)', fontSize: 12 }}>
+          Loading profile…
+        </div>
+      </AdminShell>
+    );
   }
 
   return (

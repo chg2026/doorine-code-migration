@@ -31,6 +31,13 @@ app.use('/api/users', requireAuth, require('./routes/users'))
 // Super admins bypass both. Phase 5 will add parallel /api/deallink/* mounts.
 const chgProduct = requireProduct('chg')
 
+// Deal Link product routes. Public read path is unauthenticated and lives
+// at /api/deallink/public — mount it BEFORE the authenticated /api/deallink
+// router so requireAuth doesn't hijack the unauthenticated profile lookup.
+const deallinkProduct = requireProduct('deallink')
+app.use('/api/deallink/public', require('./routes/deallink-public'))
+app.use('/api/deallink', requireAuth, deallinkProduct, scopeToAccount, require('./routes/deallink'))
+
 app.use('/api/dashboard', requireAuth, chgProduct, require('./routes/dashboard'))
 app.use('/api/properties', requireAuth, chgProduct, scopeToAccount, requireDepartment('property_management'), require('./routes/properties'))
 app.use('/api/units', requireAuth, chgProduct, scopeToAccount, requireDepartment('property_management'), require('./routes/units'))

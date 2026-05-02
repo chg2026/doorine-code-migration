@@ -27,8 +27,7 @@ const PRODUCTS = [
     tagline: 'Wholesaler deal links',
     color: 'bg-success-500',
     initial: 'D',
-    // Deal Link does not yet have a deployment or workflow — staying
-    // "Coming soon" until apps/deallink gets its own published URL.
+    devPort: 3001,
   },
   {
     code: 'chg-rehab',
@@ -112,20 +111,22 @@ export default function AppSwitcher({ currentProduct = 'chg' }) {
             {PRODUCTS.map((product) => {
               const entitlement = entitlementFor(product.code);
               const isCurrent = product.code === currentProduct;
+              const hasAccess = isCurrent || hasProductAccess(product.code);
               const brandDomain = entitlement?.brand_domain;
               const devUrl = devCrossPortUrl(product.devPort);
 
               // Decide what this tile does:
-              //   - current product  → no link, just "Current" badge
-              //   - has brand_domain  → link to that production domain
-              //   - in Replit dev + product has a devPort  → link via cross-port URL
-              //   - otherwise  → "Coming soon" placeholder (Phase 5 will wire
-              //     this to a real signup CTA)
-              const href = brandDomain
-                ? `https://${brandDomain}`
-                : devUrl || undefined;
+              //   - current product           → no link, just "Current" badge
+              //   - no active entitlement     → "Coming soon" (no link, even
+              //                                  in dev — entitlements are the
+              //                                  source of truth, not devPort)
+              //   - has brand_domain          → link to that production domain
+              //   - in Replit dev + devPort   → link via cross-port URL
+              //   - entitled but no domain    → "Coming soon"
+              const href = hasAccess
+                ? (brandDomain ? `https://${brandDomain}` : devUrl || undefined)
+                : undefined;
               const clickable = !isCurrent && !!href;
-              // Show "Coming soon" when the tile is neither current nor reachable.
               const showComingSoon = !isCurrent && !href;
 
               const Inner = (

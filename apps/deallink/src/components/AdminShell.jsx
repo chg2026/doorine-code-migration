@@ -9,13 +9,23 @@ export default function AdminShell({ children, tab }) {
   const nav = useNavigate();
   const current = tab || loc.pathname.split('/')[2] || 'deals';
 
+  // ProtectedRoute (one level up in App.jsx) handles auth + entitlement.
+  // If the user landed on /admin without claiming a handle yet, send them
+  // to onboarding so they don't see an empty inventory state.
   React.useEffect(() => {
-    if (!state.auth.signedIn) {
-      nav('/login', { replace: true, state: { from: loc.pathname } });
+    if (state.loaded && !state.profile?.handle && loc.pathname !== '/onboarding') {
+      nav('/onboarding', { replace: true });
     }
-  }, [state.auth.signedIn]);
+  }, [state.loaded, state.profile?.handle, loc.pathname, nav]);
 
-  if (!state.auth.signedIn) return null;
+  if (!state.loaded) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--mute)', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1 }}>
+        Loading…
+      </div>
+    );
+  }
+  if (!state.profile?.handle) return null;
 
   const tabs = [
     { id: 'deals', label: 'Deals', to: '/admin' },

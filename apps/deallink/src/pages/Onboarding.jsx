@@ -8,18 +8,29 @@ export default function Onboarding() {
   const nav = useNavigate();
   const { show, node } = useToast();
   const [choiceOpen, setChoiceOpen] = React.useState(false);
-  const [step, setStep] = React.useState(state.auth.signedIn ? 'checklist' : 'claim');
-  const [handle, setHandle] = React.useState(state.profile.handle.replace(/\.deals$/, ''));
-  const [email, setEmail] = React.useState(state.profile.email || '');
-  const [name, setName] = React.useState(state.profile.name || '');
+  const [step, setStep] = React.useState(state.profile?.handle ? 'checklist' : 'claim');
+  const [handle, setHandle] = React.useState((state.profile?.handle || '').replace(/\.deals$/, ''));
+  const [email, setEmail] = React.useState(state.profile?.email || '');
+  const [name, setName] = React.useState(state.profile?.name || '');
 
-  function claim(e) {
+  React.useEffect(() => {
+    if (state.profile?.handle && step === 'claim') setStep('checklist');
+  }, [state.profile?.handle, step]);
+
+  async function claim(e) {
     e.preventDefault();
     if (!handle.trim()) return;
     const initials = (name || handle).split(/\s+|\./).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || handle[0].toUpperCase();
-    dispatch({ type: 'update_profile', patch: { handle: handle.trim().toLowerCase() + '.deals', email: email.trim(), name: name.trim() || handle, initials } });
-    dispatch({ type: 'sign_in' });
-    dispatch({ type: 'update_onboarding', patch: { claimed: true } });
+    await dispatch({
+      type: 'update_profile',
+      patch: {
+        handle: handle.trim().toLowerCase() + '.deals',
+        email: email.trim(),
+        name: name.trim() || handle,
+        initials,
+        onboarding: { ...(state.profile?.onboarding || {}), claimed: true },
+      },
+    });
     setStep('checklist');
     show('Profile claimed');
   }

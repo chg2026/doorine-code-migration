@@ -1,24 +1,38 @@
 import React from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useStore, useToast } from '../store.jsx';
+import { Link, useParams } from 'react-router-dom';
+import { PublicAPI } from '../lib/deallink-api.js';
 import { Kicker, Hairline, Stripe, Status, Modal, Field } from '../components/UI.jsx';
 
 export default function DealDetail() {
   const { handle, dealId } = useParams();
-  const { state, dispatch } = useStore();
-  const nav = useNavigate();
-  const { show, node } = useToast();
+  const [state, setState] = React.useState({ loading: true, profile: null, deal: null, error: null });
   const [open, setOpen] = React.useState(false);
+  const [toast, setToast] = React.useState(null);
 
-  if (state.profile.handle !== handle) {
+  function showToast(m) { setToast(m); setTimeout(() => setToast(null), 2400); }
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, profile: null, deal: null, error: null });
+    PublicAPI.getDeal(handle, dealId).then((res) => {
+      if (cancelled) return;
+      if (!res) { setState({ loading: false, profile: null, deal: null, error: 'not-found' }); return; }
+      setState({ loading: false, profile: res.profile, deal: res.deal, error: null });
+    }).catch(() => { if (!cancelled) setState({ loading: false, profile: null, deal: null, error: 'not-found' }); });
+    return () => { cancelled = true; };
+  }, [handle, dealId]);
+
+  if (state.loading) {
     return (
-      <div className="public-page"><div className="public-frame" style={{ textAlign: 'center', padding: 40 }}>
-        <Kicker>Not found</Kicker><Link to="/" className="btn sm" style={{ marginTop: 20 }}>Home</Link>
-      </div></div>
+      <div className="public-page">
+        <div className="public-frame" style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1 }}>
+          Loading…
+        </div>
+      </div>
     );
   }
-  const d = state.deals.find(x => x.id === dealId);
-  if (!d) {
+
+  if (state.error || !state.deal) {
     return (
       <div className="public-page"><div className="public-frame" style={{ textAlign: 'center', padding: 40 }}>
         <Kicker>Deal not found</Kicker>
@@ -27,31 +41,31 @@ export default function DealDetail() {
     );
   }
 
-  const addr = d.hideStreet ? d.addr.replace(/^\d+\s+/, '— ') : d.addr;
+  const d = state.deal;
   const rows = [
-    ['Address', addr],
+    ['Address', d.addr],
     ['City / ZIP', `${d.city} ${d.zip}`],
     ['Type', typeLabel(d.type)],
     ['Units', `${d.units}`],
     ['Beds / Baths', `${d.beds} / ${d.baths}`],
-    ['Sqft', d.sqft.toLocaleString()],
+    ['Sqft', Number(d.sqft).toLocaleString()],
     ['Occupancy', d.occ],
     ['Access', d.access],
-    ['Asking', `$${d.ask.toLocaleString()},000`],
-    ['ARV', `$${d.arv.toLocaleString()},000`],
-    ['Spread', `$${(d.arv - d.ask).toLocaleString()},000`],
+    ['Asking', `$${Number(d.ask).toLocaleString()},000`],
+    ['ARV', `$${Number(d.arv).toLocaleString()},000`],
+    ['Spread', `$${Number(d.arv - d.ask).toLocaleString()},000`],
   ];
 
   return (
     <div className="public-page" style={{ paddingBottom: 96 }}>
       <div className="public-frame">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Link to={`/p/${handle}`} style={{ fontSize: 12, color: 'var(--mute)' }}>← {state.profile.handle}</Link>
+          <Link to={`/p/${handle}`} style={{ fontSize: 12, color: 'var(--mute)' }}>← {state.profile?.handle || handle}</Link>
           <Status kind={d.status} />
         </div>
 
-        <Kicker>Deal · #{d.id.toUpperCase()}</Kicker>
-        <div className="serif" style={{ fontSize: 22, marginTop: 6, lineHeight: 1.2 }}>{addr}</div>
+        <Kicker>Deal · #{String(d.id || '').slice(0, 8).toUpperCase()}</Kicker>
+        <div className="serif" style={{ fontSize: 22, marginTop: 6, lineHeight: 1.2 }}>{d.addr}</div>
 
         <Hairline style={{ margin: '18px 0 0' }} />
         <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderTop: 'none' }}>
@@ -73,7 +87,7 @@ export default function DealDetail() {
         <div style={{ marginTop: 18 }}>
           <Kicker>Photos · placeholder</Kicker>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginTop: 8 }}>
-            {[0, 1, 2, 3].map(i => <Stripe key={i} height={70} />)}
+            {[0, 1, 2, 3].map((i) => <Stripe key={i} height={70} />)}
           </div>
         </div>
       </div>
@@ -88,12 +102,8 @@ export default function DealDetail() {
         </button>
       </div>
 
-      {open && <LeadModal deal={d} onClose={() => setOpen(false)} onSubmit={(lead) => {
-        dispatch({ type: 'add_lead', lead: { ...lead, dealId: d.id, kind: 'deal-interest' } });
-        setOpen(false);
-        show('Request sent — they\'ll be in touch.');
-      }} />}
-      {node}
+      {open && <LeadModal handle={handle} deal={d} onClose={() => setOpen(false)} onSubmitted={() => { setOpen(false); showToast("Request sent — they'll be in touch."); }} />}
+      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }
@@ -102,23 +112,34 @@ function typeLabel(t) {
   return ({ SFR: 'Single Family', MF: 'Multi-Family', DUP: 'Duplex' })[t] || t;
 }
 
-function LeadModal({ deal, onClose, onSubmit }) {
+function LeadModal({ handle, deal, onClose, onSubmitted }) {
   const [first, setFirst] = React.useState('');
   const [last, setLast] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [buyerType, setBuyerType] = React.useState('Cash');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     if (!first.trim() || !email.trim() || !phone.trim()) return;
-    onSubmit({ first, last, email, phone, buyerType });
+    setSubmitting(true);
+    setError(null);
+    try {
+      await PublicAPI.submitLead(handle, { first, last, email, phone, buyerType, dealId: deal.id, kind: 'deal-interest' });
+      onSubmitted();
+    } catch (err) {
+      setError(err?.message || 'Failed to submit.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <Modal onClose={onClose}>
       <Kicker>Interested in</Kicker>
-      <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>{deal.hideStreet ? deal.addr.replace(/^\d+\s+/, '— ') : deal.addr}</div>
+      <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>{deal.addr}</div>
       <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2, fontFamily: 'var(--mono)' }}>${deal.ask}k / ${deal.arv}k ARV</div>
       <form onSubmit={submit} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -136,7 +157,8 @@ function LeadModal({ deal, onClose, onSubmit }) {
             <option>Other</option>
           </select>
         </Field>
-        <button className="btn solid full" type="submit" style={{ marginTop: 8, padding: '14px', borderRadius: 14, fontSize: 14 }}>Send request</button>
+        {error && <div style={{ fontSize: 12, color: 'var(--err)' }}>{error}</div>}
+        <button className="btn solid full" type="submit" disabled={submitting} style={{ marginTop: 8, padding: '14px', borderRadius: 14, fontSize: 14 }}>{submitting ? 'Sending…' : 'Send request'}</button>
         <div style={{ fontSize: 10, color: 'var(--dim)', textAlign: 'center', marginTop: 4 }}>You'll also join the weekly buyer list.</div>
       </form>
     </Modal>

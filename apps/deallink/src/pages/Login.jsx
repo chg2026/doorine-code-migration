@@ -1,23 +1,44 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useStore } from '../store.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { Kicker, Field } from '../components/UI.jsx';
 
+// Real Supabase email/password sign-in. Replaces the prototype "any email +
+// password works" flow. The redirect target is whatever route bounced the
+// user here (preserved on location.state.from), defaulting to /admin.
 export default function Login() {
-  const { state, dispatch } = useStore();
+  const auth = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
-  const [email, setEmail] = React.useState(state.profile.email || '');
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
 
-  function submit(e) {
+  React.useEffect(() => {
+    if (!auth.loading && auth.user) {
+      const dest = (loc.state && loc.state.from) || '/admin';
+      nav(dest, { replace: true });
+    }
+  }, [auth.loading, auth.user, nav, loc.state]);
+
+  async function submit(e) {
     e.preventDefault();
-    if (!email.trim()) { setError('Email is required'); return; }
-    if (!password) { setError('Password is required'); return; }
-    dispatch({ type: 'sign_in' });
-    const dest = (loc.state && loc.state.from) || '/admin';
-    nav(dest, { replace: true });
+    setError(null);
+    if (!email.trim() || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await auth.signIn(email.trim(), password);
+      // AuthContext.onAuthStateChange will flip auth.user; the effect
+      // above handles the redirect once profile + entitlements are loaded.
+    } catch (err) {
+      setError(err?.message || 'Sign-in failed.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -40,18 +61,33 @@ export default function Login() {
           <div className="serif" style={{ fontSize: 26, marginTop: 8 }}>Welcome back.</div>
           <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Field label="Email">
-              <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} placeholder="you@email.com" autoFocus />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                placeholder="you@email.com"
+                autoFocus
+                autoComplete="email"
+                disabled={submitting}
+              />
             </Field>
             <Field label="Password">
-              <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                disabled={submitting}
+              />
             </Field>
             {error && <div style={{ fontSize: 12, color: 'var(--err)' }}>{error}</div>}
-            <button type="submit" className="btn solid full">Sign in →</button>
+            <button type="submit" className="btn solid full" disabled={submitting}>
+              {submitting ? 'Signing in…' : 'Sign in →'}
+            </button>
             <div style={{ fontSize: 12, color: 'var(--mute)', textAlign: 'center', marginTop: 6 }}>
-              No account? <Link to="/onboarding" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Claim your @handle</Link>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--dim)', textAlign: 'center', marginTop: 4, fontFamily: 'var(--mono)' }}>
-              Demo: any email + password works
+              Need an account? Sign up via <a href="/signup" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Gold Bridge</a> and ask
+              your admin to enable Deal Link.
             </div>
           </div>
         </div>
