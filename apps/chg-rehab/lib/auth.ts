@@ -27,13 +27,15 @@ export const getOidcConfig = memoize(
  * headers instead.
  *
  * Resolution order:
- *   1. APP_BASE_URL env (explicit override; required when this app is
- *      reachable on a non-default external port — e.g. in the Replit dev
- *      preview where CHG Rehab is at https://<host>:3000 but the proxy
- *      strips the port from x-forwarded-host, causing OIDC redirects to
- *      bounce to whichever app owns the canonical host).
+ *   1. APP_BASE_URL env (explicit override; intended for the production
+ *      deployment, where the registered OIDC redirect_uri must match a
+ *      stable canonical domain. Leave unset in dev.)
  *   2. x-forwarded-{proto,host} (+ x-forwarded-port when non-default).
- *   3. host header (last resort).
+ *   3. Replit dev fallback: `https://${REPLIT_DEV_DOMAIN}:${PORT}`. Used
+ *      when running in the Replit dev preview, where the edge proxy
+ *      strips the external port from x-forwarded-host. REPLIT_DEV_DOMAIN
+ *      is auto-provided per repl, so this self-heals across clones.
+ *   4. host header (last resort).
  */
 export function publicOrigin(req: NextRequest | { headers: Headers }): string {
   const override = process.env.APP_BASE_URL?.trim();
@@ -50,18 +52,34 @@ export function publicOrigin(req: NextRequest | { headers: Headers }): string {
       : "https");
 
   // If the forwarded host already has a :port suffix, trust it.
-  // Otherwise consult x-forwarded-port and append it when non-default.
-  let host = hostHeader;
-  if (!/:\d+$/.test(host)) {
-    const xfPort = req.headers.get("x-forwarded-port");
-    const port = xfPort ? Number(xfPort) : NaN;
-    const isDefault =
-      (proto === "https" && port === 443) || (proto === "http" && port === 80);
-    if (xfPort && !Number.isNaN(port) && !isDefault) {
-      host = `${host}:${xfPort}`;
-    }
+  if (/:\d+$/.test(hostHeader)) {
+    return `${proto}://${hostHeader}`;
   }
-  return `${proto}://${host}`;
+
+  // If x-forwarded-port is present and non-default, append it.
+  const xfPort = req.headers.get("x-forwarded-port");
+  const xfPortNum = xfPort ? Number(xfPort) : NaN;
+  const xfIsDefault =
+    (proto === "https" && xfPortNum === 443) ||
+    (proto === "http" && xfPortNum === 80);
+  if (xfPort && !Number.isNaN(xfPortNum) && !xfIsDefault) {
+    return `${proto}://${hostHeader}:${xfPort}`;
+  }
+
+  // Replit dev fallback: the edge proxy strips :PORT from x-forwarded-host,
+  // so reconstruct from the auto-provided REPLIT_DEV_DOMAIN + this app's
+  // bind PORT. Skipped in production so the production canonical host
+  // (e.g. an autoscale .replit.app) is used unchanged.
+  const devDomain = process.env.REPLIT_DEV_DOMAIN?.trim();
+  if (devDomain && process.env.NODE_ENV !== "production") {
+    const port = Number(process.env.PORT) || 3000;
+    if (port !== 443 && port !== 80) {
+      return `https://${devDomain}:${port}`;
+    }
+    return `https://${devDomain}`;
+  }
+
+  return `${proto}://${hostHeader}`;
 }
 
 export function publicUrl(req: NextRequest | { headers: Headers }, path: string): string {

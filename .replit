@@ -67,4 +67,3 @@ timeoutMs = 300000
 [userenv]
 
 [userenv.development]
-APP_BASE_URL = "https://55031650-e5ed-482c-a9c9-d08962a0ea5e-00-2duhxu703xlzu.riker.replit.dev:3000"
