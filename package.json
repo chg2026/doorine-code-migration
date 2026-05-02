@@ -2,7 +2,7 @@
   "name": "rei-code",
   "private": true,
   "version": "0.0.0",
-  "description": "Gold Bridge platform monorepo — CHG CRM and Deal Link",
+  "description": "Gold Bridge platform monorepo — CHG CRM, Deal Link, and CHG Rehab",
   "workspaces": [
     "apps/*",
     "packages/*",
@@ -10,11 +10,17 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=server",
-    "dev:chg": "npm run dev --workspace=apps/chg",
+    "dev:crm": "npm run dev --workspace=apps/crm",
     "dev:deallink": "npm run dev --workspace=apps/deallink",
     "dev:server": "npm run dev --workspace=server",
-    "build:client": "npm run build:prod --workspace=apps/chg",
+    "dev:rehab": "npm run dev --workspace=apps/chg-rehab",
+    "build:client": "npm run build:prod --workspace=apps/crm",
+    "build:rehab": "npm run build --workspace=apps/chg-rehab",
     "start:replit": "npm run build:client && npm run dev --workspace=server",
+    "start:rehab": "npm run start --workspace=apps/chg-rehab",
+    "rehab:db:push": "npm run db:push --workspace=apps/chg-rehab",
+    "rehab:db:seed": "npm run db:seed --workspace=apps/chg-rehab",
+    "rehab:db:generate": "npm run db:generate --workspace=apps/chg-rehab",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
   },

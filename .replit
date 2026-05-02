@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "postgresql-16"]
+modules = ["nodejs-20", "postgresql-16", "python-3.11"]
 
 [agent]
 expertMode = true
@@ -7,25 +7,49 @@ expertMode = true
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Server"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Server"
 mode = "sequential"
-author = "rei-code"
+author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm install"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run build:client"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev --workspace=server"
+args = "npm install && npm run build:client && npm run dev --workspace=server"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "CHG Rehab"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Server"
+
+[[workflows.workflow]]
+name = "CHG Rehab"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm install && npm run dev --workspace=apps/chg-rehab"
+waitForPort = 3000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
 
 [[ports]]
 localPort = 5000
@@ -33,5 +57,9 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "npm install && npm run build:prod --workspace=apps/chg"]
+build = ["sh", "-c", "npm install && npm run build:prod --workspace=apps/crm"]
 run = ["npm", "run", "start", "--workspace=server"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 300000

@@ -72,11 +72,12 @@ This file is a comprehensive 14-section wireframe covering the Atlassian mirror,
 Run these in order. Do NOT use `--squash` — full history from both source repos must be preserved so `git blame` works going forward.
 
 ```bash
-# Pull CHG into apps/chg/ with full history
-git subtree add --prefix=apps/chg https://github.com/chg2026/chg-crm.git main
+# Pull CHG into apps/crm/ with full history
+# (originally pulled into apps/chg/; renamed to apps/crm/ when CHG Rehab joined the monorepo)
+git subtree add --prefix=apps/crm https://github.com/chg2026/chg-crm.git main
 
 # Verify
-ls -la apps/chg/
+ls -la apps/crm/
 git log --oneline -10
 
 # Pull Deal Link into apps/deallink/ with full history

@@ -43,7 +43,7 @@ app.use('/api/deals', requireAuth, chgProduct, scopeToAccount, requireDepartment
 app.use('/api/tasks', requireAuth, chgProduct, scopeToAccount, requireDepartment('tasks'), require('./routes/tasks'))
 app.use('/api/invoices', requireAuth, chgProduct, scopeToAccount, requireDepartment('finance'), require('./routes/invoices'))
 
-const buildPath = path.join(__dirname, '..', 'apps', 'chg', 'client', 'build')
+const buildPath = path.join(__dirname, '..', 'apps', 'crm', 'client', 'build')
 const hasBuild = fs.existsSync(path.join(buildPath, 'index.html'))
 
 if (hasBuild) {

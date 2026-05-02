@@ -1,0 +1,743 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  sid    String   @id
+  sess   Json
+  expire DateTime
+
+  @@index([expire])
+  @@map("sessions")
+}
+
+model Company {
+  id                   String                @id @default(cuid())
+  name                 String
+  legalName            String?
+  ein                  String?
+  createdAt            DateTime              @default(now())
+  activityLog          ActivityLogEntry[]
+  settings             CompanySetting?
+  contacts             Contact[]
+  documents            Document[]
+  leases               Lease[]
+  permissionLabels     PermissionLabelRow[]
+  permissionRows       PermissionMatrixRow[]
+  pipelineDeals        PipelineDeal[]
+  projects             Project[]
+  properties           Property[]
+  users                User[]
+  warehouseDepartments WarehouseDepartment[]
+  warehouseTemplates   WarehouseTemplate[]
+  invites              Invite[]
+  subscription         Subscription?
+  notifications        Notification[]
+  notificationState    NotificationState?
+  contactNotifications ContactNotificationLog[]
+  staleSweepAlerts     StaleSweepAlertLog[]
+}
+
+model User {
+  id                       String                        @id
+  companyId                String
+  email                    String?                       @unique
+  firstName                String?
+  lastName                 String?
+  profileImageUrl          String?
+  role                     UserRole                      @default(ProjectManager)
+  initials                 String?
+  emailOptOut              Boolean                       @default(false)
+  active                   Boolean                       @default(true)
+  deactivatedAt            DateTime?
+  notifyQuietStart         String?
+  notifyQuietEnd           String?
+  notifyQuietOverride      Boolean                       @default(false)
+  createdAt                DateTime                      @default(now())
+  updatedAt                DateTime                      @updatedAt
+  activityEntries          ActivityLogEntry[]
+  uploadedDocuments        Document[]                    @relation("DocUploader")
+  approvedDraws            Draw[]                        @relation("DrawApprover")
+  projectAssignments       ProjectAssignment[]
+  notifications            Notification[]
+  notificationPreferences  UserNotificationPreference[]
+  company                  Company                       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([companyId, active])
+}
+
+model UserNotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  event     String
+  email     Boolean
+  inApp     Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, event])
+  @@index([userId])
+}
+
+model Property {
+  id            String                     @id @default(cuid())
+  companyId     String
+  code          String
+  address       String
+  city          String?
+  state         String?
+  zip           String?
+  status        String?
+  acquired      DateTime?
+  baseline      Decimal?                   @db.Decimal(14, 2)
+  currentRoi    Decimal?                   @db.Decimal(6, 2)
+  meta          Json?
+  createdAt     DateTime                   @default(now())
+  documents     Document[]
+  leases        Lease[]
+  pipelineDeals PipelineDeal[]
+  projects      Project[]
+  company       Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assets        PropertyAsset[]
+  financials    PropertyFinancialSection[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+}
+
+model PropertyAsset {
+  id          String    @id @default(cuid())
+  propertyId  String
+  category    String
+  name        String
+  installed   DateTime?
+  warrantyEnd DateTime?
+  notes       String?
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model PropertyFinancialSection {
+  id         String   @id @default(cuid())
+  propertyId String
+  section    String
+  data       Json
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, section])
+}
+
+model PipelineDeal {
+  id           String    @id @default(cuid())
+  companyId    String
+  propertyId   String?
+  code         String
+  address      String
+  askingPrice  Decimal?  @db.Decimal(14, 2)
+  estimatedRoi Decimal?  @db.Decimal(6, 2)
+  stage        DealStage @default(Sourced)
+  notes        String?
+  meta         Json?
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  property     Property? @relation(fields: [propertyId], references: [id])
+
+  @@index([companyId, stage])
+}
+
+model Project {
+  id                    String                 @id @default(cuid())
+  companyId             String
+  propertyId            String
+  code                  String                 // 'CHG-2247'
+  name                  String
+  status                ProjectStatus          @default(Planning)
+  budget                Decimal?               @db.Decimal(14, 2)
+  startDate             DateTime?
+  endDate               DateTime?
+  currentPhase          Int?
+  meta                  Json?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  company               Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  property              Property               @relation(fields: [propertyId], references: [id])
+  phases                Phase[]
+  draws                 Draw[]
+  sowSections           SOWSection[]
+  addenda               ProjectAddendum[]
+  assignments           ProjectAssignment[]
+  contractorAssignments ContractorAssignment[]
+  documents             Document[]
+  warehouseAllocations  WarehouseItem[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+}
+
+model Phase {
+  id             String          @id @default(cuid())
+  projectId      String
+  number         Int
+  name           String
+  status         PhaseStatus     @default(NotStarted)
+  budget         Decimal?        @db.Decimal(14, 2)
+  actual         Decimal?        @db.Decimal(14, 2)
+  startDate      DateTime?
+  endDate        DateTime?
+  drawNote       String?
+  checklistItems ChecklistItem[]
+  draws          Draw[]
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, number])
+  @@index([projectId])
+}
+
+model ChecklistItem {
+  id        String          @id @default(cuid())
+  phaseId   String
+  label     String
+  status    ChecklistStatus @default(Pending)
+  meta      Json?
+  doneBy    String?
+  doneAt    DateTime?
+  createdAt DateTime        @default(now())
+  phase     Phase           @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@index([phaseId])
+}
+
+model Draw {
+  id           String     @id @default(cuid())
+  projectId    String
+  phaseId      String?
+  number       Int
+  title        String
+  amount       Decimal    @db.Decimal(14, 2)
+  status       DrawStatus @default(Pending)
+  approvedAt   DateTime?
+  approvedById String?
+  paidAt       DateTime?
+  notes        String?
+  createdAt    DateTime   @default(now())
+  approvedBy   User?      @relation("DrawApprover", fields: [approvedById], references: [id])
+  phase        Phase?     @relation(fields: [phaseId], references: [id])
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model SOWSection {
+  id        String        @id @default(cuid())
+  projectId String
+  name      String
+  order     Int           @default(0)
+  lineItems SOWLineItem[]
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model SOWLineItem {
+  id          String     @id @default(cuid())
+  sectionId   String
+  description String
+  qty         Decimal?   @db.Decimal(10, 2)
+  unit        String?
+  unitCost    Decimal?   @db.Decimal(14, 2)
+  totalCost   Decimal?   @db.Decimal(14, 2)
+  notes       String?
+  section     SOWSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId])
+}
+
+model ProjectAddendum {
+  id        String   @id @default(cuid())
+  projectId String
+  title     String
+  reason    String?
+  delta     Decimal? @db.Decimal(14, 2)
+  daysDelta Int      @default(0)
+  status    String   @default("Pending")
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectAssignment {
+  id        String  @id @default(cuid())
+  projectId String
+  userId    String
+  role      String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId, role])
+  @@index([userId])
+}
+
+model Contact {
+  id             String                    @id @default(cuid())
+  companyId      String
+  type           ContactType
+  name           String
+  company        String?
+  email          String?
+  phone          String?
+  address        String?
+  trade          String?
+  rating         Int?
+  notes          String?
+  meta           Json?
+  emailOptOut    Boolean                   @default(false)
+  emailOptOutAt  DateTime?
+  createdAt      DateTime                  @default(now())
+
+  org            Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  complianceDocs ContractorComplianceDoc[]
+  assignments    ContractorAssignment[]
+  notificationLogs ContactNotificationLog[]
+
+  @@index([companyId, type])
+}
+
+// A persistent assignment of a Contact (typically Contractor / Subcontractor)
+// to a Project for a given role. We model this separately from
+// `ProjectAssignment` because that table links users (employees) to projects,
+// whereas contractors live in `Contact` and are external.
+model ContractorAssignment {
+  id          String   @id @default(cuid())
+  companyId   String
+  contactId   String
+  projectId   String
+  role        String   // e.g. "GC", "Electrical sub"
+  status      String   @default("Active") // Active | Completed | Removed
+  assignedAt  DateTime @default(now())
+  assignedBy  String?
+
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, contactId, role])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([projectId])
+}
+
+model ContractorComplianceDoc {
+  id        String    @id @default(cuid())
+  contactId String
+  type      String
+  name      String
+  expiresAt DateTime?
+  fileKey   String?
+  status    String    @default("Active")
+  createdAt DateTime  @default(now())
+  contact   Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  versions  ContractorComplianceDocVersion[]
+
+  @@index([contactId])
+}
+
+model ContractorComplianceDocVersion {
+  id         String    @id @default(cuid())
+  docId      String
+  name       String
+  expiresAt  DateTime?
+  fileKey    String?
+  replacedAt DateTime  @default(now())
+  doc        ContractorComplianceDoc @relation(fields: [docId], references: [id], onDelete: Cascade)
+
+  @@index([docId])
+}
+
+model Lease {
+  id         String    @id @default(cuid())
+  companyId  String
+  propertyId String
+  tenantName String
+  rent       Decimal?  @db.Decimal(10, 2)
+  startDate  DateTime?
+  endDate    DateTime?
+  status     String    @default("Active")
+  meta       Json?
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model WarehouseDepartment {
+  id            String                 @id @default(cuid())
+  companyId     String
+  code          String
+  name          String
+  icon          String?
+  order         Int                    @default(0)
+  pinned        Boolean                @default(false)
+  hidden        Boolean                @default(false)
+  company       Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subcategories WarehouseSubcategory[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+}
+
+model WarehouseSubcategory {
+  id           String              @id @default(cuid())
+  departmentId String
+  code         String
+  name         String
+  order        Int                 @default(0)
+  pinned       Boolean             @default(false)
+  hidden       Boolean             @default(false)
+  items        WarehouseItem[]
+  department   WarehouseDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, code])
+}
+
+model WarehouseItem {
+  id            String               @id @default(cuid())
+  subcategoryId String
+  name          String
+  brand         String?
+  model         String?
+  unit          String?
+  defaultCost   Decimal?             @db.Decimal(14, 2)
+  vendor        String?
+  notes         String?
+  meta          Json?
+  qty           Decimal?             @db.Decimal(12, 2)
+  condition     String?
+  value         Decimal?             @db.Decimal(14, 2)
+  projectId     String?
+  project       Project?             @relation(fields: [projectId], references: [id])
+  subcategory   WarehouseSubcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+
+  @@index([subcategoryId])
+  @@index([projectId])
+}
+
+model WarehouseTemplate {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  scope     String?
+  data      Json
+  isDefault Boolean  @default(false)
+  isLocked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model Document {
+  id           String    @id @default(cuid())
+  companyId    String
+  level        DocLevel
+  category     String
+  status       DocStatus @default(Active)
+  name         String
+  fileKey      String?
+  mimeType     String?
+  size         Int?
+  expiresAt    DateTime?
+  uploadedById String?
+  uploadedAt   DateTime  @default(now())
+  propertyId   String?
+  projectId    String?
+  contactId    String?
+  meta         Json?
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project      Project?  @relation(fields: [projectId], references: [id])
+  property     Property? @relation(fields: [propertyId], references: [id])
+  uploadedBy   User?     @relation("DocUploader", fields: [uploadedById], references: [id])
+
+  @@index([companyId, level])
+}
+
+model ActivityLogEntry {
+  id        String   @id @default(cuid())
+  companyId String
+  actorId   String?
+  action    String
+  entity    String?
+  entityId  String?
+  message   String?
+  meta      Json?
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id])
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, createdAt])
+}
+
+model PermissionMatrixRow {
+  id        String  @id @default(cuid())
+  companyId String
+  feature   String
+  action    String
+  roles     Json
+  notes     String?
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, feature, action])
+}
+
+model PermissionLabelRow {
+  id        String  @id @default(cuid())
+  companyId String
+  label     String
+  ord       Int     @default(0)
+  pm        String  @default("none")
+  gc        String  @default("none")
+  sub       String  @default("none")
+  inspector String  @default("none")
+  adminLock Boolean @default(false)
+  locked    Boolean @default(false)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, label])
+}
+
+model Invite {
+  id           String    @id @default(cuid())
+  companyId    String
+  email        String
+  role         UserRole
+  token        String    @unique
+  status       String    @default("Pending") // Pending | Accepted | Revoked | Expired
+  invitedById  String?
+  acceptedById String?
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, status])
+  @@index([email])
+}
+
+model Subscription {
+  id                       String    @id @default(cuid())
+  companyId                String    @unique
+  plan                     String    @default("Operator") // Starter | Operator | Enterprise
+  status                   String    @default("inactive") // active | trialing | past_due | canceled | inactive | incomplete
+  seatLimit                Int       @default(25)
+  stripeCustomerId         String?
+  stripeSubscriptionId     String?
+  stripePriceId            String?
+  stripeProductId          String?
+  currentPeriodEnd         DateTime?
+  cancelAtPeriodEnd        Boolean   @default(false)
+  defaultPaymentMethodId   String?
+  paymentMethodBrand       String?
+  paymentMethodLast4       String?
+  paymentMethodExpMonth    Int?
+  paymentMethodExpYear     Int?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  company                  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model CompanySetting {
+  id                           String  @id @default(cuid())
+  companyId                    String  @unique
+  strictGate                   Boolean @default(true)
+  coiThresholdDays             Int     @default(60)
+  strictPaymentGate            Boolean @default(true)
+  blockAssignmentIfDocsMissing Boolean @default(true)
+  expiryAlertThresholdDays     Int     @default(60)
+  companyName                  String?
+  projectIdPrefix              String  @default("CHG-")
+  defaultProjectMode           String  @default("Contractor-Led")
+  timezone                     String  @default("America/New_York")
+  dateFormat                   String  @default("MM/DD/YYYY")
+  currency                     String  @default("USD")
+  fiscalYearStart              String  @default("January")
+  warehouseLowStockThreshold   Int     @default(5)
+  warehouseValueRoundingMode   String  @default("nearest")
+  contractorPortalEnabled      Boolean @default(false)
+  meta                         Json?
+  company                      Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  Admin
+  ProjectManager
+  GeneralContractor
+  Subcontractor
+  Inspector
+  Tenant
+  Vendor
+}
+
+enum DealStage {
+  Sourced
+  Underwriting
+  OfferOut
+  UnderContract
+  Closed
+  Lost
+}
+
+enum ProjectStatus {
+  Planning
+  Active
+  OnHold
+  Complete
+}
+
+enum PhaseStatus {
+  NotStarted
+  Active
+  Complete
+  OnHold
+}
+
+enum ChecklistStatus {
+  Pending
+  Done
+  Flagged
+  NA
+}
+
+enum DrawStatus {
+  Pending
+  Approved
+  Paid
+  Rejected
+}
+
+enum ContactType {
+  Contractor
+  Subcontractor
+  Vendor
+  Inspector
+  Tenant
+  Other
+}
+
+enum DocLevel {
+  Company
+  Property
+  Project
+  Contact
+}
+
+enum DocStatus {
+  Active
+  Expired
+  Pending
+  Archived
+  Staged
+}
+
+model Notification {
+  id            String    @id @default(cuid())
+  companyId     String
+  userId        String
+  event         String
+  channel       String
+  title         String
+  body          String?
+  link          String?
+  meta          Json?
+  status        String    @default("Pending")
+  urgent        Boolean   @default(false)
+  scheduledFor  DateTime?
+  sentAt        DateTime?
+  failedAt      DateTime?
+  failureReason String?
+  resolvedAt    DateTime?
+  resolvedById  String?
+  resolvedReason String?
+  readAt        DateTime?
+  dedupeKey     String?
+  createdAt     DateTime  @default(now())
+
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, userId, channel, readAt])
+  @@index([companyId, channel, status, scheduledFor])
+  @@index([companyId, channel, status, failedAt])
+  @@index([companyId, channel, status, resolvedAt])
+  @@unique([userId, channel, dedupeKey])
+}
+
+model NotificationState {
+  id                       String    @id @default(cuid())
+  companyId                String    @unique
+  lastDigestSweepAt        DateTime?
+  lastSweepAttemptAt       DateTime?
+  lastLapseSweepAt         DateTime?
+  lastStaleAlertAt         DateTime?
+  lastWeeklyAlertRecapAt   DateTime?
+  lastManualSweepAt        DateTime?
+  lastManualSweepByUserId  String?
+  lastManualSweepByName    String?
+  updatedAt                DateTime  @updatedAt
+
+  company                  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model StaleSweepAlertLog {
+  id              String   @id @default(cuid())
+  companyId       String
+  sentAt          DateTime @default(now())
+  staleForMs      Float?
+  thresholdMs     Int
+  throttleMs      Int
+  recipientCount  Int
+  deliveredCount  Int
+  failedCount     Int
+  recipients      Json
+  createdAt       DateTime @default(now())
+
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, sentAt])
+}
+
+model ContactNotificationLog {
+  id             String    @id @default(cuid())
+  companyId      String
+  contactId      String
+  event          String
+  dedupeKey      String
+  status         String    @default("Sent") // "Sent" | "Failed"
+  title          String?
+  link           String?
+  recipientEmail String?
+  failureReason  String?
+  failedAt       DateTime?
+  resolvedAt     DateTime?
+  resolvedById   String?
+  resolvedReason String?
+  sentAt         DateTime  @default(now())
+
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact        Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, event, dedupeKey])
+  @@index([companyId, contactId])
+  @@index([companyId, status, failedAt])
+  @@index([companyId, status, resolvedAt])
+}
