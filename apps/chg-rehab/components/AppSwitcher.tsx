@@ -8,7 +8,14 @@ type Product = {
   tagline: string;
   color: string;
   initial: string;
+  // External Replit port for cross-port dev URLs (`https://<host>:<port>`).
+  // Use this for products whose .replit `externalPort` is the same as their
+  // `localPort` (e.g. CHG Rehab — 3000:3000).
   devPort?: number;
+  // For products served at the Replit bare host (externalPort 80/443 — e.g.
+  // the CHG CRM at localPort 5000 → externalPort 80). Cross-port URLs do
+  // NOT work for these; the dev edge proxy serves them on the root domain.
+  devBareHost?: boolean;
   brandDomain?: string;
 };
 
@@ -19,7 +26,7 @@ const PRODUCTS: Product[] = [
     tagline: "Real Estate CRM",
     color: "#0C447C",
     initial: "C",
-    devPort: 5000,
+    devBareHost: true,
   },
   {
     code: "deallink",
@@ -38,11 +45,18 @@ const PRODUCTS: Product[] = [
   },
 ];
 
-function devCrossPortUrl(port?: number): string | null {
-  if (typeof window === "undefined" || !port) return null;
+function devUrlFor(product: Product): string | null {
+  if (typeof window === "undefined") return null;
   const host = window.location.hostname;
-  if (/\.replit\.dev$/.test(host)) {
-    return `https://${host}:${port}`;
+  if (!/\.replit\.dev$/.test(host)) return null;
+  // CHG Rehab is currently the host on this domain — strip the dev suffix
+  // so we resolve to the same Replit project, just at a different port.
+  // window.location.hostname here is the chg-rehab dev domain.
+  if (product.devBareHost) {
+    return `https://${host}`;
+  }
+  if (product.devPort) {
+    return `https://${host}:${product.devPort}`;
   }
   return null;
 }
@@ -138,7 +152,7 @@ export default function AppSwitcher({
           <div style={{ padding: "4px 0" }}>
             {PRODUCTS.map((product) => {
               const isCurrent = product.code === currentProduct;
-              const devUrl = devCrossPortUrl(product.devPort);
+              const devUrl = devUrlFor(product);
               const href = product.brandDomain
                 ? `https://${product.brandDomain}`
                 : devUrl || undefined;
