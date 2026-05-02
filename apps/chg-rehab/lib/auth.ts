@@ -21,19 +21,46 @@ export const getOidcConfig = memoize(
 );
 
 /**
- * Returns the public-facing origin (scheme://host) for this request.
+ * Returns the public-facing origin (scheme://host[:port]) for this request.
  * Behind the Replit proxy `req.url` reflects the internal bind address
- * (e.g. https://0.0.0.0:5000), so we must build URLs from the forwarded
+ * (e.g. https://0.0.0.0:3000), so we must build URLs from the forwarded
  * headers instead.
+ *
+ * Resolution order:
+ *   1. APP_BASE_URL env (explicit override; required when this app is
+ *      reachable on a non-default external port — e.g. in the Replit dev
+ *      preview where CHG Rehab is at https://<host>:3000 but the proxy
+ *      strips the port from x-forwarded-host, causing OIDC redirects to
+ *      bounce to whichever app owns the canonical host).
+ *   2. x-forwarded-{proto,host} (+ x-forwarded-port when non-default).
+ *   3. host header (last resort).
  */
 export function publicOrigin(req: NextRequest | { headers: Headers }): string {
+  const override = process.env.APP_BASE_URL?.trim();
+  if (override) return override.replace(/\/+$/, "");
+
   const xfHost = req.headers.get("x-forwarded-host");
-  const host = xfHost || req.headers.get("host") || "";
+  const hostHeader = xfHost || req.headers.get("host") || "";
   const proto =
     req.headers.get("x-forwarded-proto") ||
-    (host.includes("localhost") || host.startsWith("0.") || host.startsWith("127.")
+    (hostHeader.includes("localhost") ||
+    hostHeader.startsWith("0.") ||
+    hostHeader.startsWith("127.")
       ? "http"
       : "https");
+
+  // If the forwarded host already has a :port suffix, trust it.
+  // Otherwise consult x-forwarded-port and append it when non-default.
+  let host = hostHeader;
+  if (!/:\d+$/.test(host)) {
+    const xfPort = req.headers.get("x-forwarded-port");
+    const port = xfPort ? Number(xfPort) : NaN;
+    const isDefault =
+      (proto === "https" && port === 443) || (proto === "http" && port === 80);
+    if (xfPort && !Number.isNaN(port) && !isDefault) {
+      host = `${host}:${xfPort}`;
+    }
+  }
   return `${proto}://${host}`;
 }
 
