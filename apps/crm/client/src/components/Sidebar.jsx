@@ -13,7 +13,7 @@ const DEPARTMENTS = [
 ];
 
 const ADMIN_NAV = [
-  { label: 'Admin',     icon: ShieldIcon,  path: '/admin' },
+  { label: 'Super Admin', icon: ShieldIcon, path: '/admin' },
 ];
 
 export default function Sidebar() {
@@ -63,7 +63,7 @@ export default function Sidebar() {
         {(isSuperAdmin || isAccountAdmin) && (
           <>
             <div className="pt-4 pb-1 px-3">
-              <div className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Admin</div>
+              <div className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Super Admin</div>
             </div>
             {ADMIN_NAV.map(item => (
               <button
