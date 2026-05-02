@@ -22,6 +22,13 @@ const PRODUCTS = [
     color: 'bg-success-500',
     initial: 'D',
   },
+  {
+    code: 'chg-rehab',
+    name: 'CHG Rehab',
+    tagline: 'Rehab project management',
+    color: 'bg-warning-500',
+    initial: 'R',
+  },
 ];
 
 /**
