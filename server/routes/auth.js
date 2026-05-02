@@ -5,7 +5,7 @@ const crypto = require('crypto')
 
 // Postgres-backed rate limiter — shared across server instances and survives
 // deploys, unlike the previous in-memory Map. Requires the signup_attempts
-// table from apps/chg/scripts/phase-2-signup-rate-limit.sql.
+// table from apps/crm/scripts/phase-2-signup-rate-limit.sql.
 //
 // If Supabase is unreachable, we fail OPEN (allow the signup through) rather
 // than locking every signup out on a DB blip. The tradeoff: a rate-limit

@@ -1,6 +1,6 @@
 # @rei-code/api-client
 
-Shared API client used by both `apps/chg` and `apps/deallink` to call the Express server at `/server/`.
+Shared API client used by both `apps/crm` and `apps/deallink` to call the Express server at `/server/`.
 
 ## What lives here (eventually)
 
@@ -14,7 +14,7 @@ An empty scaffold. This workspace is declared so that when the API client is ext
 
 ## Consumers
 
-- `apps/chg` → will import via `@rei-code/api-client`
+- `apps/crm` → will import via `@rei-code/api-client`
 - `apps/deallink` → will import via `@rei-code/api-client`
 
 ## Stack

@@ -37,11 +37,11 @@ Instead, we rebuild prod's pre-Phase-1 shape from the dev SQL files, then seed 3
 
 **In staging SQL editor (`cmlfnhzjfhuynzuleyxt`)**, paste and run these files in order:
 
-1. [`apps/chg/scripts/schema.sql`](../../apps/chg/scripts/schema.sql) — base business tables
-2. [`apps/chg/scripts/saas-migration.sql`](../../apps/chg/scripts/saas-migration.sql) — multi-tenant layer (accounts, roles, RLS)
-3. [`apps/chg/scripts/construction-migration.sql`](../../apps/chg/scripts/construction-migration.sql) — units, master_phases, addendums
-4. [`apps/chg/scripts/fix-trigger.sql`](../../apps/chg/scripts/fix-trigger.sql) — NULL-safety fix prod already has
-5. [`apps/chg/scripts/phase-1-staging-seed.sql`](../../apps/chg/scripts/phase-1-staging-seed.sql) — 3 fake accounts + roles + data
+1. [`apps/crm/scripts/schema.sql`](../../apps/crm/scripts/schema.sql) — base business tables
+2. [`apps/crm/scripts/saas-migration.sql`](../../apps/crm/scripts/saas-migration.sql) — multi-tenant layer (accounts, roles, RLS)
+3. [`apps/crm/scripts/construction-migration.sql`](../../apps/crm/scripts/construction-migration.sql) — units, master_phases, addendums
+4. [`apps/crm/scripts/fix-trigger.sql`](../../apps/crm/scripts/fix-trigger.sql) — NULL-safety fix prod already has
+5. [`apps/crm/scripts/phase-1-staging-seed.sql`](../../apps/crm/scripts/phase-1-staging-seed.sql) — 3 fake accounts + roles + data
 
 Each file should run in <5s and return "Success. No rows returned." If any file errors, STOP and paste the error to Claude.
 
@@ -57,18 +57,18 @@ After step 5, run the sanity check query from the bottom of the seed file:
 
 In **staging** (`cmlfnhzjfhuynzuleyxt`) SQL editor:
 
-1. Paste full contents of [`apps/chg/scripts/security-hotfix-handle-new-user.sql`](../../apps/chg/scripts/security-hotfix-handle-new-user.sql) and run. Should return "Success. No rows returned." in <1s.
-2. Paste full contents of [`apps/chg/scripts/phase-1-product-migration.sql`](../../apps/chg/scripts/phase-1-product-migration.sql) and run. Should return "Success. No rows returned." in <10s. Watch for any error — if you see one, STOP and paste the error to Claude.
+1. Paste full contents of [`apps/crm/scripts/security-hotfix-handle-new-user.sql`](../../apps/crm/scripts/security-hotfix-handle-new-user.sql) and run. Should return "Success. No rows returned." in <1s.
+2. Paste full contents of [`apps/crm/scripts/phase-1-product-migration.sql`](../../apps/crm/scripts/phase-1-product-migration.sql) and run. Should return "Success. No rows returned." in <10s. Watch for any error — if you see one, STOP and paste the error to Claude.
 
 ### Step A3 — Verify on staging
 
-Paste each query from [`apps/chg/scripts/phase-1-product-migration-verify.sql`](../../apps/chg/scripts/phase-1-product-migration-verify.sql) one at a time. Each is labeled with the PASS criteria. If any query returns unexpected results, STOP.
+Paste each query from [`apps/crm/scripts/phase-1-product-migration-verify.sql`](../../apps/crm/scripts/phase-1-product-migration-verify.sql) one at a time. Each is labeled with the PASS criteria. If any query returns unexpected results, STOP.
 
 If all checks pass, staging rehearsal is a success.
 
 ### Step A4 — (Optional) test rollback on staging
 
-To verify the rollback script works: paste [`apps/chg/scripts/phase-1-product-migration-rollback.sql`](../../apps/chg/scripts/phase-1-product-migration-rollback.sql) and run. Re-run the forward migration afterwards to restore the staging state.
+To verify the rollback script works: paste [`apps/crm/scripts/phase-1-product-migration-rollback.sql`](../../apps/crm/scripts/phase-1-product-migration-rollback.sql) and run. Re-run the forward migration afterwards to restore the staging state.
 
 ---
 
@@ -87,20 +87,20 @@ To verify the rollback script works: paste [`apps/chg/scripts/phase-1-product-mi
 If the trigger fix hasn't been applied to prod yet:
 
 1. **Prod** SQL editor
-2. Paste [`security-hotfix-handle-new-user.sql`](../../apps/chg/scripts/security-hotfix-handle-new-user.sql)
+2. Paste [`security-hotfix-handle-new-user.sql`](../../apps/crm/scripts/security-hotfix-handle-new-user.sql)
 3. Run. Expect <1s.
 4. Verify with: `SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname = 'handle_new_user';` — body should match the new version.
 
 ### Step B3 — Deploy the product migration
 
 1. **Prod** SQL editor
-2. Paste [`phase-1-product-migration.sql`](../../apps/chg/scripts/phase-1-product-migration.sql)
+2. Paste [`phase-1-product-migration.sql`](../../apps/crm/scripts/phase-1-product-migration.sql)
 3. Run. Expect <10s.
 4. If ANY error appears: **DO NOT re-run**. Paste the error to Claude. Claude will decide whether to retry, rollback, or PITR.
 
 ### Step B4 — Verify prod
 
-Run each query from [`phase-1-product-migration-verify.sql`](../../apps/chg/scripts/phase-1-product-migration-verify.sql). Every check should PASS.
+Run each query from [`phase-1-product-migration-verify.sql`](../../apps/crm/scripts/phase-1-product-migration-verify.sql). Every check should PASS.
 
 ### Step B5 — Smoke test the live app
 

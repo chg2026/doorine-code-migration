@@ -21,8 +21,12 @@
     "rehab:db:push": "npm run db:push --workspace=apps/chg-rehab",
     "rehab:db:seed": "npm run db:seed --workspace=apps/chg-rehab",
     "rehab:db:generate": "npm run db:generate --workspace=apps/chg-rehab",
+    "rehab:test": "npm run test --workspace=apps/chg-rehab",
+    "rehab:cron": "npm run cron:notifications-sweep --workspace=apps/chg-rehab",
+    "rehab:lint": "npm run lint --workspace=apps/chg-rehab",
     "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "engines": {
     "node": ">=20.0.0",

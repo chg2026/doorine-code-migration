@@ -43,8 +43,12 @@ edit `.replit` by hand):
   from `apps/crm/client/`, served by `server/index.js`.
 - **CHG Rehab** — `next dev -H 0.0.0.0 -p 3000` (console output). Boots in
   ~2 s and is reachable at the dev domain on port 3000.
-- **Project** — parallel parent that runs both Server and CHG Rehab. Default
-  Run-button target.
+- **Project** — parallel parent that runs both Server and CHG Rehab. The
+  Replit platform auto-creates this wrapper (and points the Run button at
+  it) whenever a project has more than one workflow. It is system-managed
+  and cannot be removed or edited via the workflows skill — that is normal
+  and expected for a multi-service monorepo. To run only one product, click
+  the workflow name in the Workflows pane instead of the Run button.
 
 Both ports are forwarded to the public dev domain: `5000 → 80` (Gold Bridge)
 and `3000 → 3000` (CHG Rehab).

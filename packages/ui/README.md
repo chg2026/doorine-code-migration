@@ -1,6 +1,6 @@
 # @rei-code/ui
 
-Shared React component library used by both `apps/chg` and `apps/deallink`.
+Shared React component library used by both `apps/crm` and `apps/deallink`.
 
 ## What lives here (eventually)
 
@@ -14,7 +14,7 @@ An empty scaffold. This workspace is declared so that when the shared components
 
 ## Consumers
 
-- `apps/chg` → will import via `@rei-code/ui`
+- `apps/crm` → will import via `@rei-code/ui`
 - `apps/deallink` → will import via `@rei-code/ui`
 
 ## Stack
