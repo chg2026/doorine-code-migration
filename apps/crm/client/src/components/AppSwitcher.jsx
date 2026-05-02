@@ -1,12 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-// Static presentation catalog for the two Gold Bridge products. Keeps icon +
-// color + tagline out of the DB since those are pure UI concerns. Business
-// metadata (plan, status, brand_domain) comes from /auth/me entitlements.
+// Static presentation catalog for the Gold Bridge products. Keeps icon +
+// color + tagline + URL fallback out of the DB since those are pure UI
+// concerns. Business metadata (plan, status, brand_domain) comes from
+// /auth/me entitlements when an account has a real entitlement granted.
 //
-// Adding a third product later: add a row here AND give the user an entitlement
-// server-side. The switcher will light it up automatically.
+// `devPort` lets the switcher work in the Replit dev environment by
+// computing the cross-port URL (https://<port>-<host>) without needing a
+// brand_domain to be set. Once a product gets a real domain, set it via
+// the entitlement's brand_domain (super-admin → Entitlements panel).
+//
+// Adding a fourth product later: add a row here AND give the user an
+// entitlement server-side. The switcher will light it up automatically.
 const PRODUCTS = [
   {
     code: 'chg',
@@ -21,6 +27,8 @@ const PRODUCTS = [
     tagline: 'Wholesaler deal links',
     color: 'bg-success-500',
     initial: 'D',
+    // Deal Link does not yet have a deployment or workflow — staying
+    // "Coming soon" until apps/deallink gets its own published URL.
   },
   {
     code: 'chg-rehab',
@@ -28,8 +36,23 @@ const PRODUCTS = [
     tagline: 'Rehab project management',
     color: 'bg-warning-500',
     initial: 'R',
+    devPort: 3000,
   },
 ];
+
+// In Replit dev, port 3000 is reachable at https://3000-<dev-hostname>.
+// In production we want the entitlement's brand_domain (or, eventually,
+// a deployed REACT_APP_CHG_REHAB_URL). This helper computes a safe URL
+// for the dev environment and returns null otherwise.
+function devCrossPortUrl(port) {
+  if (typeof window === 'undefined' || !port) return null;
+  const host = window.location.hostname;
+  // Match the standard Replit dev domain shape: <id>.<region>.replit.dev
+  if (/\.replit\.dev$/.test(host)) {
+    return `https://${port}-${host}`;
+  }
+  return null;
+}
 
 /**
  * 9-dot app switcher. Lives in the top bar, shows a dropdown card of the
@@ -88,15 +111,20 @@ export default function AppSwitcher({ currentProduct = 'chg' }) {
               const entitled = hasProductAccess(product.code);
               const isCurrent = product.code === currentProduct;
               const brandDomain = entitlement?.brand_domain;
+              const devUrl = devCrossPortUrl(product.devPort);
 
               // Decide what this tile does:
               //   - current product  → no link, just "Current" badge
-              //   - entitled + has brand_domain  → link to that product
-              //   - entitled, no brand_domain yet  → "Open" but no URL (dev/pre-launch)
-              //   - not entitled  → "Coming soon" upsell placeholder (Phase 5 will wire
+              //   - has brand_domain  → link to that production domain
+              //   - in Replit dev + product has a devPort  → link via cross-port URL
+              //   - otherwise  → "Coming soon" placeholder (Phase 5 will wire
               //     this to a real signup CTA)
-              const clickable = !isCurrent && entitled && !!brandDomain;
-              const href = brandDomain ? `https://${brandDomain}` : undefined;
+              const href = brandDomain
+                ? `https://${brandDomain}`
+                : devUrl || undefined;
+              const clickable = !isCurrent && !!href;
+              // Show "Coming soon" when the tile is neither current nor reachable.
+              const showComingSoon = !isCurrent && !href;
 
               const Inner = (
                 <div className="flex items-start gap-3 px-4 py-3 rounded-lg">
@@ -111,7 +139,7 @@ export default function AppSwitcher({ currentProduct = 'chg' }) {
                           Current
                         </span>
                       )}
-                      {!isCurrent && !entitled && (
+                      {showComingSoon && (
                         <span className="text-[10px] uppercase tracking-wide font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                           Coming soon
                         </span>
@@ -127,6 +155,8 @@ export default function AppSwitcher({ currentProduct = 'chg' }) {
                   <a
                     key={product.code}
                     href={href}
+                    target="_blank"
+                    rel="noreferrer"
                     className="block mx-1 hover:bg-gray-50 transition-colors rounded-lg"
                     onClick={() => setOpen(false)}
                   >
