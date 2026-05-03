@@ -8,12 +8,12 @@ import type { PrismaClient } from "@prisma/client";
 export async function seedInvestorPortal(prisma: PrismaClient, companyId: string) {
   console.log("[seed:investor] starting");
 
-  // 1. Make sure the user_profiles table has the is_investor column. The
-  //    table itself lives in Supabase but our chg-rehab seed already runs
-  //    against the same Postgres database via DATABASE_URL.
-  await prisma.$executeRawUnsafe(
-    'ALTER TABLE IF EXISTS public.user_profiles ADD COLUMN IF NOT EXISTS is_investor BOOLEAN NOT NULL DEFAULT FALSE'
-  );
+  // NOTE: `public.user_profiles` lives in the **Supabase** database, not in
+  // Helium DB (which is what `prisma` here is connected to via DATABASE_URL).
+  // Schema changes for that table — including the `is_investor` column —
+  // are versioned in `supabase/migrations/` and applied via
+  // `npm run supabase:migrate` (or by hand from the Supabase SQL editor).
+  // See `apps/chg-rehab/prisma/README.md` for the full split.
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
