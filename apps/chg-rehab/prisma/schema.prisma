@@ -44,6 +44,7 @@ model Company {
   investors            Investor[]
   offerings            Offering[]
   investorDocuments    InvestorDocument[]
+  investorInvites      InvestorInvite[]
 }
 
 model User {
@@ -799,6 +800,8 @@ model Offering {
   stage           OfferingStage         @default(Prospecting)
   status          OfferingStatus        @default(Active)
   coverImageUrl   String?
+  coverImageObjectPath String?
+  documentObjectPaths  String[]         @default([])
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @default(now()) @updatedAt
 
@@ -1109,4 +1112,24 @@ enum InvestorCommunicationChannel {
   Phone
   Note
   Meeting
+}
+
+model InvestorInvite {
+  id           String              @id @default(cuid())
+  companyId    String
+  email        String
+  firstName    String?
+  lastName     String?
+  token        String              @unique
+  invitedById  String?
+  consumedAt   DateTime?
+  consumedById String?
+  expiresAt    DateTime
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @default(now()) @updatedAt
+
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([email])
 }

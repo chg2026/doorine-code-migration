@@ -312,7 +312,14 @@ async function main() {
     },
   ] as const;
 
-  for (const s of subscriptionSpecs) {
+  for (const spec of subscriptionSpecs) {
+    const s = spec as typeof spec & {
+      fundedAt?: string;
+      currentValue?: string;
+      lifetimeDistributions?: string;
+      irrToDate?: string;
+      cocToDate?: string;
+    };
     const data = {
       investorId,
       offeringId: s.offeringId,

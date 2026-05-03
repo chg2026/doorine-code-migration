@@ -1722,7 +1722,7 @@ function ProductsTab({ onOk, onError }: { onOk: (t: string) => void; onError: (t
       </div>
       <p style={{ fontSize: 11, color: "#6b7280", padding: "8px 12px 12px", margin: 0 }}>
         The AppSwitcher uses <code>brand_domain</code> to build the production link for each tile. Leave
-        blank to fall back to the dev cross-port URL or "Coming soon".
+        blank to fall back to the dev cross-port URL or &quot;Coming soon&quot;.
       </p>
     </Card>
   );
