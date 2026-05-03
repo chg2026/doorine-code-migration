@@ -29,7 +29,7 @@ const PRODUCTS: Product[] = [
     tagline: "Operations platform",
     color: "#0C447C",
     initial: "C",
-    devPort: 3000,
+    devBareHost: true,
   },
   {
     code: "deallink",
