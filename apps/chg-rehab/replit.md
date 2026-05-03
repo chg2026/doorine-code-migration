@@ -13,7 +13,7 @@ authoritative wireframe — CSS must match exactly).
 
 - **Framework:** Next.js 15 (App Router, Server Actions enabled) + React 19 + TypeScript
 - **Database:** PostgreSQL via Prisma 6.19.3 (use `./node_modules/.bin/prisma`, NOT npx)
-- **Auth:** Replit OIDC (`openid-client` v6) with iron-session (`chg_session` cookie)
+- **Auth:** Supabase (`@supabase/ssr` + `@supabase/supabase-js`) — email+password and phone OTP. Shadow-syncs `auth.uid()` → Prisma `User.id` and Supabase `accounts.id` → Prisma `Company.id` on first sign-in (see `lib/auth.ts`). Iron-session (`chg_session` cookie) is retained only as a one-shot bridge for `pendingInviteToken`.
 - **File Storage:** Replit Object Storage (`@google-cloud/storage` + Uppy v5) — `lib/objectStorage.ts`
 - **Upload Validation:** `lib/fileValidation.ts` (shared client+server constants/sync check) and `lib/serverFileValidation.ts` (server-only async check against GCS object metadata). Allowed types: PDF, JPG, PNG. Max size: 20 MB.
 - **Billing:** Stripe (`stripe` SDK v22 + `@stripe/stripe-js` + `@stripe/react-stripe-js`) — `lib/stripe.ts`
@@ -24,10 +24,12 @@ authoritative wireframe — CSS must match exactly).
 ```
 app/
   layout.tsx, page.tsx, globals.css
-  login/                                   OIDC sign-in page
+  login/                                   Supabase email+password sign-in page (client)
+  phone-auth/                              Supabase phone-OTP sign-in page (client)
   api/
-    login, callback, logout                OIDC flow
-    dev-login                              DEV-ONLY session minting helper (404 in prod)
+    logout                                 clears Supabase session + iron-session bridge
+    auth/login                             POST email+password (sets sb-* cookies)
+    auth/phone/{send-otp,verify-otp}       SMS OTP via Supabase
     auth/user                              current user JSON
     objects, uploads                       object storage routes
     documents/{route.ts, [id]/promote, [id]/download}
@@ -35,7 +37,7 @@ app/
     admin/{settings, company, permissions, users, users/[id]}
     billing/{route.ts, setup-intent, payment-method, subscription, invoices}   Stripe-backed billing
     stripe/webhook                         Stripe webhook receiver (raw-body verified)
-    invites/accept                         invite token landing → sets session token → /api/login
+    invites/accept                         invite token landing → stashes token → /login
     cron/notifications-sweep               scheduled trigger for the notification sweep (CRON_SECRET-gated)
     draws/[id]/approve                     payment gate enforced here
     contacts/[id]/assign                   compliance gate enforced here
@@ -342,13 +344,16 @@ treatment. (Note: the prisma delegate is `prisma.activityLogEntry`, not
 
 ## Auth Flow
 
-- `GET /api/login` — kicks off OIDC with PKCE
-- `GET /api/callback` — completes OIDC, upserts user, returns to `next`
-- `GET /api/logout` — ends session and Replit session
+- `/login` — email+password sign-in page (browser Supabase client sets cookies)
+- `/phone-auth` — phone-OTP sign-in page
+- `POST /api/auth/login` — server-side email+password fallback
+- `POST /api/auth/phone/send-otp` — sends an SMS OTP via Supabase
+- `POST /api/auth/phone/verify-otp` — verifies the OTP, sets `sb-*` cookies
+- `GET|POST /api/logout` — clears Supabase session + iron-session bridge, redirects to `/login`
 - `GET /api/auth/user` — current user info (401 if not signed in)
-- `GET /api/dev-login?as=<userId>&next=<path>` — **DEV ONLY** — mints an
-  iron-session for a seeded user. Returns 404 in production. Used for local
-  smoke tests of auth-gated pages.
+- `GET /api/invites/accept?token=…` — stashes the invite token in
+  iron-session and redirects to `/login`. The token is consumed on the
+  first successful Supabase sign-in (`lib/auth.ts` → `syncSupabaseUser`).
 
 ## Object Storage
 

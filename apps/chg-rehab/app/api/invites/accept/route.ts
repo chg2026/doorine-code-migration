@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Stash the token on the session and bounce through normal login.
-  const res = NextResponse.redirect(publicUrl(req, "/api/login?next=/admin"));
+  const res = NextResponse.redirect(publicUrl(req, "/login?next=/admin"));
   const session = await getIronSession<AppSession>(req, res, sessionOptions);
   session.pendingInviteToken = token;
   await session.save();

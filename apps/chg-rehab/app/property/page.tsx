@@ -63,7 +63,7 @@ function matchesFilter(status: string | null, f: Filter): boolean {
 
 export default async function PropertyPage({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/login");
+  if (!user) redirect("/login");
   if (!(await can(user, "property", "view"))) {
     return <div style={{ padding: 20 }}>You do not have access to property records.</div>;
   }

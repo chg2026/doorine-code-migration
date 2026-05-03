@@ -52,7 +52,10 @@ export async function GET() {
         ...(dbError ? { databaseError: dbError } : {}),
         objectStorage: storageCheck.ok ? "reachable" : "unreachable",
         ...(storageCheck.error ? { objectStorageError: storageCheck.error } : {}),
-        replitAuth: process.env.REPL_ID ? "configured" : "missing",
+        supabaseAuth:
+          process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? "configured"
+            : "missing",
         unsubscribeLinks: unsubscribeDiag.ok ? "ok" : "missing",
         ...(unsubscribeDiag.reason ? { unsubscribeLinksReason: unsubscribeDiag.reason } : {}),
       },

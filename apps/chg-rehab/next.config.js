@@ -4,6 +4,10 @@ const nextConfig = {
   experimental: {
     serverActions: { allowedOrigins: ["*"] },
   },
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  },
   // The instrumentation hook eagerly compiles a few server-only modules
   // (e.g. lib/replitmail.ts, lib/objectStorage.ts) whose dependency tree uses
   // `node:` URI imports. Tell webpack to leave these scheme-prefixed imports

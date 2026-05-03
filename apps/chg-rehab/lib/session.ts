@@ -1,5 +1,10 @@
 import type { SessionOptions } from "iron-session";
 
+/**
+ * Shape returned by `getCurrentUser()`. Auth identity is sourced from the
+ * Supabase session cookie; this is just the chg-rehab projection of the
+ * matching Prisma `User` row.
+ */
 export interface SessionUser {
   id: string;
   email?: string | null;
@@ -10,24 +15,13 @@ export interface SessionUser {
   companyId: string;
 }
 
+/**
+ * Iron-session payload. After the Supabase auth swap, the only thing we
+ * still keep here is `pendingInviteToken` — the bridge cookie that carries
+ * an invite token from `/api/invites/accept` through `/login` and gets
+ * consumed on the next successful sign-in.
+ */
 export interface AppSession {
-  user?: SessionUser;
-  // Tokens for refresh / logout
-  tokens?: {
-    access_token: string;
-    refresh_token?: string;
-    id_token?: string;
-    expires_at?: number; // epoch seconds
-  };
-  // Transient OIDC flow state
-  oidc?: {
-    state: string;
-    codeVerifier: string;
-    nonce?: string;
-    redirectAfter?: string;
-    callbackUrl: string;
-  };
-  // Pending invite token to apply after the next successful login
   pendingInviteToken?: string;
 }
 

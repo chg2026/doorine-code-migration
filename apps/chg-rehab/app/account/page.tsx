@@ -46,7 +46,7 @@ function readCompanyQuietHours(meta: unknown): { start: string; end: string } {
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/login");
+  if (!user) redirect("/login");
 
   const [settings, prefs, dbUser] = await Promise.all([
     getCompanySettings(user.companyId),

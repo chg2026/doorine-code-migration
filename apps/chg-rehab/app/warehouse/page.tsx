@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function WarehousePage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/login");
+  if (!user) redirect("/login");
   if (!(await can(user, "warehouse", "view"))) redirect("/");
 
   const [departments, templates, settings, canEdit, canManage] = await Promise.all([

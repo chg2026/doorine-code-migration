@@ -36,7 +36,7 @@ export default async function DocsPage(props: {
   searchParams: Promise<{ level?: string; status?: string; cat?: string; q?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/login");
+  if (!user) redirect("/login");
   if (!(await can(user, "documents", "view"))) redirect("/");
 
   const sp = await props.searchParams;

@@ -77,7 +77,7 @@ const TYPE_TO_TAB: Partial<Record<ContactType, Exclude<Tab, "unsubscribed">>> = 
 
 export default async function ContactsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/login");
+  if (!user) redirect("/login");
   if (!(await can(user, "contacts", "view"))) {
     return <div style={{ padding: 20 }}>You do not have access to contacts.</div>;
   }

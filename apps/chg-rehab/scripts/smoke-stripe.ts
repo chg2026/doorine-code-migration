@@ -19,6 +19,12 @@
  *  10) Seat limit: temporarily set seatLimit to current usage, invite one
  *      more user, expect HTTP 402 with code "seat_limit_reached"; restore.
  */
+// NOTE: This smoke script is broken under Supabase auth — it relied on the
+// removed `/api/dev-login` route to mint a chg_session cookie. To re-enable,
+// rewrite step (1) below to (a) ask Supabase admin.createUser to mint a
+// session for the seeded admin user, then (b) drop the resulting
+// `sb-*-auth-token` cookies onto the request. Tracked as Phase 1 follow-up.
+
 import Stripe from "stripe";
 import { prisma } from "../lib/prisma";
 

@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/api/login");
+  if (!user) redirect("/login");
   if (user.role !== "Admin") redirect("/");
 
   const [settings, company, perms, users, removedUsers, invites, notificationState] = await Promise.all([

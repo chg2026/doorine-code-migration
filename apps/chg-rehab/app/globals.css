@@ -539,3 +539,11 @@ body{font-family:var(--font);font-size:13px;color:var(--text-primary);background
 .login-cta:hover{background:#152d48;}
 .login-error{background:var(--red-bg);color:var(--red-txt);font-size:11px;padding:8px 10px;border-radius:5px;margin-bottom:12px;border:0.5px solid rgba(162,45,45,0.2);}
 .login-foot{text-align:center;font-size:10px;color:var(--text-tertiary);margin-top:16px;}
+.login-label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-secondary);font-weight:500;}
+.login-input{width:100%;padding:8px 10px;border:0.5px solid var(--border-lo);border-radius:5px;font-size:12px;font-family:var(--font);background:#fff;color:var(--text-primary);}
+.login-input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(15,29,55,0.08);}
+.login-input:disabled{background:#f7f9fc;color:var(--text-tertiary);}
+.login-divider{display:flex;align-items:center;gap:8px;margin:14px 0;font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;}
+.login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:var(--border-lo);}
+.login-cta-secondary{background:#fff;color:var(--navy);border:0.5px solid var(--border-lo);}
+.login-cta-secondary:hover{background:#f7f9fc;}
