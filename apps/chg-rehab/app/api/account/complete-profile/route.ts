@@ -8,6 +8,11 @@ export const dynamic = "force-dynamic";
  * Recompute and persist the caller's profile_score using the apps/crm rubric.
  * Returns the freshly computed score. Useful for clients that want to drive
  * the global completion banner forward without doing a full PUT to /profile.
+ *
+ * Note: this endpoint intentionally ignores any request body and recomputes
+ * the score from persisted user_profiles + accounts state. Clients that need
+ * to mutate fields should call PUT /api/account/profile first, which itself
+ * recomputes and returns the new score.
  */
 export async function PATCH() {
   const user = await getCurrentUser();
