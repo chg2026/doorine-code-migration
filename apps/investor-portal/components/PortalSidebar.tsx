@@ -44,7 +44,8 @@ export default function PortalSidebar({
       <div style={{ flex: 1, overflowY: "auto" }}>
         <div className="nav-sec">Investor</div>
         {NAV.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          const active =
+            pathname === item.href || (pathname?.startsWith(item.href + "/") ?? false);
           return (
             <Link key={item.href} href={item.href} className={`ni${active ? " on" : ""}`}>
               <span className="ni-dot" style={{ background: item.dot }} />

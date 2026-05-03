@@ -924,6 +924,7 @@ model InvestorDocument {
   sizeBytes     Int?
   uploadedById  String?
   uploadedAt    DateTime                @default(now())
+  viewedAt      DateTime?
   taxYear       Int?
 
   company       Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -962,6 +963,7 @@ model InvestorActivity {
   relatedSubscriptionId String?
   relatedDocumentId     String?
   relatedUpdateId       String?
+  readAt                DateTime?
   createdAt             DateTime                @default(now())
 
   investor              Investor                @relation(fields: [investorId], references: [id], onDelete: Cascade)

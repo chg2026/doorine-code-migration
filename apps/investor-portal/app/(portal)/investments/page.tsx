@@ -1,3 +1,4 @@
+import Link from "next/link";
 import PortalPage from "@/components/PortalPage";
 import { getCurrentInvestor } from "@/lib/auth";
 import {
@@ -72,27 +73,38 @@ export default async function InvestmentsPage() {
               <div className="kpi-s">{fmtMoney(t.totalFunded)} funded</div>
             </div>
             <div className="kpi">
-              <div className="kpi-l">Current value</div>
-              <div className={`kpi-v ${t.totalGain >= 0 ? "green" : "red"}`}>
-                {fmtMoney(t.totalCurrentValue)}
-              </div>
+              <div className="kpi-l">Active deals</div>
+              <div className="kpi-v">{t.activeCount}</div>
               <div className="kpi-s">
-                {t.totalGain >= 0 ? "↑" : "↓"} {fmtPct(Math.abs(t.totalGainPct))} total gain
+                of {t.totalCount} total {t.totalCount === 1 ? "subscription" : "subscriptions"}
               </div>
             </div>
             <div className="kpi">
-              <div className="kpi-l">Lifetime distributions</div>
-              <div className="kpi-v green">{fmtMoney(t.totalDistributions)}</div>
-              <div className="kpi-s">avg IRR {fmtPct(t.avgIrr)}</div>
+              <div className="kpi-l">Total returns</div>
+              <div className={`kpi-v ${t.totalGain + t.totalDistributions >= 0 ? "green" : "red"}`}>
+                {fmtMoney(t.totalDistributions + t.totalGain)}
+              </div>
+              <div className="kpi-s">
+                distributions + value gain · avg IRR {fmtPct(t.avgIrr)}
+              </div>
             </div>
           </div>
 
           <div className="card">
             <div className="card-hd">
               <div className="card-title">All investments</div>
-              <span className="card-sub">
-                {t.totalCount} {t.totalCount === 1 ? "subscription" : "subscriptions"}
-              </span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span className="card-sub">
+                  {t.totalCount} {t.totalCount === 1 ? "subscription" : "subscriptions"}
+                </span>
+                <Link
+                  href="/marketplace"
+                  className="btn btn-sm"
+                  title="Marketplace placeholder — full subscribe flow lands in Phase 4"
+                >
+                  + Subscribe to deal
+                </Link>
+              </div>
             </div>
             <table className="tbl">
               <thead>
@@ -115,8 +127,13 @@ export default async function InvestmentsPage() {
                   const funded = num(s.fundedAmount);
                   const gain = value - funded;
                   return (
-                    <tr key={s.id}>
-                      <td>
+                    <tr key={s.id} id={`sub-${s.id}`} className="row-clickable">
+                      <td style={{ position: "relative" }}>
+                        <Link
+                          href={`/investments/${s.offeringId}`}
+                          className="row-link row-overlay"
+                          aria-label={`Open ${s.offering.name}`}
+                        />
                         <div className="row-title">{s.offering.name}</div>
                         <div className="row-sub">
                           {PROPERTY_TYPE_LABEL[s.offering.propertyType] || "Other"}

@@ -10,6 +10,7 @@ import {
   num,
   summarizePortfolio,
 } from "@/lib/portfolio";
+import DashboardToolbar from "./DashboardToolbar";
 
 export const dynamic = "force-dynamic";
 
@@ -34,14 +35,37 @@ function statusPill(status: string) {
   }
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deal?: string }>;
+}) {
   const investor = await getCurrentInvestor();
   if (!investor) return null;
 
-  const [subs, activities] = await Promise.all([
+  const sp = await searchParams;
+  const dealParam = sp.deal || "all";
+
+  const [allSubs, activities] = await Promise.all([
     getInvestorSubscriptions(investor.id),
     getInvestorActivities(investor.id, 6),
   ]);
+
+  // Toolbar deal filter narrows the KPI strip + tables to a single deal,
+  // letting investors slice their portfolio without leaving the dashboard.
+  const subs =
+    dealParam !== "all"
+      ? allSubs.filter((s) => s.offeringId === dealParam)
+      : allSubs;
+  const dealOptions = allSubs.map((s) => ({ id: s.offeringId, name: s.offering.name }));
+  // Dedupe deal options (an investor may have multiple subs on the same deal).
+  const seen = new Set<string>();
+  const uniqDeals = dealOptions.filter((d) => {
+    if (seen.has(d.id)) return false;
+    seen.add(d.id);
+    return true;
+  });
+
   const t = summarizePortfolio(subs);
 
   const name = investor.firstName || investor.email || "investor";
@@ -49,7 +73,7 @@ export default async function DashboardPage() {
 
   return (
     <PortalPage title="Dashboard" subtitle={subtitle}>
-      {subs.length === 0 ? (
+      {allSubs.length === 0 ? (
         <div className="placeholder-card">
           <div className="placeholder-title">No investments yet</div>
           You haven&apos;t subscribed to any offerings. Once you commit to a
@@ -57,6 +81,7 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <>
+          <DashboardToolbar deals={uniqDeals} selectedDeal={dealParam} />
           <div className="g4" style={{ marginBottom: 10 }}>
             <div className="kpi">
               <div className="kpi-l">Total invested</div>
@@ -80,9 +105,11 @@ export default async function DashboardPage() {
               <div className="kpi-s">lifetime, all deals</div>
             </div>
             <div className="kpi">
-              <div className="kpi-l">Active offerings</div>
-              <div className="kpi-v">{t.activeCount}</div>
-              <div className="kpi-s">avg CoC {fmtPct(t.avgCoc)}</div>
+              <div className="kpi-l">Avg cash-on-cash</div>
+              <div className="kpi-v">{fmtPct(t.avgCoc)}</div>
+              <div className="kpi-s">
+                {t.activeCount} active {t.activeCount === 1 ? "deal" : "deals"}
+              </div>
             </div>
           </div>
 
