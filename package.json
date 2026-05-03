@@ -26,6 +26,7 @@
     "rehab:cron": "npm run cron:notifications-sweep --workspace=apps/chg-rehab",
     "rehab:lint": "npm run lint --workspace=apps/chg-rehab",
     "rehab:db:investor-column": "tsx apps/chg-rehab/scripts/ensure-investor-column.ts",
+    "rehab:db:seed-investor": "npm run db:seed-investor --workspace=apps/chg-rehab",
     "start:investor": "npm run start --workspace=apps/investor-portal",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",

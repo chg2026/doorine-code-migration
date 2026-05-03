@@ -69,27 +69,64 @@ export async function middleware(req: NextRequest) {
   // Cross-app role check (Investor Portal). Always derive `is_investor`
   // server-side from `user_profiles` — never trust client state. Investors
   // belong on apps/investor-portal; bounce them out of chg-rehab.
+  // Fail closed: if service-role config is missing, treat as a hard
+  // misconfiguration rather than letting investors slip through.
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  if (serviceKey && supabaseUrl) {
-    const admin = createPlainClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    const { data: profile } = await admin
-      .from("user_profiles")
-      .select("is_investor")
-      .eq("id", user.id)
-      .maybeSingle<{ is_investor: boolean | null }>();
-    if (profile?.is_investor) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "investor_account" }, { status: 403 });
-      }
-      const target = INVESTOR_PORTAL_BASE_URL
-        ? new URL("/login", INVESTOR_PORTAL_BASE_URL)
-        : new URL("/login?error=investor_account", req.url);
-      target.searchParams.set("error", "Investor accounts use the investor portal.");
-      return NextResponse.redirect(target);
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  if (!serviceKey || !supabaseUrl) {
+    console.error(
+      "[middleware] SUPABASE_SERVICE_ROLE_KEY / SUPABASE_URL missing — " +
+        "cannot enforce investor cross-app boundary; refusing request"
+    );
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "service_unavailable" },
+        { status: 503 }
+      );
     }
+    return new NextResponse(
+      "Service temporarily unavailable. Please contact support.",
+      { status: 503 }
+    );
+  }
+  const admin = createPlainClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: profile, error: profileErr } = await admin
+    .from("user_profiles")
+    .select("is_investor")
+    .eq("id", user.id)
+    .maybeSingle<{ is_investor: boolean | null }>();
+  if (profileErr) {
+    // Fail closed on lookup error too — better to 503 than to leak.
+    console.error(
+      "[middleware] user_profiles lookup failed:",
+      profileErr.message
+    );
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "service_unavailable" },
+        { status: 503 }
+      );
+    }
+    return new NextResponse(
+      "Service temporarily unavailable. Please try again.",
+      { status: 503 }
+    );
+  }
+  if (profile?.is_investor) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "investor_account" }, { status: 403 });
+    }
+    const target = INVESTOR_PORTAL_BASE_URL
+      ? new URL("/login", INVESTOR_PORTAL_BASE_URL)
+      : new URL("/login?error=investor_account", req.url);
+    target.searchParams.set(
+      "error",
+      "Investor accounts use the investor portal."
+    );
+    return NextResponse.redirect(target);
   }
 
   return res;

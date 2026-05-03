@@ -43,10 +43,6 @@ args = "Deal Link"
 task = "workflow.run"
 args = "Investor Portal"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Apply Investor DDL"
-
 [[workflows.workflow]]
 name = "CHG Rehab"
 author = "agent"
@@ -82,17 +78,6 @@ waitForPort = 3002
 
 [workflows.workflow.metadata]
 outputType = "console"
-
-[[workflows.workflow]]
-name = "Apply Investor DDL"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node apps/chg-rehab/scripts/check-supabase-host.mjs && npm run rehab:db:investor-column"
 
 [[ports]]
 localPort = 3000
