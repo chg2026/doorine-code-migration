@@ -7,6 +7,14 @@
 
 ---
 
+> **⚠️ Historical document — apps/crm is retired.**
+>
+> This handoff was written when `apps/crm/` was the live CHG CRM workspace. That workspace has since been retired and moved to `archive/apps-crm/`. References below to `apps/crm/` (file paths, schema scripts, audit Tasks, Phase 0–7 roadmap, etc.) describe a state of the codebase that no longer exists in the working tree.
+>
+> The active monorepo today is `apps/chg-rehab`, `apps/crmdeallink`, and `apps/investor-portal`. Consult those workspaces (and current docs in `docs/`) for the live picture. This file is preserved for historical context only.
+
+---
+
 ## Context for Claude Code — Read First
 
 You are picking up a mid-flight monorepo consolidation. Nicole is non-technical and is moving the project from Cowork mode to Claude Code because Claude Code is the right tool for deep engineering work (code edits, refactors, tests, analysis, debugging).

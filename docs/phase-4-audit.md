@@ -8,6 +8,12 @@
 
 ---
 
+> **⚠️ Historical audit — apps/crm is retired.**
+>
+> This audit was written against the live `apps/crm/` workspace in April 2026. That workspace has since been retired and moved to `archive/apps-crm/`. All file paths below referencing `apps/crm/...` (e.g. `apps/crm/scripts/phase-4-admin-entitlements.sql`, `apps/crm/client/src/pages/admin/`) now resolve under `archive/apps-crm/` rather than the working tree. The active monorepo today is `apps/chg-rehab`, `apps/crmdeallink`, and `apps/investor-portal`. Preserved for historical reference only.
+
+---
+
 ## 1. What Phase 4 ships (recap)
 
 Goal from blueprint §09: super admin can manage product entitlements per account.
