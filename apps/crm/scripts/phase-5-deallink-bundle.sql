@@ -46,7 +46,19 @@ AS $$
   );
 $$;
 
--- ─── 3. HELPER: has_product_access(product_code) ───────────────────────────
+-- ─── 3. HELPER: set_updated_at() ───────────────────────────────────────────
+-- Trigger function that bumps the updated_at column on every UPDATE.
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+-- ─── 4. HELPER: has_product_access(product_code) ───────────────────────────
 -- Returns true iff the caller's account has an active entitlement to the
 -- named product (e.g. 'deallink', 'chg', 'chg-rehab').
 CREATE OR REPLACE FUNCTION public.has_product_access(product_code TEXT)
