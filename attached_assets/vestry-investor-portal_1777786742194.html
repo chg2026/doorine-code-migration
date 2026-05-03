@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vestry Capital — Investor Portal</title>
+<style>
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f5;
+    --bg-tertiary: #f0ede8;
+    --text-primary: #1a1916;
+    --text-secondary: #6b6a66;
+    --text-tertiary: #a09e99;
+    --border-light: rgba(0,0,0,0.08);
+    --border-mid: rgba(0,0,0,0.14);
+    --border-dark: rgba(0,0,0,0.22);
+    --teal: #0F6E56;
+    --teal-light: #E1F5EE;
+    --teal-mid: #1D9E75;
+    --teal-dark: #085041;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --blue-mid: #378ADD;
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --amber: #854F0B;
+    --amber-light: #FAEEDA;
+    --amber-mid: #BA7517;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --green: #3B6D11;
+    --green-light: #EAF3DE;
+    --gray-light: #F1EFE8;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #e8e4de; display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; padding: 24px 16px; }
+  .shell { width: 100%; max-width: 1200px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 40px rgba(0,0,0,0.18); }
+
+  /* LOGIN */
+  .login-wrap { display: flex; min-height: 700px; }
+  .login-left { flex: 1; background: #0F6E56; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; }
+  .login-right { flex: 1; background: var(--bg-primary); padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .trust-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .trust-check { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* PORTAL SHELL */
+  .portal { display: grid; grid-template-columns: 190px 1fr; min-height: 700px; background: var(--bg-tertiary); }
+
+  /* SIDEBAR */
+  .sb { background: var(--bg-primary); border-right: 0.5px solid var(--border-light); display: flex; flex-direction: column; }
+  .sb-top { padding: 14px; border-bottom: 0.5px solid var(--border-light); display: flex; align-items: center; gap: 9px; }
+  .sb-mark { width: 26px; height: 26px; border-radius: 6px; background: var(--teal); flex-shrink: 0; }
+  .sb-brand { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .nav-sec { font-size: 10px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; padding: 10px 14px 3px; }
+  .ni { display: flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; border-left: 2px solid transparent; transition: all .12s; }
+  .ni:hover { background: var(--bg-secondary); }
+  .ni.on { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; border-left-color: var(--teal); }
+  .ni-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .sb-foot { margin-top: auto; padding: 12px 14px; border-top: 0.5px solid var(--border-light); display: flex; align-items: center; gap: 8px; }
+
+  /* MAIN */
+  .main { display: flex; flex-direction: column; }
+  .topbar { background: var(--bg-primary); border-bottom: 0.5px solid var(--border-light); padding: 11px 18px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .pg-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .pg-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+  .content { padding: 16px; flex: 1; overflow-y: auto; max-height: calc(700px - 52px); }
+
+  /* PAGES */
+  .page { display: none; } .page.on { display: block; }
+
+  /* CARDS */
+  .card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 14px; }
+  .card + .card { margin-top: 10px; }
+  .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+
+  /* GRIDS */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+
+  /* KPI */
+  .kpi { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; }
+  .kpi-l { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; font-weight: 500; }
+  .kpi-v { font-size: 19px; font-weight: 600; color: var(--text-primary); line-height: 1.1; }
+  .kpi-s { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+  .green { color: var(--teal); } .amber { color: var(--amber); } .red { color: var(--red); }
+
+  /* PILLS */
+  .pill { font-size: 10px; padding: 2px 7px; border-radius: 8px; font-weight: 500; display: inline-block; }
+  .pill-g { background: var(--teal-light); color: var(--teal-dark); }
+  .pill-b { background: var(--blue-light); color: var(--blue); }
+  .pill-a { background: var(--amber-light); color: var(--amber); }
+  .pill-r { background: var(--red-light); color: var(--red); }
+  .pill-gray { background: var(--gray-light); color: #5F5E5A; }
+  .pill-p { background: var(--purple-light); color: var(--purple); }
+
+  /* BUTTONS */
+  .btn { padding: 5px 11px; font-size: 11px; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); cursor: pointer; background: transparent; color: var(--text-secondary); transition: background .12s; font-family: inherit; }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn-p { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .btn-p:hover { background: var(--teal-dark); }
+  .btn-sm { padding: 3px 8px; font-size: 10px; }
+
+  /* FORMS */
+  .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+  .field label { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+  .field input, .field select, .field textarea { padding: 7px 9px; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); font-size: 12px; color: var(--text-primary); background: var(--bg-primary); width: 100%; font-family: inherit; outline: none; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--teal); }
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 0.5px solid var(--border-light); margin-bottom: 12px; }
+  .tab { padding: 7px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab:hover { color: var(--text-primary); }
+  .tab.on { color: var(--text-primary); font-weight: 500; border-bottom-color: var(--teal); }
+  .tc { display: none; } .tc.on { display: block; }
+
+  /* TABLE */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+  .tbl th { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; padding: 5px 8px; background: var(--bg-secondary); text-align: left; }
+  .tbl td { padding: 7px 8px; border-bottom: 0.5px solid var(--border-light); color: var(--text-primary); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--bg-secondary); }
+
+  /* TWO-PANE */
+  .two-pane { display: grid; grid-template-columns: 200px 1fr; gap: 0; min-height: 480px; border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-primary); }
+  .list-pane { border-right: 0.5px solid var(--border-light); overflow-y: auto; }
+  .detail-pane { padding: 14px; overflow-y: auto; }
+  .list-item { padding: 8px 10px; border-bottom: 0.5px solid var(--border-light); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .list-item:hover { background: var(--bg-secondary); }
+  .list-item.on { background: var(--bg-secondary); border-left: 2px solid var(--teal); }
+
+  /* KANBAN */
+  .kanban { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+  .kol { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 8px; min-height: 300px; }
+  .kol-hd { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .kcard { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: 8px; margin-bottom: 6px; cursor: pointer; transition: border-color .12s; }
+  .kcard:hover { border-color: var(--border-dark); }
+  .kcard.on { border-color: var(--teal); border-width: 1px; }
+
+  /* FEED */
+  .feed-item { display: flex; gap: 8px; padding: 8px 0; border-bottom: 0.5px solid var(--border-light); }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .feed-body { flex: 1; }
+  .feed-title { font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 1px; }
+  .feed-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+  .feed-time { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+
+  /* AVATAR */
+  .av { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
+  .av-sm { width: 24px; height: 24px; font-size: 9px; }
+  .av-md { width: 32px; height: 32px; font-size: 12px; }
+  .av-lg { width: 40px; height: 40px; font-size: 14px; }
+  .g-teal { background: var(--teal-light); color: var(--teal-dark); }
+  .g-blue { background: var(--blue-light); color: var(--blue); }
+  .g-purple { background: var(--purple-light); color: var(--purple); }
+  .g-amber { background: var(--amber-light); color: var(--amber); }
+  .g-gray { background: var(--gray-light); color: #5F5E5A; }
+  .g-coral { background: #FAECE7; color: #712B13; }
+
+  /* PROGRESS */
+  .prog-wrap { height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; display: flex; }
+  .prog-hard { height: 100%; background: var(--teal-mid); }
+  .prog-soft { height: 100%; background: #9FE1CB; }
+
+  /* MODAL */
+  .modal-bg { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+  .modal-bg.show { display: flex; }
+  .modal { background: var(--bg-primary); border-radius: var(--radius-lg); border: 0.5px solid var(--border-mid); padding: 18px; width: 360px; max-width: 90vw; }
+  .modal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .modal-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .modal-close { font-size: 18px; cursor: pointer; color: var(--text-secondary); line-height: 1; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: #fff; padding: 10px 16px; border-radius: var(--radius-md); font-size: 12px; font-weight: 500; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; max-width: 320px; }
+  .toast.show { opacity: 1; }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
+  .bar-col { flex: 1; border-radius: 2px 2px 0 0; min-height: 4px; }
+  .divider { height: 0.5px; background: var(--border-light); margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+
+<!-- LOGIN PAGE -->
+<div id="login-page" class="login-wrap">
+  <div class="login-left">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
+        <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center">
+          <div style="width:18px;height:18px;border-radius:3px;background:#fff"></div>
+        </div>
+        <span style="font-size:16px;font-weight:600;color:#fff">Vestry Capital</span>
+      </div>
+      <div style="font-size:22px;font-weight:600;color:#fff;line-height:1.35;margin-bottom:12px">Your investments,<br>all in one place.</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:24px">Track performance, review documents, and stay connected to every deal — securely from anywhere.</div>
+      <div class="trust-row"><div class="trust-check"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 3.5-4" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.82)">Real-time portfolio performance</span></div>
+      <div class="trust-row"><div class="trust-check"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 3.5-4" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.82)">Secure document vault</span></div>
+      <div class="trust-row"><div class="trust-check"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 3.5-4" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.82)">Distribution history & statements</span></div>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.35)">© 2025 Vestry Capital · Privacy · Terms</div>
+  </div>
+  <div class="login-right">
+    <div style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:4px">Welcome back</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:22px">Sign in to your investor portal</div>
+    <div class="field"><label>Email address</label><input type="email" id="login-email" value="james.wilson@gmail.com" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-pw" value="password123" placeholder="Password"></div>
+    <div style="text-align:right;margin-bottom:18px;margin-top:-4px"><span style="font-size:11px;color:var(--blue);cursor:pointer" onclick="toast('Password reset email sent')">Forgot password?</span></div>
+    <button class="btn btn-p" style="width:100%;padding:10px;font-size:13px" onclick="doLogin()">Sign in</button>
+    <div style="margin-top:18px;font-size:11px;color:var(--text-secondary);text-align:center">Need access? <span style="color:var(--blue);cursor:pointer" onclick="toast('Access request sent to your operator')">Request portal access</span></div>
+    <div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:var(--radius-md);font-size:11px;color:var(--text-secondary);text-align:center">Demo: credentials pre-filled — click Sign in</div>
+  </div>
+</div>
+
+<!-- PORTAL SHELL -->
+<div id="app" style="display:none" class="portal">
+  <div class="sb">
+    <div class="sb-top">
+      <div class="sb-mark"></div>
+      <span class="sb-brand">Vestry Capital</span>
+    </div>
+    <div style="flex:1;overflow-y:auto">
+      <div class="nav-sec">Investor</div>
+      <div class="ni on" data-p="dashboard" onclick="nav(this)"><div class="ni-dot" style="background:#1D9E75"></div>Dashboard</div>
+      <div class="ni" data-p="deals" onclick="nav(this)"><div class="ni-dot" style="background:#378ADD"></div>My investments</div>
+      <div class="ni" data-p="docs" onclick="nav(this)"><div class="ni-dot" style="background:#7F77DD"></div>Documents</div>
+      <div class="ni" data-p="updates" onclick="nav(this)"><div class="ni-dot" style="background:#BA7517"></div>Reports & updates</div>
+      <div class="ni" data-p="activity" onclick="nav(this)"><div class="ni-dot" style="background:#D85A30"></div>Activity feed</div>
+      <div class="ni" data-p="analytics" onclick="nav(this)"><div class="ni-dot" style="background:#639922"></div>Analytics</div>
+      <div class="nav-sec" style="margin-top:4px">Operator</div>
+      <div class="ni" data-p="crm" onclick="nav(this)"><div class="ni-dot" style="background:#378ADD"></div>Investor CRM</div>
+      <div class="ni" data-p="pipeline" onclick="nav(this)"><div class="ni-dot" style="background:#BA7517"></div>Deal pipeline</div>
+      <div class="ni" data-p="fundraising" onclick="nav(this)"><div class="ni-dot" style="background:#639922"></div>Fundraising</div>
+      <div class="nav-sec" style="margin-top:4px">Finance</div>
+      <div class="ni" data-p="finance" onclick="nav(this)"><div class="ni-dot" style="background:#7F77DD"></div>Finance hub</div>
+    </div>
+    <div class="sb-foot">
+      <div class="av av-sm g-blue">JW</div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:500;color:var(--text-primary)">James Wilson</div>
+        <div style="font-size:10px;color:var(--text-secondary);cursor:pointer" onclick="doLogout()">Sign out</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="pg-title" id="pg-title">Dashboard</div>
+        <div class="pg-sub" id="pg-sub">Portfolio summary · Q2 2025</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <select id="deal-filter" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-secondary)" onchange="toast('Filtered to: '+this.options[this.selectedIndex].text)">
+          <option value="all">All deals</option>
+          <option value="maple">Maple Grove Apts</option>
+          <option value="riverside">Riverside SFR</option>
+          <option value="commerce">Commerce Park NW</option>
+        </select>
+        <button class="btn btn-sm" onclick="toast('Report exported as PDF')">&#8595; Export</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="p-dashboard" class="page on">
+        <div class="g4" style="margin-bottom:10px">
+          <div class="kpi"><div class="kpi-l">Total invested</div><div class="kpi-v">$485,000</div><div class="kpi-s">across 4 deals</div></div>
+          <div class="kpi"><div class="kpi-l">Current value</div><div class="kpi-v green">$541,200</div><div class="kpi-s">&#8593; 11.6% total gain</div></div>
+          <div class="kpi"><div class="kpi-l">Total distributions</div><div class="kpi-v green">$38,400</div><div class="kpi-s">&#8593; $6,200 this QTR</div></div>
+          <div class="kpi"><div class="kpi-l">Avg. cash-on-cash</div><div class="kpi-v">7.9%</div><div class="kpi-s">annualized</div></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">My investments</div><button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=deals]'))">View all</button></div>
+            <table class="tbl">
+              <thead><tr><th style="width:40%">Property</th><th style="width:20%">Invested</th><th style="width:15%">Return</th><th style="width:25%">Status</th></tr></thead>
+              <tbody>
+                <tr style="cursor:pointer" onclick="nav(document.querySelector('[data-p=deals]'))"><td><div style="font-size:11px;font-weight:500">Maple Grove Apts</div><div style="font-size:10px;color:var(--text-secondary)">Multifamily · Austin TX</div></td><td>$150,000</td><td class="green">14.7%</td><td><span class="pill pill-g">Active</span></td></tr>
+                <tr style="cursor:pointer" onclick="nav(document.querySelector('[data-p=deals]'))"><td><div style="font-size:11px;font-weight:500">Riverside SFR</div><div style="font-size:10px;color:var(--text-secondary)">Single family · Phoenix AZ</div></td><td>$100,000</td><td class="green">12.0%</td><td><span class="pill pill-g">Active</span></td></tr>
+                <tr style="cursor:pointer" onclick="nav(document.querySelector('[data-p=deals]'))"><td><div style="font-size:11px;font-weight:500">Commerce Park NW</div><div style="font-size:10px;color:var(--text-secondary)">Mixed-use · Portland OR</div></td><td>$200,000</td><td class="green">17.6%</td><td><span class="pill pill-g">Active</span></td></tr>
+                <tr style="cursor:pointer" onclick="nav(document.querySelector('[data-p=deals]'))"><td><div style="font-size:11px;font-weight:500">Elm Street Duplex</div><div style="font-size:10px;color:var(--text-secondary)">Single family · Denver CO</div></td><td>$35,000</td><td class="red">-5.8%</td><td><span class="pill pill-gray">Closed</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">Recent activity</div><button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=activity]'))">View all</button></div>
+            <div class="feed-item"><div class="feed-dot" style="background:#1D9E75"></div><div class="feed-body"><div class="feed-title">$3,200 distribution from Maple Grove</div><div class="feed-time">2 days ago</div></div><button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=finance]'))">View</button></div>
+            <div class="feed-item"><div class="feed-dot" style="background:#378ADD"></div><div class="feed-body"><div class="feed-title">Q2 2025 statement available</div><div class="feed-time">5 days ago</div></div><button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=docs]'))">Open</button></div>
+            <div class="feed-item"><div class="feed-dot" style="background:#7F77DD"></div><div class="feed-body"><div class="feed-title">Property update — Riverside SFR</div><div class="feed-time">1 week ago</div></div><button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=updates]'))">Read</button></div>
+            <div class="feed-item"><div class="feed-dot" style="background:#378ADD"></div><div class="feed-body"><div class="feed-title">K-1 for 2024 uploaded to vault</div><div class="feed-time">3 weeks ago</div></div><button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=docs]'))">Download</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEALS -->
+      <div id="p-deals" class="page">
+        <div id="deal-list">
+          <div class="g3" style="margin-bottom:10px">
+            <div class="kpi"><div class="kpi-l">Total committed</div><div class="kpi-v">$485,000</div></div>
+            <div class="kpi"><div class="kpi-l">Active deals</div><div class="kpi-v">3</div></div>
+            <div class="kpi"><div class="kpi-l">Total returns</div><div class="kpi-v green">$38,400</div></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">All investments</div><button class="btn btn-sm btn-p" onclick="showDealDetail('new')">+ Subscribe to deal</button></div>
+            <table class="tbl">
+              <thead><tr><th style="width:32%">Deal</th><th style="width:16%">Invested</th><th style="width:16%">Value</th><th style="width:12%">IRR</th><th style="width:12%">CoC</th><th style="width:12%">Status</th></tr></thead>
+              <tbody>
+                <tr style="cursor:pointer" onclick="showDealDetail('maple')"><td><div style="font-size:11px;font-weight:500">Maple Grove Apts</div><div style="font-size:10px;color:var(--text-secondary)">Multifamily · Austin TX</div></td><td>$150,000</td><td class="green">$172,000</td><td class="green">14.7%</td><td>8.3%</td><td><span class="pill pill-g">Active</span></td></tr>
+                <tr style="cursor:pointer" onclick="showDealDetail('riverside')"><td><div style="font-size:11px;font-weight:500">Riverside SFR</div><div style="font-size:10px;color:var(--text-secondary)">Single family · Phoenix AZ</div></td><td>$100,000</td><td class="green">$108,500</td><td class="green">12.0%</td><td>7.0%</td><td><span class="pill pill-g">Active</span></td></tr>
+                <tr style="cursor:pointer" onclick="showDealDetail('commerce')"><td><div style="font-size:11px;font-weight:500">Commerce Park NW</div><div style="font-size:10px;color:var(--text-secondary)">Mixed-use · Portland OR</div></td><td>$200,000</td><td class="green">$231,000</td><td class="green">17.6%</td><td>9.6%</td><td><span class="pill pill-g">Active</span></td></tr>
+                <tr style="cursor:pointer" onclick="showDealDetail('elm')"><td><div style="font-size:11px;font-weight:500">Elm Street Duplex</div><div style="font-size:10px;color:var(--text-secondary)">Single family · Denver CO</div></td><td>$35,000</td><td class="red">$29,700</td><td class="red">-5.8%</td><td>—</td><td><span class="pill pill-gray">Closed</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="deal-detail" style="display:none">
+          <button class="btn btn-sm" style="margin-bottom:10px" onclick="document.getElementById('deal-list').style.display='block';document.getElementById('deal-detail').style.display='none'">&#8592; Back to all deals</button>
+          <div class="card">
+            <div style="background:var(--bg-secondary);height:72px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:11px;color:var(--text-tertiary)">Property photo gallery</div>
+            <div class="g2">
+              <div>
+                <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:2px" id="dd-name">Maple Grove Apartments</div>
+                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px" id="dd-meta">Multifamily · 48 units · Austin, TX</div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px">Value-add apartment community with active renovation program targeting 24-month hold with strong market fundamentals.</div>
+                <div class="g2" style="gap:6px">
+                  <div class="kpi"><div class="kpi-l">My invested</div><div class="kpi-v" id="dd-inv">$150,000</div></div>
+                  <div class="kpi"><div class="kpi-l">Ownership</div><div class="kpi-v" id="dd-own">7.35%</div></div>
+                  <div class="kpi"><div class="kpi-l">Distributions</div><div class="kpi-v green" id="dd-dist">$12,000</div></div>
+                  <div class="kpi"><div class="kpi-l">Current IRR</div><div class="kpi-v green" id="dd-irr">14.7%</div></div>
+                </div>
+              </div>
+              <div>
+                <div class="card" style="margin-bottom:8px">
+                  <div class="card-title" style="margin-bottom:8px">Deal financials</div>
+                  <table class="tbl"><tbody id="dd-fin">
+                    <tr><td style="color:var(--text-secondary)">Target IRR</td><td style="text-align:right;font-weight:500">16–18%</td></tr>
+                    <tr><td style="color:var(--text-secondary)">Pref. return</td><td style="text-align:right;font-weight:500">8%</td></tr>
+                    <tr><td style="color:var(--text-secondary)">Hold period</td><td style="text-align:right;font-weight:500">24 months</td></tr>
+                    <tr><td style="color:var(--text-secondary)">Min. investment</td><td style="text-align:right;font-weight:500">$50,000</td></tr>
+                  </tbody></table>
+                </div>
+                <div class="card">
+                  <div class="card-title" style="margin-bottom:8px">Deal documents</div>
+                  <div style="font-size:11px;padding:4px 0;border-bottom:0.5px solid var(--border-light);display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Private placement memorandum</span><span style="color:var(--blue);cursor:pointer" onclick="toast('PPM downloaded')">&#8595; PDF</span></div>
+                  <div style="font-size:11px;padding:4px 0;border-bottom:0.5px solid var(--border-light);display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Investor deck / pro forma</span><span style="color:var(--blue);cursor:pointer" onclick="toast('Deck downloaded')">&#8595; PDF</span></div>
+                  <div style="font-size:11px;padding:4px 0;display:flex;justify-content:space-between"><span style="color:var(--text-secondary)">Subscription agreement (blank)</span><span style="color:var(--blue);cursor:pointer" onclick="toast('Sub agreement downloaded')">&#8595; PDF</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="btn btn-p" onclick="openModal('sub-modal')">Subscribe to this deal</button>
+              <button class="btn" onclick="nav(document.querySelector('[data-p=docs]'))">View documents</button>
+              <button class="btn" onclick="nav(document.querySelector('[data-p=updates]'))">View updates</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTS -->
+      <div id="p-docs" class="page">
+        <div class="two-pane">
+          <div class="list-pane">
+            <div style="padding:8px 10px;border-bottom:0.5px solid var(--border-light)"><input id="doc-search" style="width:100%;padding:5px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);font-size:11px;background:var(--bg-primary);color:var(--text-primary)" placeholder="Search documents..." oninput="renderDocs()"></div>
+            <div style="padding:5px 10px;font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em">By deal</div>
+            <div class="list-item on" onclick="setDocFilter('deal','all',this)"><div style="width:8px;height:8px;border-radius:2px;background:#B4B2A9"></div><span style="font-size:11px">All documents</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">14</span></div>
+            <div class="list-item" onclick="setDocFilter('deal','maple',this)"><div style="width:8px;height:8px;border-radius:2px;background:#1D9E75"></div><span style="font-size:11px">Maple Grove</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">5</span></div>
+            <div class="list-item" onclick="setDocFilter('deal','riverside',this)"><div style="width:8px;height:8px;border-radius:2px;background:#378ADD"></div><span style="font-size:11px">Riverside SFR</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">4</span></div>
+            <div class="list-item" onclick="setDocFilter('deal','commerce',this)"><div style="width:8px;height:8px;border-radius:2px;background:#7F77DD"></div><span style="font-size:11px">Commerce Park</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">5</span></div>
+            <div style="padding:5px 10px;font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;margin-top:4px">By type</div>
+            <div class="list-item" onclick="setDocFilter('type','tax',this)"><span style="font-size:11px">Tax documents</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">4</span></div>
+            <div class="list-item" onclick="setDocFilter('type','statement',this)"><span style="font-size:11px">Statements</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">4</span></div>
+            <div class="list-item" onclick="setDocFilter('type','agreement',this)"><span style="font-size:11px">Agreements</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">3</span></div>
+            <div class="list-item" onclick="setDocFilter('type','offering',this)"><span style="font-size:11px">Offering docs</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">3</span></div>
+          </div>
+          <div class="detail-pane">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="card-title" id="docs-heading">All documents — 14 files</div>
+              <button class="btn btn-sm btn-p" onclick="toast('Upload portal — operator back-office feature')">&#8593; Upload</button>
+            </div>
+            <table class="tbl">
+              <thead><tr><th style="width:38%">File name</th><th style="width:18%">Deal</th><th style="width:14%">Type</th><th style="width:16%">Date</th><th style="width:14%">Action</th></tr></thead>
+              <tbody id="docs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPDATES -->
+      <div id="p-updates" class="page">
+        <div class="two-pane">
+          <div class="list-pane">
+            <div style="padding:8px 10px;border-bottom:0.5px solid var(--border-light);font-size:12px;font-weight:500;color:var(--text-primary)">Updates <span style="font-weight:400;color:var(--text-secondary)">— 5</span></div>
+            <div id="updates-list"></div>
+          </div>
+          <div class="detail-pane" id="update-detail"><div style="color:var(--text-tertiary);font-size:12px;text-align:center;padding:50px 0">Select an update to read</div></div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY -->
+      <div id="p-activity" class="page">
+        <div class="g2">
+          <div>
+            <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap" id="act-filters">
+              <button class="btn btn-sm btn-p" onclick="filterActivity('all',this)">All events</button>
+              <button class="btn btn-sm" onclick="filterActivity('distribution',this)">Distributions</button>
+              <button class="btn btn-sm" onclick="filterActivity('document',this)">Documents</button>
+              <button class="btn btn-sm" onclick="filterActivity('update',this)">Updates</button>
+            </div>
+            <div class="card" id="act-feed"></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:10px">
+              <div class="card-title" style="margin-bottom:8px">This month</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border-light)"><span style="font-size:11px;color:var(--text-secondary)">Distributions</span><span style="font-size:11px;font-weight:500;color:var(--teal)">$8,000</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border-light)"><span style="font-size:11px;color:var(--text-secondary)">New documents</span><span style="font-size:11px;font-weight:500">4</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0"><span style="font-size:11px;color:var(--text-secondary)">Updates posted</span><span style="font-size:11px;font-weight:500">3</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:8px">Notification preferences</div>
+              <div id="notif-prefs"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="p-analytics" class="page">
+        <div class="g4" style="margin-bottom:10px">
+          <div class="kpi"><div class="kpi-l">Portfolio IRR</div><div class="kpi-v green">14.2%</div><div class="kpi-s">&#8593; vs 12.8% target</div></div>
+          <div class="kpi"><div class="kpi-l">Equity multiple</div><div class="kpi-v">1.42x</div><div class="kpi-s">Target: 1.8x</div></div>
+          <div class="kpi"><div class="kpi-l">Total distributions</div><div class="kpi-v green">$38,400</div><div class="kpi-s">&#8593; $6,200 this QTR</div></div>
+          <div class="kpi"><div class="kpi-l">Cash-on-cash avg</div><div class="kpi-v">7.9%</div><div class="kpi-s">annualized</div></div>
+        </div>
+        <div class="g2" style="margin-bottom:10px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:10px">IRR by deal vs target</div>
+            <div id="irr-bars"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:8px">Distribution history — 12 months</div>
+            <div class="bar-chart" id="dist-chart" style="margin-bottom:4px"></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary)" id="chart-months"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:8px">Distribution table — YTD 2025</div>
+          <table class="tbl">
+            <thead><tr><th>Deal</th><th>Q1 2025</th><th>Q2 2025</th><th>YTD total</th><th>CoC yield</th></tr></thead>
+            <tbody>
+              <tr><td>Commerce Park NW</td><td class="green">$4,800</td><td class="green">$4,800</td><td class="green">$9,600</td><td>9.6%</td></tr>
+              <tr><td>Maple Grove Apts</td><td class="green">$3,000</td><td class="green">$3,200</td><td class="green">$6,200</td><td>8.3%</td></tr>
+              <tr><td>Riverside SFR</td><td class="green">$2,100</td><td class="green">$2,100</td><td class="green">$4,200</td><td>7.0%</td></tr>
+              <tr><td style="font-weight:500">Total</td><td class="green" style="font-weight:500">$9,900</td><td class="green" style="font-weight:500">$10,100</td><td class="green" style="font-weight:500">$20,000</td><td style="font-weight:500">8.7%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CRM -->
+      <div id="p-crm" class="page">
+        <div class="two-pane">
+          <div class="list-pane">
+            <div style="padding:8px 10px;border-bottom:0.5px solid var(--border-light)">
+              <input id="crm-search" style="width:100%;padding:5px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);font-size:11px;background:var(--bg-primary);color:var(--text-primary);margin-bottom:5px" placeholder="Search investors..." oninput="renderCRMList()">
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm btn-p" onclick="setCRMFilter('all',this)">All</button>
+                <button class="btn btn-sm" onclick="setCRMFilter('active',this)">Active</button>
+                <button class="btn btn-sm" onclick="setCRMFilter('prospect',this)">Prospects</button>
+              </div>
+            </div>
+            <div id="crm-list"></div>
+            <div style="padding:8px 10px;border-top:0.5px solid var(--border-light);font-size:10px;color:var(--text-tertiary)">24 contacts · 14 active · 6 prospects</div>
+          </div>
+          <div class="detail-pane" id="crm-detail"><div style="color:var(--text-tertiary);font-size:12px;text-align:center;padding:50px 0">Select an investor to view profile</div></div>
+        </div>
+      </div>
+
+      <!-- PIPELINE -->
+      <div id="p-pipeline" class="page">
+        <div class="g4" style="margin-bottom:10px">
+          <div class="kpi"><div class="kpi-l">Total pipeline</div><div class="kpi-v">$18.4M</div><div class="kpi-s">7 deals</div></div>
+          <div class="kpi"><div class="kpi-l">Active raises</div><div class="kpi-v">2</div><div class="kpi-s">$4.5M target</div></div>
+          <div class="kpi"><div class="kpi-l">Closing this month</div><div class="kpi-v amber">1</div><div class="kpi-s">Commerce Park</div></div>
+          <div class="kpi"><div class="kpi-l">Deployed capital</div><div class="kpi-v green">$3.5M</div><div class="kpi-s">2 closed deals</div></div>
+        </div>
+        <div class="kanban" id="pipeline-board"></div>
+      </div>
+
+      <!-- FUNDRAISING -->
+      <div id="p-fundraising" class="page">
+        <div class="g4" style="margin-bottom:10px">
+          <div class="kpi"><div class="kpi-l">Total raise target</div><div class="kpi-v">$4.5M</div></div>
+          <div class="kpi"><div class="kpi-l">Hard committed</div><div class="kpi-v green">$2.04M</div><div class="kpi-s green">45% of target</div></div>
+          <div class="kpi"><div class="kpi-l">Soft committed</div><div class="kpi-v amber">$1.32M</div><div class="kpi-s amber">needs conversion</div></div>
+          <div class="kpi"><div class="kpi-l">Still needed</div><div class="kpi-v">$1.14M</div></div>
+        </div>
+        <div class="tabs" id="fund-tabs">
+          <div class="tab on" onclick="switchFundTab('maple',this)">Maple Grove — $3.0M</div>
+          <div class="tab" onclick="switchFundTab('riverside2',this)">Riverside Fund II — $1.5M</div>
+        </div>
+        <div id="fund-maple" class="tc on">
+          <div class="g2">
+            <div class="card">
+              <div class="card-hd"><div class="card-title">Maple Grove — raise progress</div><span class="pill pill-a">Raising</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px"><span>$2.04M hard + $0.96M soft of $3.0M target</span><span class="amber">18 days to close</span></div>
+              <div class="prog-wrap" style="margin-bottom:8px"><div class="prog-hard" style="width:68%"></div><div class="prog-soft" style="width:32%"></div></div>
+              <table class="tbl" style="margin-top:8px">
+                <thead><tr><th style="width:30%">Investor</th><th style="width:20%">Committed</th><th style="width:20%">Funded</th><th style="width:15%">Status</th><th style="width:15%">Action</th></tr></thead>
+                <tbody id="fund-maple-tbody"></tbody>
+              </table>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:8px">
+                <div class="card-title" style="margin-bottom:8px">Close countdown</div>
+                <div style="text-align:center;padding:10px 0;border-bottom:0.5px solid var(--border-light);margin-bottom:10px"><div style="font-size:34px;font-weight:600;color:var(--text-primary)">18</div><div style="font-size:11px;color:var(--text-secondary)">days remaining · Jul 31, 2025</div></div>
+                <div id="close-checklist"></div>
+              </div>
+              <div class="card">
+                <button class="btn btn-p" style="width:100%;margin-bottom:6px" onclick="toast('Subscription reminder sent to 6 soft investors')">Email all soft investors</button>
+                <div style="font-size:10px;color:var(--text-tertiary);text-align:center">Sends sub reminder to Thomas, Sandra + 4 others</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="fund-riverside2" class="tc">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">Riverside SFR Fund II — raise progress</div><span class="pill pill-a">Raising</span></div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px">$0.48M hard + $0.38M soft of $1.5M — 57% covered · Close Aug 15, 2025</div>
+            <div class="prog-wrap" style="margin-bottom:10px"><div class="prog-hard" style="width:32%"></div><div class="prog-soft" style="width:25%"></div></div>
+            <div style="font-size:12px;color:var(--text-secondary)">5 investors committed. 43% gap to fill before close. Consider outreach to warm prospects in CRM.</div>
+            <button class="btn btn-sm" style="margin-top:10px" onclick="nav(document.querySelector('[data-p=crm]'))">Open Investor CRM &#8594;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANCE HUB -->
+      <div id="p-finance" class="page">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+          <select id="fin-deal" style="font-size:12px;padding:5px 10px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);font-weight:500" onchange="renderFinance()">
+            <option value="maple">Maple Grove Apartments</option>
+            <option value="riverside">Riverside SFR Fund I</option>
+            <option value="commerce">Commerce Park NW</option>
+          </select>
+          <span style="font-size:11px;color:var(--text-secondary)" id="fin-meta">Austin TX · 14 investors · $2.04M raised</span>
+          <button class="btn btn-sm" style="margin-left:auto" onclick="toast('Finance report exported as PDF')">&#8595; Export all</button>
+        </div>
+        <div class="tabs" id="fin-tabs">
+          <div class="tab on" onclick="switchFinTab('captable',this)">Cap table</div>
+          <div class="tab" onclick="switchFinTab('distributions',this)">Distributions</div>
+          <div class="tab" onclick="switchFinTab('statements',this)">Statements</div>
+        </div>
+        <div id="fin-captable" class="tc on">
+          <div class="g2">
+            <div class="card">
+              <div class="card-hd"><div class="card-title" id="cap-title">Ownership table — 14 investors</div><button class="btn btn-sm btn-p" onclick="openModal('add-inv-modal')">+ Add investor</button></div>
+              <table class="tbl"><thead><tr><th style="width:36%">Investor</th><th style="width:20%">Invested</th><th style="width:24%">Ownership %</th><th style="width:20%">Status</th></tr></thead><tbody id="cap-tbody"></tbody></table>
+            </div>
+            <div class="card" style="display:flex;flex-direction:column;align-items:center">
+              <div class="card-title" style="margin-bottom:10px;align-self:flex-start">Ownership split</div>
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#F1EFE8" stroke-width="20"/>
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#7F77DD" stroke-width="20" stroke-dasharray="48 279" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#1D9E75" stroke-width="20" stroke-dasharray="39 288" stroke-dashoffset="-48" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#378ADD" stroke-width="20" stroke-dasharray="31 296" stroke-dashoffset="-87" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#BA7517" stroke-width="20" stroke-dasharray="31 296" stroke-dashoffset="-118" transform="rotate(-90 70 70)"/>
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#B4B2A9" stroke-width="20" stroke-dasharray="178 149" stroke-dashoffset="-149" transform="rotate(-90 70 70)"/>
+                <text x="70" y="66" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1916">14 LPs</text>
+                <text x="70" y="79" text-anchor="middle" font-size="10" fill="#6b6a66">$2.04M</text>
+              </svg>
+              <div style="width:100%;margin-top:8px" id="cap-legend"></div>
+            </div>
+          </div>
+        </div>
+        <div id="fin-distributions" class="tc">
+          <div class="g4" style="margin-bottom:10px">
+            <div class="kpi"><div class="kpi-l">Total distributed</div><div class="kpi-v green">$74,400</div></div>
+            <div class="kpi"><div class="kpi-l">Last payout</div><div class="kpi-v">$14,280</div><div class="kpi-s">Jun 30, 2025</div></div>
+            <div class="kpi"><div class="kpi-l">Avg per quarter</div><div class="kpi-v">$12,400</div></div>
+            <div class="kpi"><div class="kpi-l">Next est. payout</div><div class="kpi-v amber">$14,500</div><div class="kpi-s amber">Sep 30, 2025</div></div>
+          </div>
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-title" style="margin-bottom:10px">Record new distribution</div>
+            <div class="g3">
+              <div class="field"><label>Distribution date</label><input type="date" id="dist-date" value="2025-07-01"></div>
+              <div class="field"><label>Total amount ($)</label><input type="number" id="dist-amount" placeholder="e.g. 14500" oninput="previewSplit()"></div>
+              <div class="field"><label>Type</label><select id="dist-type"><option>Cash flow (operations)</option><option>Return of capital</option><option>Refinance proceeds</option></select></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Amount auto-splits to each investor based on cap table ownership %. <span id="split-preview" style="color:var(--teal)"></span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-p" onclick="recordDistribution()">Record distribution</button>
+              <button class="btn" onclick="previewSplitFn()">Preview splits</button>
+              <span style="font-size:10px;color:var(--text-tertiary)">Wire instructions sent separately — no ACH in MVP</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:8px">Distribution history</div>
+            <table class="tbl"><thead><tr><th>Date</th><th>Type</th><th>Total amount</th><th>Per $100K</th><th>Status</th><th>Action</th></tr></thead><tbody id="dist-history"></tbody></table>
+          </div>
+        </div>
+        <div id="fin-statements" class="tc">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <select id="stmt-inv" style="font-size:11px;padding:5px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary)"><option>James Wilson</option><option>Patricia Okafor</option><option>Robert Chen</option><option>Diana Kim</option></select>
+            <select id="stmt-period" style="font-size:11px;padding:5px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary)"><option>Q2 2025</option><option>Q1 2025</option><option>FY 2024</option></select>
+            <button class="btn btn-p" onclick="generateStatement()">Generate PDF</button>
+            <button class="btn" onclick="toast('Statement emailed to investor')">Email to investor</button>
+            <button class="btn" onclick="nav(document.querySelector('[data-p=docs]'));toast('Statement added to document vault')">Upload to vault</button>
+          </div>
+          <div class="card" style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border-light)">
+              <div class="av av-md g-blue">JW</div>
+              <div><div style="font-size:13px;font-weight:600;color:var(--text-primary)">James Wilson</div><div style="font-size:11px;color:var(--text-secondary)">Individual LP · Maple Grove · 7.35% ownership</div></div>
+              <div style="margin-left:auto;text-align:right"><div style="font-size:12px;font-weight:500;color:var(--text-primary)">Q2 2025 Statement</div><div style="font-size:10px;color:var(--text-secondary)">Apr 1 – Jun 30, 2025</div></div>
+            </div>
+            <div class="g4" style="margin-bottom:10px">
+              <div class="kpi"><div class="kpi-l">Opening balance</div><div class="kpi-v">$150,000</div></div>
+              <div class="kpi"><div class="kpi-l">Contributions</div><div class="kpi-v">—</div></div>
+              <div class="kpi"><div class="kpi-l">Distributions</div><div class="kpi-v green">-$3,200</div></div>
+              <div class="kpi"><div class="kpi-l">Closing balance</div><div class="kpi-v green">$172,000</div></div>
+            </div>
+            <table class="tbl">
+              <thead><tr><th>Date</th><th>Description</th><th>Contributions</th><th>Distributions</th><th>Balance</th></tr></thead>
+              <tbody>
+                <tr><td>Apr 1, 2025</td><td>Opening balance</td><td>—</td><td>—</td><td style="font-weight:500">$150,000</td></tr>
+                <tr><td>Jun 30, 2025</td><td>Q2 cash flow distribution</td><td>—</td><td class="green">-$3,200</td><td style="font-weight:500">$146,800</td></tr>
+                <tr><td>Jun 30, 2025</td><td>Unrealized appreciation</td><td class="green">+$25,200</td><td>—</td><td style="font-weight:500;color:var(--teal)">$172,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-hd" style="margin-bottom:8px"><div class="card-title">Q2 2025 — all investor statements</div><button class="btn btn-sm btn-p" onclick="toast('All 14 statements generated and queued for delivery')">Generate all statements</button></div>
+            <table class="tbl"><thead><tr><th style="width:28%">Investor</th><th style="width:18%">Invested</th><th style="width:18%">Q2 distribution</th><th style="width:18%">Balance</th><th style="width:10%">Status</th><th style="width:8%">Action</th></tr></thead><tbody id="all-stmts"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="sub-modal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">Subscribe to deal</div><span class="modal-close" onclick="closeModal('sub-modal')">&#215;</span></div>
+    <div class="field"><label>Investment amount ($)</label><input type="number" id="sub-amount" placeholder="Minimum $50,000" oninput="calcOwnership()"></div>
+    <div id="own-preview" style="font-size:11px;color:var(--teal);margin-bottom:10px;min-height:16px"></div>
+    <div class="field"><label>Entity type</label><select><option>Individual</option><option>LLC / Corporation</option><option>Trust</option><option>IRA / Self-directed</option></select></div>
+    <div style="font-size:11px;color:var(--text-secondary);padding:8px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-bottom:10px;line-height:1.5">Download and sign the subscription agreement, then upload the signed copy below. DocuSign integration in Phase 2.</div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="toast('Blank subscription agreement downloaded')">&#8595; Download subscription agreement</button>
+    <div class="field"><label>Upload signed subscription doc</label><input type="file" accept=".pdf,.doc,.docx"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" style="flex:1" onclick="submitSub()">Submit subscription</button>
+      <button class="btn" onclick="closeModal('sub-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="add-inv-modal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">Add investor to cap table</div><span class="modal-close" onclick="closeModal('add-inv-modal')">&#215;</span></div>
+    <div class="field"><label>Investor name</label><input type="text" id="new-name" placeholder="Full name"></div>
+    <div class="field"><label>Email</label><input type="email" id="new-email" placeholder="investor@email.com"></div>
+    <div class="field"><label>Committed amount ($)</label><input type="number" id="new-amount" placeholder="e.g. 100000" oninput="calcNewOwn()"></div>
+    <div id="new-own-preview" style="font-size:11px;color:var(--teal);margin-bottom:10px;min-height:16px"></div>
+    <div class="field"><label>Entity type</label><select><option>Individual</option><option>LLC</option><option>Trust</option></select></div>
+    <div class="field"><label>Status</label><select id="new-status"><option>Soft commit</option><option>Hard commit</option><option>Confirmed</option></select></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" style="flex:1" onclick="addInvestor()">Add to cap table</button>
+      <button class="btn" onclick="closeModal('add-inv-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const D={
+  docFilter:{deal:'all',type:null},
+  crmFilter:'all',
+  selectedUpdate:null,
+  selectedCRM:null,
+  capTable:[
+    {id:'RC',name:'Robert Chen',av:'g-purple',amount:300000,pct:14.71,type:'LLC',status:'Confirmed'},
+    {id:'PO',name:'Patricia Okafor',av:'g-blue',amount:250000,pct:12.25,type:'Individual',status:'Confirmed'},
+    {id:'JW',name:'James Wilson',av:'g-blue',amount:150000,pct:7.35,type:'Individual',status:'Confirmed'},
+    {id:'DK',name:'Diana Kim',av:'g-amber',amount:200000,pct:9.80,type:'Individual',status:'Confirmed'},
+    {id:'SL',name:'Sandra Lee',av:'g-gray',amount:150000,pct:7.35,type:'Trust',status:'Confirmed'},
+    {id:'TN',name:'Thomas Nguyen',av:'g-gray',amount:200000,pct:9.80,type:'Individual',status:'Soft'},
+    {id:'WB',name:'William Barnes',av:'g-teal',amount:180000,pct:8.82,type:'LLC',status:'Confirmed'},
+    {id:'LM',name:'Laura Martinez',av:'g-coral',amount:100000,pct:4.90,type:'Individual',status:'Confirmed'},
+  ],
+  docs:[
+    {name:'K-1 2024 tax year',deal:'maple',dlabel:'Maple Grove',type:'tax',date:'Apr 2, 2025',size:'245 KB',isNew:true},
+    {name:'Q2 2025 capital statement',deal:'maple',dlabel:'Maple Grove',type:'statement',date:'Apr 15, 2025',size:'180 KB',isNew:true},
+    {name:'Subscription agreement (signed)',deal:'maple',dlabel:'Maple Grove',type:'agreement',date:'Jan 8, 2024',size:'310 KB',isNew:false},
+    {name:'Private placement memorandum',deal:'maple',dlabel:'Maple Grove',type:'offering',date:'Dec 1, 2023',size:'2.4 MB',isNew:false},
+    {name:'Q1 2025 capital statement',deal:'maple',dlabel:'Maple Grove',type:'statement',date:'Jan 15, 2025',size:'175 KB',isNew:false},
+    {name:'K-1 2024 tax year',deal:'riverside',dlabel:'Riverside SFR',type:'tax',date:'Mar 28, 2025',size:'198 KB',isNew:false},
+    {name:'Q1 2025 distribution summary',deal:'riverside',dlabel:'Riverside SFR',type:'statement',date:'Apr 10, 2025',size:'88 KB',isNew:false},
+    {name:'Operating agreement',deal:'riverside',dlabel:'Riverside SFR',type:'agreement',date:'Feb 14, 2024',size:'380 KB',isNew:false},
+    {name:'Investor deck / pro forma',deal:'riverside',dlabel:'Riverside SFR',type:'offering',date:'Jan 5, 2024',size:'5.1 MB',isNew:false},
+    {name:'K-1 2024 tax year',deal:'commerce',dlabel:'Commerce Park',type:'tax',date:'Apr 5, 2025',size:'220 KB',isNew:true},
+    {name:'Q2 2025 annual report',deal:'commerce',dlabel:'Commerce Park',type:'statement',date:'May 30, 2025',size:'1.2 MB',isNew:true},
+    {name:'Subscription agreement (signed)',deal:'commerce',dlabel:'Commerce Park',type:'agreement',date:'Mar 1, 2024',size:'295 KB',isNew:false},
+    {name:'PPM — Commerce Park NW',deal:'commerce',dlabel:'Commerce Park',type:'offering',date:'Feb 15, 2024',size:'3.1 MB',isNew:false},
+    {name:'Operating agreement',deal:'commerce',dlabel:'Commerce Park',type:'agreement',date:'Mar 1, 2024',size:'340 KB',isNew:false},
+  ],
+  updates:[
+    {id:1,deal:'maple',dlabel:'Maple Grove',color:'#1D9E75',type:'Quarterly update',date:'Jun 28, 2025',title:'Q2 2025 — renovation 70% complete',body:'Unit interior renovations are progressing on schedule. 34 of 48 units fully upgraded with new appliances, LVP flooring, and updated fixtures. Renovated units leasing at $1,640/mo, above $1,580 pro forma target. Occupancy at 91%, up 4% from last quarter.',metrics:[{l:'Occupancy',v:'91%'},{l:'Units renovated',v:'34 / 48'},{l:'Avg rent',v:'$1,640'}],isNew:true},
+    {id:2,deal:'riverside',dlabel:'Riverside SFR',color:'#378ADD',type:'Leasing update',date:'Jun 15, 2025',title:'3 new tenant placements above pro forma',body:'Three additional properties in the Phoenix portfolio have been leased at above-proforma rental rates. Market rents continue to strengthen with sub-5% vacancy across the portfolio. All three new leases signed at $2,100–$2,150/mo.',metrics:[{l:'New leases',v:'3'},{l:'Avg rent',v:'$2,100'},{l:'Portfolio vac.',v:'4.2%'}],isNew:false},
+    {id:3,deal:'commerce',dlabel:'Commerce Park',color:'#7F77DD',type:'Annual report',date:'May 30, 2025',title:'Q1 2025 annual report now available',body:'Full Q1 annual report posted including financials, occupancy data, and distribution schedule. Retail occupancy remains strong at 96%. Office wing 100% leased through 2026. DSCR at 1.61×.',metrics:[{l:'Retail occ.',v:'96%'},{l:'DSCR',v:'1.61x'},{l:'YTD dist.',v:'$9,600'}],isNew:true},
+    {id:4,deal:'maple',dlabel:'Maple Grove',color:'#1D9E75',type:'Distribution notice',date:'Apr 10, 2025',title:'Q1 2025 distribution of $3,000 processed',body:'Your Q1 2025 distribution has been recorded. Wire instructions sent separately. Please allow 3–5 business days to settle. This represents an annualized cash-on-cash yield of 8.0% on your invested capital.',metrics:[{l:'Your share',v:'$3,000'},{l:'Type',v:'Cash flow'},{l:'Per $100K',v:'$650'}],isNew:false},
+    {id:5,deal:'riverside',dlabel:'Riverside SFR',color:'#378ADD',type:'Market update',date:'Mar 20, 2025',title:'Phoenix rental demand outlook — Q1 2025',body:'Phoenix continues to show strong in-migration trends. Single-family rental demand remains elevated with sub-5% vacancy across our portfolio. New supply pipeline is constrained, supporting continued rent growth through 2025.',metrics:[{l:'Market vac.',v:'4.8%'},{l:'Rent growth',v:'+6.2% YoY'},{l:'In-migration',v:'Top 3 US'}],isNew:false},
+  ],
+  activities:[
+    {type:'distribution',color:'#1D9E75',title:'$3,200 distribution from Maple Grove',desc:'Q2 2025 cash flow — wire initiated',time:'2 days ago'},
+    {type:'document',color:'#378ADD',title:'Q2 capital statement available',desc:'Maple Grove Apartments · Apr–Jun 2025',time:'2 days ago'},
+    {type:'update',color:'#7F77DD',title:'Q2 property update — Maple Grove',desc:'Renovation 70% complete, occupancy 91%',time:'Jun 28'},
+    {type:'distribution',color:'#1D9E75',title:'$4,800 distribution from Commerce Park',desc:'Q2 2025 preferred return',time:'Jun 10'},
+    {type:'document',color:'#378ADD',title:'K-1 2024 uploaded — Riverside SFR',desc:'Schedule K-1 (Form 1065) · 2024 tax year',time:'Jun 5'},
+    {type:'update',color:'#7F77DD',title:'Annual report posted — Commerce Park',desc:'Full Q1 financials and occupancy data',time:'May 30'},
+    {type:'document',color:'#378ADD',title:'K-1 2024 uploaded — Commerce Park NW',desc:'Schedule K-1 (Form 1065) · 2024 tax year',time:'May 28'},
+    {type:'update',color:'#7F77DD',title:'Leasing update — Riverside SFR',desc:'3 new tenants placed above pro forma',time:'Jun 15'},
+  ],
+  notifPrefs:{distribution:true,document:true,update:true,newdeal:false,captable:false},
+  distHistory:[
+    {date:'Jun 30, 2025',type:'Cash flow',total:'$14,280',per100:'$700',status:'Sent'},
+    {date:'Mar 31, 2025',type:'Cash flow',total:'$13,260',per100:'$650',status:'Sent'},
+    {date:'Dec 31, 2024',type:'Cash flow',total:'$12,240',per100:'$600',status:'Sent'},
+    {date:'Sep 30, 2024',type:'Return of capital',total:'$20,400',per100:'$1,000',status:'Sent'},
+  ],
+  crmInvestors:[
+    {id:'RC',name:'Robert Chen',av:'g-purple',deals:3,total:'$750K',status:'active',email:'r.chen@enterprise.com',phone:'+1 310 555 0198',loc:'San Francisco CA',irr:'15.2%',invested:'$750,000',dists:'$52,000',logins:12},
+    {id:'PO',name:'Patricia Okafor',av:'g-blue',deals:2,total:'$500K',status:'active',email:'p.okafor@gmail.com',phone:'+1 424 555 0132',loc:'Los Angeles CA',irr:'13.8%',invested:'$500,000',dists:'$34,000',logins:9},
+    {id:'JW',name:'James Wilson',av:'g-blue',deals:4,total:'$485K',status:'active',email:'james.wilson@gmail.com',phone:'+1 310 555 0142',loc:'Los Angeles CA',irr:'14.2%',invested:'$485,000',dists:'$38,400',logins:8},
+    {id:'DK',name:'Diana Kim',av:'g-amber',deals:2,total:'$400K',status:'active',email:'d.kim@kventuresllc.com',phone:'+1 213 555 0177',loc:'Los Angeles CA',irr:'16.1%',invested:'$400,000',dists:'$28,000',logins:6},
+    {id:'TN',name:'Thomas Nguyen',av:'g-gray',deals:1,total:'$200K',status:'prospect',email:'t.nguyen@gmail.com',phone:'+1 415 555 0155',loc:'San Jose CA',irr:'—',invested:'—',dists:'—',logins:2},
+    {id:'MH',name:'Michael Harlow',av:'g-purple',deals:0,total:'—',status:'prospect',email:'m.harlow@outlook.com',phone:'+1 323 555 0111',loc:'San Diego CA',irr:'—',invested:'—',dists:'—',logins:0},
+    {id:'AL',name:'Angela Reyes',av:'g-coral',deals:0,total:'—',status:'lead',email:'a.reyes@mail.com',phone:'+1 626 555 0199',loc:'Phoenix AZ',irr:'—',invested:'—',dists:'—',logins:0},
+  ],
+  fundraisingInvestors:[
+    {id:'JW',name:'James Wilson',av:'g-blue',committed:150000,funded:150000,status:'Hard'},
+    {id:'PO',name:'Patricia Okafor',av:'g-blue',committed:250000,funded:250000,status:'Hard'},
+    {id:'RC',name:'Robert Chen',av:'g-purple',committed:300000,funded:300000,status:'Hard'},
+    {id:'DK',name:'Diana Kim',av:'g-amber',committed:200000,funded:200000,status:'Hard'},
+    {id:'TN',name:'Thomas Nguyen',av:'g-gray',committed:200000,funded:0,status:'Soft'},
+    {id:'SL',name:'Sandra Lee',av:'g-gray',committed:150000,funded:0,status:'Soft'},
+    {id:'MH',name:'Michael Harlow',av:'g-purple',committed:100000,funded:0,status:'Invited'},
+  ],
+  pipelineDeals:[
+    {stage:'prospecting',name:'Harborview Flats',meta:'San Diego CA · 62 units',type:'MF',irr:'15%',price:'$3.2M'},
+    {stage:'prospecting',name:'Westridge SFR Portfolio',meta:'Scottsdale AZ · 8 homes',type:'SF',irr:'12%',price:'$1.6M'},
+    {stage:'diligence',name:'Lakeview Commons',meta:'Nashville TN · 94 units',type:'MF',irr:'17%',price:'$5.8M'},
+    {stage:'diligence',name:'Fifth & Main Retail',meta:'Denver CO · 12k sqft',type:'MX',irr:'13%',price:'$1.3M'},
+    {stage:'raise',name:'Maple Grove Apts',meta:'Austin TX · 48 units',type:'MF',funded:'68%',close:'Jul 31'},
+    {stage:'raise',name:'Riverside SFR Fund II',meta:'Phoenix AZ · 12 homes',type:'SF',funded:'32%',close:'Aug 15'},
+    {stage:'closing',name:'Commerce Park NW',meta:'Portland OR · 28k sqft',type:'MX',funded:'100%',close:'Jul 5'},
+    {stage:'closed',name:'Riverside SFR Fund I',meta:'Phoenix AZ · 9 homes',type:'SF',irr:'12.0%',deployed:'$1.5M'},
+    {stage:'closed',name:'Birchwood Townhomes',meta:'Boise ID · 22 units',type:'MF',irr:'14.4%',deployed:'$2.0M'},
+  ],
+};
+
+function g(id){return document.getElementById(id);}
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+
+function toast(msg){
+  const t=g('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function nav(el){
+  if(!el)return;
+  const p=el.dataset.p;
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('on'));
+  const pg=g('p-'+p);if(pg)pg.classList.add('on');
+  const titles={dashboard:'Dashboard',deals:'My investments',docs:'Document vault',updates:'Reports & updates',activity:'Activity feed',analytics:'Performance analytics',crm:'Investor CRM',pipeline:'Deal pipeline',fundraising:'Fundraising tracker',finance:'Finance hub'};
+  const subs={dashboard:'Portfolio summary · Q2 2025',deals:'All active and closed deals',docs:'All documents across deals',updates:'Property updates and reports',activity:'All portfolio events',analytics:'Portfolio performance metrics',crm:'All investor contacts',pipeline:'Active and prospective deals',fundraising:'Active capital raises',finance:'Cap table · distributions · statements'};
+  g('pg-title').textContent=titles[p]||p;
+  g('pg-sub').textContent=subs[p]||'';
+  if(p==='docs')renderDocs();
+  if(p==='updates')renderUpdates();
+  if(p==='activity'){renderActivityFeed('all');renderNotifPrefs();}
+  if(p==='analytics')renderAnalytics();
+  if(p==='crm')renderCRMList();
+  if(p==='pipeline')renderPipeline();
+  if(p==='fundraising')renderFundraising();
+  if(p==='finance')renderFinance();
+}
+
+function doLogin(){
+  const e=g('login-email').value,p=g('login-pw').value;
+  if(!e||!p){toast('Please enter email and password');return;}
+  g('login-page').style.display='none';
+  g('app').style.display='grid';
+}
+function doLogout(){g('app').style.display='none';g('login-page').style.display='flex';}
+function openModal(id){g(id).classList.add('show');}
+function closeModal(id){g(id).classList.remove('show');}
+
+function calcOwnership(){
+  const a=parseFloat(g('sub-amount').value)||0;
+  g('own-preview').textContent=a>0?'Estimated ownership: '+((a/(2040000+a))*100).toFixed(2)+'% — raise target $3.0M':'';
+}
+function calcNewOwn(){
+  const a=parseFloat(g('new-amount').value)||0;
+  g('new-own-preview').textContent=a>0?'Approx ownership: '+((a/2040000)*100).toFixed(2)+'% of current raise':'';
+}
+function submitSub(){
+  if(!g('sub-amount').value){toast('Please enter an investment amount');return;}
+  closeModal('sub-modal');toast('Subscription submitted — operator will confirm within 2 business days');
+}
+function addInvestor(){
+  const n=g('new-name').value,a=parseFloat(g('new-amount').value)||0;
+  if(!n||!a){toast('Please fill in name and amount');return;}
+  const pct=((a/2040000)*100);
+  D.capTable.push({id:n.split(' ').map(w=>w[0]).join('').toUpperCase(),name:n,av:'g-teal',amount:a,pct:parseFloat(pct.toFixed(2)),type:'Individual',status:g('new-status').value.split(' ')[0]});
+  closeModal('add-inv-modal');renderCapTable();
+  toast(n+' added to cap table');
+  ['new-name','new-email','new-amount'].forEach(id=>g(id).value='');
+}
+
+function showDealDetail(deal){
+  const d={maple:{name:'Maple Grove Apartments',meta:'Multifamily · 48 units · Austin, TX',inv:'$150,000',own:'7.35%',dist:'$12,000',irr:'14.7%'},riverside:{name:'Riverside SFR Fund I',meta:'Single family · 9 homes · Phoenix, AZ',inv:'$100,000',own:'5.0%',dist:'$6,300',irr:'12.0%'},commerce:{name:'Commerce Park NW',meta:'Mixed-use · 28k sqft · Portland, OR',inv:'$200,000',own:'9.8%',dist:'$19,200',irr:'17.6%'},elm:{name:'Elm Street Duplex',meta:'Single family · Denver, CO (Closed)',inv:'$35,000',own:'3.5%',dist:'$0',irr:'-5.8%'},new:{name:'Lakeview Commons — New Offering',meta:'Multifamily · 94 units · Nashville, TN',inv:'—',own:'—',dist:'—',irr:'Target 17%'}};
+  if(!d[deal])return;
+  const i=d[deal];
+  ['dd-name','dd-meta','dd-inv','dd-own','dd-dist','dd-irr'].forEach((id,idx)=>g(id).textContent=[i.name,i.meta,i.inv,i.own,i.dist,i.irr][idx]);
+  g('deal-list').style.display='none';g('deal-detail').style.display='block';
+}
+
+function renderDocs(){
+  let docs=D.docs;
+  const s=(g('doc-search').value||'').toLowerCase();
+  if(s)docs=docs.filter(d=>d.name.toLowerCase().includes(s));
+  if(D.docFilter.deal!=='all')docs=docs.filter(d=>d.deal===D.docFilter.deal);
+  if(D.docFilter.type)docs=docs.filter(d=>d.type===D.docFilter.type);
+  const tl={tax:'Tax doc',statement:'Statement',agreement:'Agreement',offering:'Offering'};
+  g('docs-tbody').innerHTML=docs.map(d=>`<tr>
+    <td><div style="font-size:11px;font-weight:500">${d.name}${d.isNew?'<span class="pill pill-g" style="margin-left:5px;font-size:9px">New</span>':''}</div></td>
+    <td style="font-size:10px;color:var(--text-secondary)">${d.dlabel}</td>
+    <td><span class="pill pill-b">${tl[d.type]||d.type}</span></td>
+    <td style="font-size:11px;color:var(--text-secondary)">${d.date}</td>
+    <td><span style="font-size:10px;color:var(--blue);cursor:pointer" onclick="toast('${d.name} downloaded — ${d.size}')">&#8595; ${d.size}</span></td>
+  </tr>`).join('');
+  g('docs-heading').textContent=(D.docFilter.deal==='all'&&!D.docFilter.type?'All documents':'Filtered documents')+' — '+docs.length+' files';
+}
+function setDocFilter(key,val,el){
+  D.docFilter={deal:'all',type:null};D.docFilter[key]=val;
+  document.querySelectorAll('#p-docs .list-item').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');renderDocs();
+}
+
+function renderUpdates(){
+  g('updates-list').innerHTML=D.updates.map(u=>`
+    <div class="list-item${D.selectedUpdate===u.id?' on':''}" onclick="selectUpdate(${u.id})">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
+          <span style="font-size:9px;font-weight:500;padding:1px 5px;border-radius:4px;background:${u.color}22;color:${u.color}">${u.dlabel}</span>
+          ${u.isNew?'<div style="width:6px;height:6px;border-radius:50%;background:#1D9E75"></div>':''}
+        </div>
+        <div style="font-size:11px;font-weight:500;color:var(--text-primary);line-height:1.3">${u.title}</div>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-top:1px">${u.date}</div>
+      </div>
+    </div>`).join('');
+  if(!D.selectedUpdate)selectUpdate(1);
+}
+function selectUpdate(id){
+  D.selectedUpdate=id;
+  const u=D.updates.find(x=>x.id===id);
+  if(!u)return;
+  g('update-detail').innerHTML=`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:500;padding:2px 7px;border-radius:6px;background:${u.color}22;color:${u.color}">${u.dlabel}</span>
+          <span class="pill pill-gray">${u.type}</span>
+          <span style="font-size:10px;color:var(--text-tertiary)">${u.date}</span>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:2px">${u.title}</div>
+        <div style="font-size:11px;color:var(--text-secondary)">Posted by Marcus Reed · Asset Manager</div>
+      </div>
+      <button class="btn btn-sm" onclick="toast('Update downloaded as PDF')">&#8595; PDF</button>
+    </div>
+    <div style="background:var(--bg-secondary);height:60px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-tertiary);margin-bottom:10px">Property photos</div>
+    <div class="g3" style="margin-bottom:10px">${u.metrics.map(m=>`<div class="kpi"><div class="kpi-l">${m.l}</div><div class="kpi-v">${m.v}</div></div>`).join('')}</div>
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:10px">${u.body}</div>
+    <div class="divider"></div>
+    <button class="btn btn-sm" onclick="nav(document.querySelector('[data-p=docs]'))">View all documents &#8594;</button>
+  `;
+  renderUpdates();
+}
+
+function renderActivityFeed(filter){
+  const acts=filter==='all'?D.activities:D.activities.filter(a=>a.type===filter);
+  const actionLabel={distribution:'View statement',document:'Download',update:'Read'};
+  const actionFn={distribution:"nav(document.querySelector('[data-p=finance]'))",document:"nav(document.querySelector('[data-p=docs]'))",update:"nav(document.querySelector('[data-p=updates]'))"};
+  g('act-feed').innerHTML=acts.map(a=>`
+    <div class="feed-item">
+      <div class="feed-dot" style="background:${a.color}"></div>
+      <div class="feed-body">
+        <div class="feed-title">${a.title}</div>
+        <div class="feed-desc">${a.desc}</div>
+        <div class="feed-time">${a.time}</div>
+      </div>
+      <button class="btn btn-sm" onclick="${actionFn[a.type]}">${actionLabel[a.type]}</button>
+    </div>`).join('');
+}
+function filterActivity(f,el){
+  document.querySelectorAll('#act-filters .btn').forEach(b=>{b.classList.remove('btn-p')});
+  el.classList.add('btn-p');renderActivityFeed(f);
+}
+function renderNotifPrefs(){
+  const items=[{k:'distribution',l:'Distribution received'},{k:'document',l:'New document uploaded'},{k:'update',l:'Property update posted'},{k:'newdeal',l:'New deal available'},{k:'captable',l:'Cap table change'}];
+  g('notif-prefs').innerHTML=items.map(i=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border-light)">
+      <span style="font-size:11px;color:var(--text-secondary)">${i.l}</span>
+      <div style="width:28px;height:16px;border-radius:8px;background:${D.notifPrefs[i.k]?'#1D9E75':'#D3D1C7'};cursor:pointer;position:relative;transition:background .2s;flex-shrink:0" onclick="toggleNotif('${i.k}',this)">
+        <div style="width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:${D.notifPrefs[i.k]?'14':'2'}px;transition:left .2s"></div>
+      </div>
+    </div>`).join('');
+}
+function toggleNotif(k,el){
+  D.notifPrefs[k]=!D.notifPrefs[k];
+  el.style.background=D.notifPrefs[k]?'#1D9E75':'#D3D1C7';
+  el.children[0].style.left=D.notifPrefs[k]?'14px':'2px';
+  toast((D.notifPrefs[k]?'Enabled':'Disabled')+' notifications for this event');
+}
+
+function renderAnalytics(){
+  const deals=[{name:'Commerce Park',irr:17.6,target:16,color:'#1D9E75'},{name:'Maple Grove',irr:14.4,target:16,color:'#5DCAA5'},{name:'Riverside SFR',irr:12.0,target:13,color:'#9FE1CB'},{name:'Elm St Duplex',irr:-5.8,target:11,color:'#E24B4A'}];
+  g('irr-bars').innerHTML=deals.map(d=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:10px;color:var(--text-secondary);width:80px;flex-shrink:0">${d.name}</div>
+      <div style="flex:1;height:18px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;position:relative">
+        <div style="height:100%;background:${d.color};width:${Math.max(0,(d.irr/22)*100).toFixed(0)}%;border-radius:3px;display:flex;align-items:center;padding-left:5px">
+          <span style="font-size:10px;font-weight:500;color:${d.irr>0?'#fff':'transparent'}">${d.irr>0?d.irr+'%':''}</span>
+        </div>
+        <div style="position:absolute;top:0;bottom:0;left:${((d.target/22)*100).toFixed(0)}%;width:1.5px;background:var(--text-secondary);opacity:.4"></div>
+      </div>
+      <div style="font-size:11px;font-weight:500;width:42px;text-align:right;color:${d.irr>0?'#0F6E56':'#A32D2D'}">${d.irr}%</div>
+    </div>`).join('');
+  const months=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+  const vals=[2800,2800,5500,2800,2800,6200,2800,2800,6500,7500,3800,8200];
+  const max=Math.max(...vals);
+  g('dist-chart').innerHTML=vals.map((v,i)=>`<div class="bar-col" style="height:${Math.round((v/max)*75)+5}px;background:${i>=9?'#1D9E75':'#9FE1CB'}"></div>`).join('');
+  g('chart-months').innerHTML=months.map(m=>`<span>${m}</span>`).join('');
+}
+
+function renderCRMList(){
+  const s=(g('crm-search').value||'').toLowerCase();
+  let inv=D.crmInvestors;
+  if(s)inv=inv.filter(i=>i.name.toLowerCase().includes(s));
+  if(D.crmFilter!=='all')inv=inv.filter(i=>i.status===D.crmFilter);
+  g('crm-list').innerHTML=inv.map(i=>`
+    <div class="list-item${D.selectedCRM===i.id?' on':''}" onclick="selectCRM('${i.id}')">
+      <div class="av av-sm ${i.av}">${i.id}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.name}</div>
+        <div style="font-size:10px;color:var(--text-secondary)">${i.deals} deals · ${i.total}</div>
+      </div>
+      <span class="pill ${i.status==='active'?'pill-g':i.status==='prospect'?'pill-a':'pill-p'}" style="font-size:9px">${i.status}</span>
+    </div>`).join('');
+}
+function setCRMFilter(f,el){
+  D.crmFilter=f;
+  document.querySelectorAll('#p-crm .btn').forEach(b=>b.classList.remove('btn-p'));
+  el.classList.add('btn-p');renderCRMList();
+}
+function selectCRM(id){
+  D.selectedCRM=id;
+  const i=D.crmInvestors.find(x=>x.id===id);
+  if(!i)return;
+  g('crm-detail').innerHTML=`
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <div class="av av-lg ${i.av}">${i.id}</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:2px">${i.name}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">${i.loc} · ${i.status}</div>
+          <div style="display:flex;gap:5px"><span class="pill ${i.status==='active'?'pill-g':'pill-a'}">${i.status==='active'?'Active investor':'Prospect'}</span>${i.status==='active'?'<span class="pill pill-b">Accredited</span>':''}</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm btn-p" onclick="logComm('${i.id}','${i.name}')">+ Log</button>
+          <button class="btn btn-sm" onclick="toast('Portal invite sent to ${i.email}')">Invite</button>
+        </div>
+      </div>
+      <div class="g3" style="padding-top:10px;border-top:0.5px solid var(--border-light)">
+        <div><div style="font-size:10px;color:var(--text-secondary);margin-bottom:1px">Email</div><div style="font-size:11px;color:var(--blue)">${i.email}</div></div>
+        <div><div style="font-size:10px;color:var(--text-secondary);margin-bottom:1px">Phone</div><div style="font-size:11px">${i.phone}</div></div>
+        <div><div style="font-size:10px;color:var(--text-secondary);margin-bottom:1px">Portal logins (30d)</div><div style="font-size:11px;font-weight:500">${i.logins}</div></div>
+      </div>
+    </div>
+    <div class="g4" style="margin-bottom:10px">
+      <div class="kpi"><div class="kpi-l">Total invested</div><div class="kpi-v">${i.invested}</div></div>
+      <div class="kpi"><div class="kpi-l">Distributions</div><div class="kpi-v green">${i.dists}</div></div>
+      <div class="kpi"><div class="kpi-l">Portfolio IRR</div><div class="kpi-v">${i.irr}</div></div>
+      <div class="kpi"><div class="kpi-l">Active deals</div><div class="kpi-v">${i.deals}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hd"><div class="card-title">Communication log</div><button class="btn btn-sm" onclick="logComm('${i.id}','${i.name}')">+ Log activity</button></div>
+      <div id="comm-log-${i.id}">
+        <div class="feed-item"><div class="feed-dot" style="background:var(--blue)"></div><div class="feed-body"><div class="feed-title">Q2 distribution confirmation sent</div><div class="feed-desc">Emailed wire confirmation and Q2 statement</div><div class="feed-time">Jun 30, 2025 · Email</div></div></div>
+        <div class="feed-item"><div class="feed-dot" style="background:var(--teal)"></div><div class="feed-body"><div class="feed-title">Call — new deal interest discussion</div><div class="feed-desc">Verbal interest expressed. Reviewing PPM.</div><div class="feed-time">Jun 22, 2025 · Phone · 18 min</div></div></div>
+        <div class="feed-item"><div class="feed-dot" style="background:var(--amber-mid)"></div><div class="feed-body"><div class="feed-title">Internal note — investor preferences</div><div class="feed-desc">Prefers multifamily. Min 7% pref return.</div><div class="feed-time">Jun 10, 2025 · Note</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:6px">Internal notes</div>
+      <textarea style="width:100%;padding:7px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);font-size:11px;color:var(--text-primary);background:var(--bg-primary);resize:vertical;min-height:60px;font-family:inherit" id="note-${i.id}">High-value LP. Prefers multifamily. Considering increasing allocation to $750K in 2025.</textarea>
+      <button class="btn btn-sm" style="margin-top:6px" onclick="toast('Note saved for ${i.name}')">Save note</button>
+    </div>
+  `;
+  renderCRMList();
+}
+function logComm(id,name){
+  const log=g('comm-log-'+id);
+  if(log){const d=document.createElement('div');d.className='feed-item';d.innerHTML=`<div class="feed-dot" style="background:#7F77DD"></div><div class="feed-body"><div class="feed-title">New activity logged</div><div class="feed-time">Just now · Manual entry</div></div>`;log.prepend(d);}
+  toast('Activity logged for '+name);
+}
+
+function renderPipeline(){
+  const stages=[{id:'prospecting',label:'Prospecting'},{id:'diligence',label:'Due diligence'},{id:'raise',label:'Active raise'},{id:'closing',label:'Closing'},{id:'closed',label:'Closed'}];
+  g('pipeline-board').innerHTML=stages.map(s=>{
+    const deals=D.pipelineDeals.filter(d=>d.stage===s.id);
+    return `<div class="kol"><div class="kol-hd"><span>${s.label}</span><span style="background:var(--bg-primary);padding:1px 5px;border-radius:4px;font-size:9px">${deals.length}</span></div>
+    ${deals.map(d=>`<div class="kcard" onclick="toast('${d.name} — full deal detail in dev build')">
+      <div style="margin-bottom:3px"><span class="pill ${d.type==='MF'?'pill-g':d.type==='SF'?'pill-b':'pill-p'}" style="font-size:9px">${d.type==='MF'?'Multifamily':d.type==='SF'?'SFR':'Mixed-use'}</span></div>
+      <div style="font-size:11px;font-weight:500;color:var(--text-primary);margin-bottom:1px">${d.name}</div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-bottom:5px">${d.meta}</div>
+      ${d.price?`<div class="g2" style="gap:3px"><div class="kpi" style="padding:3px 6px"><div class="kpi-l" style="font-size:9px">Ask</div><div style="font-size:11px;font-weight:500">${d.price}</div></div><div class="kpi" style="padding:3px 6px"><div class="kpi-l" style="font-size:9px">IRR</div><div style="font-size:11px;font-weight:500">${d.irr}</div></div></div>`:''}
+      ${d.funded?`<div style="font-size:10px;color:var(--text-secondary);margin-bottom:2px">${d.funded} funded · Close ${d.close}</div><div class="prog-wrap"><div class="prog-hard" style="width:${d.funded}"></div></div>`:''}
+      ${d.deployed?`<div class="g2" style="gap:3px"><div class="kpi" style="padding:3px 6px"><div class="kpi-l" style="font-size:9px">Deployed</div><div style="font-size:11px;font-weight:500">${d.deployed}</div></div><div class="kpi" style="padding:3px 6px"><div class="kpi-l" style="font-size:9px">IRR</div><div style="font-size:11px;font-weight:500;color:var(--teal)">${d.irr}</div></div></div>`:''}
+    </div>`).join('')}
+    <div style="border:0.5px dashed var(--border-mid);border-radius:var(--radius-md);padding:6px;text-align:center;font-size:10px;color:var(--text-tertiary);cursor:pointer;margin-top:2px" onclick="toast('Add deal form — coming in dev build')">+ Add deal</div></div>`;
+  }).join('');
+}
+
+function renderFundraising(){
+  g('fund-maple-tbody').innerHTML=D.fundraisingInvestors.map(i=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="av av-sm ${i.av}">${i.id}</div><span>${i.name}</span></div></td>
+      <td>${fmt(i.committed)}</td>
+      <td>${i.funded>0?fmt(i.funded):'<span style="color:var(--text-secondary)">—</span>'}</td>
+      <td><span class="pill ${i.status==='Hard'?'pill-g':i.status==='Soft'?'pill-a':'pill-gray'}">${i.status}</span></td>
+      <td><span style="font-size:10px;color:var(--blue);cursor:pointer" onclick="toast('${i.status==='Hard'?'Documents viewed for '+i.name:i.status==='Soft'?'Follow-up sent to '+i.name:'Reminder sent to '+i.name}')">${i.status==='Hard'?'View docs':i.status==='Soft'?'Follow up':'Remind'}</span></td>
+    </tr>`).join('');
+  const cl=[{t:'PPM & offering docs uploaded',d:true},{t:'Deal page published',d:true},{t:'Investors invited to portal',d:true},{t:'8 sub docs received',d:true},{t:'Convert 6 soft commits',d:false},{t:'Final wires confirmed',d:false},{t:'Cap table finalized',d:false}];
+  g('close-checklist').innerHTML=cl.map(c=>`
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+      <div style="width:16px;height:16px;border-radius:50%;background:${c.d?'#E1F5EE':'var(--bg-secondary)'};border:0.5px solid ${c.d?'#9FE1CB':'var(--border-mid)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${c.d?'<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2 3-3" stroke="#0F6E56" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+      </div>
+      <span style="font-size:11px;color:${c.d?'var(--text-secondary)':'var(--text-primary)'};${c.d?'text-decoration:line-through':''}">${c.t}</span>
+    </div>`).join('');
+}
+function switchFundTab(id,el){
+  document.querySelectorAll('#fund-tabs .tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
+  ['maple','riverside2'].forEach(k=>g('fund-'+k).classList.remove('on'));
+  g('fund-'+id).classList.add('on');
+}
+
+function renderFinance(){
+  renderCapTable();renderDistHistory();renderAllStmts();
+  const m={maple:'Austin TX · 14 investors · $2.04M raised',riverside:'Phoenix AZ · 9 investors · $1.5M raised',commerce:'Portland OR · 11 investors · $2.0M raised'};
+  g('fin-meta').textContent=m[g('fin-deal').value]||'';
+}
+function renderCapTable(){
+  const colors=['#7F77DD','#1D9E75','#378ADD','#BA7517','#5DCAA5','#B4B2A9'];
+  g('cap-tbody').innerHTML=D.capTable.map(r=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="av av-sm ${r.av}">${r.id}</div><div><div style="font-size:11px;font-weight:500">${r.name}</div><div style="font-size:10px;color:var(--text-secondary)">${r.type}</div></div></div></td>
+      <td>${fmt(r.amount)}</td>
+      <td><div style="font-size:11px;font-weight:500;color:var(--teal)">${r.pct.toFixed(2)}%</div><div style="height:4px;background:var(--bg-secondary);border-radius:2px;margin-top:2px"><div style="height:4px;background:#1D9E75;border-radius:2px;width:${Math.min(100,r.pct*4).toFixed(0)}%"></div></div></td>
+      <td><span class="pill ${r.status==='Confirmed'?'pill-g':r.status==='Soft'?'pill-a':'pill-gray'}">${r.status}</span></td>
+    </tr>`).join('');
+  g('cap-legend').innerHTML=D.capTable.slice(0,5).map((r,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">
+      <div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:${colors[i]};flex-shrink:0"></div><span style="font-size:10px;color:var(--text-secondary)">${r.name}</span></div>
+      <span style="font-size:10px;font-weight:500">${r.pct.toFixed(1)}%</span>
+    </div>`).join('')+`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:#B4B2A9"></div><span style="font-size:10px;color:var(--text-secondary)">${D.capTable.length-5} others</span></div><span style="font-size:10px;font-weight:500">${(100-D.capTable.slice(0,5).reduce((s,r)=>s+r.pct,0)).toFixed(1)}%</span></div>`;
+}
+function renderDistHistory(){
+  g('dist-history').innerHTML=D.distHistory.map(d=>`
+    <tr>
+      <td>${d.date}</td>
+      <td><span class="pill ${d.type==='Cash flow'?'pill-g':'pill-p'}">${d.type}</span></td>
+      <td style="font-weight:500;color:var(--teal)">${d.total}</td>
+      <td>${d.per100}</td>
+      <td><span class="pill pill-g">${d.status}</span></td>
+      <td><span style="font-size:10px;color:var(--blue);cursor:pointer" onclick="toast('Distribution splits viewed')">View splits</span></td>
+    </tr>`).join('');
+}
+function previewSplit(){
+  const a=parseFloat(g('dist-amount').value)||0;
+  g('split-preview').textContent=a>0?'Preview: James Wilson gets '+fmt(a*0.0735)+', Patricia Okafor gets '+fmt(a*0.1225):'';
+}
+function previewSplitFn(){
+  const a=parseFloat(g('dist-amount').value)||0;
+  if(!a){toast('Enter an amount to preview splits');return;}
+  toast('JW: '+fmt(a*0.0735)+' · PO: '+fmt(a*0.1225)+' · RC: '+fmt(a*0.1471)+' · DK: '+fmt(a*0.098));
+}
+function recordDistribution(){
+  const a=parseFloat(g('dist-amount').value)||0;
+  if(!a){toast('Please enter a distribution amount');return;}
+  D.distHistory.unshift({date:g('dist-date').value,type:'Cash flow',total:fmt(a),per100:fmt(a/2040000*100000),status:'Sent'});
+  D.activities.unshift({type:'distribution',color:'#1D9E75',title:fmt(a)+' distribution recorded',desc:'All 14 investors notified via email and activity feed',time:'Just now'});
+  renderDistHistory();g('dist-amount').value='';g('split-preview').textContent='';
+  toast(fmt(a)+' distribution recorded — all investors notified');
+}
+function renderAllStmts(){
+  const rows=[{id:'PO',name:'Patricia Okafor',av:'g-blue',inv:'$250,000',q2:'$5,355',bal:'$286,750',s:'Generated'},{id:'RC',name:'Robert Chen',av:'g-purple',inv:'$300,000',q2:'$6,426',bal:'$344,100',s:'Generated'},{id:'JW',name:'James Wilson',av:'g-blue',inv:'$150,000',q2:'$3,213',bal:'$172,000',s:'Generated'},{id:'DK',name:'Diana Kim',av:'g-amber',inv:'$200,000',q2:'$4,284',bal:'$229,400',s:'Pending'}];
+  g('all-stmts').innerHTML=rows.map(r=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="av av-sm ${r.av}">${r.id}</div><span>${r.name}</span></div></td>
+      <td>${r.inv}</td><td style="color:var(--teal)">${r.q2}</td><td style="font-weight:500">${r.bal}</td>
+      <td><span class="pill ${r.s==='Generated'?'pill-g':'pill-a'}">${r.s}</span></td>
+      <td><span style="font-size:10px;color:var(--blue);cursor:pointer" onclick="toast('Statement ${r.s==='Generated'?'sent':'generated'} for ${r.name}')">${r.s==='Generated'?'Send':'Generate'}</span></td>
+    </tr>`).join('');
+}
+function generateStatement(){
+  toast(g('stmt-period').value+' statement generated for '+g('stmt-inv').value+' — added to vault');
+  setTimeout(()=>nav(document.querySelector('[data-p=docs]')),800);
+}
+function switchFinTab(id,el){
+  document.querySelectorAll('#fin-tabs .tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
+  ['captable','distributions','statements'].forEach(k=>g('fin-'+k).classList.remove('on'));
+  g('fin-'+id).classList.add('on');
+}
+</script>
+</body>
+</html>

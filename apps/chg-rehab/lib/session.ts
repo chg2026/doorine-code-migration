@@ -19,6 +19,12 @@ export interface SessionUser {
    * round-trip on every layout.
    */
   profileScore?: number | null;
+  /**
+   * Mirrors `user_profiles.is_super_admin`. Drives the conditional "Super
+   * Admin" tab in TopNav and gates the `/super-admin` page + every
+   * `/api/super-admin/*` route.
+   */
+  isSuperAdmin?: boolean;
 }
 
 /**

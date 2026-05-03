@@ -82,7 +82,11 @@ export async function getSessionFromCookies(): Promise<IronSession<AppSession>> 
  * Map a Prisma User row into the SessionUser shape the rest of the app
  * (TopNav, /api/auth/user, all `getCurrentUser()` callers) consumes.
  */
-function toSessionUser(u: User, profileScore: number | null = null): SessionUser {
+function toSessionUser(
+  u: User,
+  profileScore: number | null = null,
+  isSuperAdmin = false
+): SessionUser {
   return {
     id: u.id,
     email: u.email,
@@ -92,6 +96,7 @@ function toSessionUser(u: User, profileScore: number | null = null): SessionUser
     role: u.role,
     companyId: u.companyId,
     profileScore,
+    isSuperAdmin,
   };
 }
 
@@ -299,7 +304,7 @@ async function syncSupabaseUser(
     });
   });
 
-  return toSessionUser(created, profile.profile_score ?? null);
+  return toSessionUser(created, profile.profile_score ?? null, !!profile.is_super_admin);
 }
 
 /**
@@ -316,7 +321,7 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
   const admin = getSupabaseAdminClient();
   const { data: profile } = await admin
     .from("user_profiles")
-    .select("email, full_name, avatar_url, status, profile_score")
+    .select("email, full_name, avatar_url, status, profile_score, is_super_admin")
     .eq("id", existing.id)
     .maybeSingle();
 
@@ -346,8 +351,8 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
         profileImageUrl: nextImg,
       },
     });
-    return toSessionUser(updated, profile?.profile_score ?? null);
+    return toSessionUser(updated, profile?.profile_score ?? null, !!profile?.is_super_admin);
   }
 
-  return toSessionUser(existing, profile?.profile_score ?? null);
+  return toSessionUser(existing, profile?.profile_score ?? null, !!profile?.is_super_admin);
 }

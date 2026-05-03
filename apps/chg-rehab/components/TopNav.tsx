@@ -7,7 +7,7 @@ import BillingNavIndicator from "./BillingNavIndicator";
 import BillingNavBadge from "./BillingNavBadge";
 import AppSwitcher from "./AppSwitcher";
 
-const MODULES: { href: string; label: string }[] = [
+const BASE_MODULES: { href: string; label: string }[] = [
   { href: "/pipeline", label: "Pipeline" },
   { href: "/underwriting", label: "Underwriting" },
   { href: "/rehab", label: "Rehab Manager" },
@@ -20,6 +20,12 @@ const MODULES: { href: string; label: string }[] = [
 
 export default function TopNav({ user }: { user: SessionUser }) {
   const pathname = usePathname();
+  // Super Admin tab is only rendered for users with the platform-wide flag.
+  // Append after Admin Settings so the company-admin tab stays in its
+  // canonical position for non-super-admins.
+  const modules = user.isSuperAdmin
+    ? [...BASE_MODULES, { href: "/super-admin", label: "Super Admin" }]
+    : BASE_MODULES;
 
   const initials =
     [(user.firstName || "")[0], (user.lastName || "")[0]]
@@ -36,7 +42,7 @@ export default function TopNav({ user }: { user: SessionUser }) {
         CHG <span>Rehab</span>
       </div>
       <nav className="module-nav">
-        {MODULES.map((m) => {
+        {modules.map((m) => {
           const active = pathname === m.href || pathname.startsWith(m.href + "/");
           return (
             <Link
