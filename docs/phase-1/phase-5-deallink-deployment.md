@@ -7,7 +7,7 @@ needs to set this up once from the Replit Deployments pane.
 ## One-time setup
 
 1. **Apply the migration** in the prod Supabase SQL editor:
-   `apps/crm/scripts/phase-5-deallink-tables.sql` (runbook:
+   `archive/apps-crm/scripts/phase-5-deallink-tables.sql` (runbook:
    `docs/phase-1/phase-5-deallink-runbook.md`).
 2. **Grant Deal Link access** to the accounts that should see the tile.
    Insert a row into `account_products` with `product_id = (select id from

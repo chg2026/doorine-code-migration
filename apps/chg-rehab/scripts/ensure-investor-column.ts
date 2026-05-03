@@ -24,7 +24,7 @@ async function main() {
       "[ensure-investor-column] SUPABASE_DB_URL is not set.\n" +
         "Either:\n" +
         "  1. Set SUPABASE_DB_URL to your Supabase project's Postgres URI and re-run, or\n" +
-        "  2. Run apps/crm/scripts/phase-6-investor-portal.sql in the Supabase SQL editor."
+        "  2. Run archive/apps-crm/scripts/phase-6-investor-portal.sql in the Supabase SQL editor."
     );
     process.exit(1);
   }

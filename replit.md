@@ -7,21 +7,20 @@ independent deployments, one dev environment.
 
 | Path                | Tech                                          | Port (dev) | Notes                                                                                                                |
 | ------------------- | --------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| `server/`           | Express 5 + Supabase JS + node-cron           | 5000       | Shared API for legacy CHG CRM and Deal Link. Still hosts `/api/admin/*` consumed by the chg-rehab Super Admin proxy and `/api/deallink/*` consumed by Deal Link. |
-| `apps/crm/`         | React 19 (CRA) + Supabase                     | 5000 (via server) | **Legacy** CHG CRM front-end. App switcher's "CHG Platform" tile now points at `apps/chg-rehab` (CHG Phase 4). Retirement is in flight (CHG Phase 5, Task #14). Direct URL still works as a fallback during cutover. |
+| `server/`           | Express 5 + Supabase JS + node-cron           | 5000       | Shared API for chg-rehab and Deal Link (`/api/admin/*`, `/api/auth/*`, `/api/deallink/*`, etc.). No longer serves a CRA SPA — apps/crm has been retired (CHG Phase 5).                          |
 | `apps/deallink/`    | React 18 + Vite + Supabase                    | 3001       | Linktree-style wholesaler app. Live as the second Gold Bridge product. Persists to Supabase via `/api/deallink/*` on the shared Express server. |
 | `apps/chg-rehab/`   | Next.js 15 + React 19 + Prisma 6 + Supabase auth + Stripe | 3000 | The CHG Platform. Supabase auth (CHG Phase 1) + tabbed `/account` Profile (Phase 2) + `/super-admin` (Phase 3, proxies to Express `/api/admin/*`) + Investor Portal back-office under `/admin?tab={investors,deals,fundraising,finance}` (Investor Portal Phase 2 / Task #6). Replit Postgres. Replit Object Storage. |
 | `apps/investor-portal/` | Next.js 15 + React 19 (shares chg-rehab Prisma client) + Supabase auth | 3002 | Investor-facing portal. Shares the chg-rehab Prisma schema (`InvestorSubscription`, `Offering`, `Distribution`, etc.) and Supabase auth users (`is_investor=true` on `user_profiles`). Pages: `/login`, `/signup` (invite-token only), `/(portal)/{dashboard,investments,distributions,documents,updates,activity,analytics}`. Investor data is scoped per-user via `lib/portfolio.ts`. |
+| `archive/apps-crm/` | (retired)                                     | —          | Legacy React 19 (CRA) CHG CRM. Archived 2026-05 after the chg-rehab cutover; retained read-only for reference, not built or served. |
 | `packages/ui/`      | (stub)                                        | —          | Reserved for shared UI primitives.                                                                                   |
 | `packages/api-client/` | (stub)                                     | —          | Reserved for typed shared API client.                                                                                |
 
 `apps/*` and `packages/*` and `server` are all npm workspaces declared in
 the root `package.json`. The repo currently keeps **one root lockfile plus
-two legacy nested lockfiles** (`apps/deallink/package-lock.json` and
-`apps/crm/client/package-lock.json`) that pre-date the workspace conversion.
-Treat the root lockfile as authoritative — do not introduce any **new**
-nested lockfiles in workspaces that don't already have one. The two legacy
-ones can be removed when their workspaces are next refactored.
+one legacy nested lockfile** (`apps/deallink/package-lock.json`) that
+pre-dates the workspace conversion. Treat the root lockfile as
+authoritative — do not introduce any **new** nested lockfiles in
+workspaces that don't already have one.
 
 ## Deployments, one repo
 
@@ -29,11 +28,10 @@ The Replit project hosts independent autoscale deployments wired to the
 same git repo:
 
 1. **Gold Bridge** (the "main" deployment) — declared in `.replit` under
-   `[deployment]`. Build = `npm install && npm run build:prod --workspace=apps/crm`.
-   Run = `npm run start --workspace=server`. Hosts the shared Express API
-   (`/api/auth/*`, `/api/admin/*`, `/api/deallink/*`, `/api/dashboard`,
-   etc.) consumed by all the product front-ends. Still serves the legacy
-   CRM SPA at port 5000 as a fallback during CHG Phase 5 retirement.
+   `[deployment]`. Build = `npm install`. Run = `npm run start --workspace=server`.
+   Exposes the shared Express API (`/api/auth/*`, `/api/admin/*`, `/api/deallink/*`,
+   `/api/dashboard`, etc.) consumed by chg-rehab and Deal Link. No longer
+   serves a SPA — the CHG CRM front-end has been retired (CHG Phase 5).
 2. **CHG Rehab** — a second autoscale deployment the user creates and
    maintains separately. Build = `npm install && npm run build --workspace=apps/chg-rehab`.
    Run = `npm run start --workspace=apps/chg-rehab`. Listens on port 3000.
@@ -57,18 +55,18 @@ env vars point at the same project.
 
 Each deployment has its own secrets pane. CHG Rehab needs the secrets listed
 in `apps/chg-rehab/.env.example`; Gold Bridge needs the Supabase secrets
-listed in `CLAUDE.md` and `apps/crm/.env.example`; Deal Link needs the
-front-end Supabase env vars in `apps/deallink/.env.example`.
+listed in `CLAUDE.md`; Deal Link needs the front-end Supabase env vars in
+`apps/deallink/.env.example`.
 
 ## Dev workflows
 
 `.replit` defines four product workflows plus the system-managed parent
 (managed via the workflows skill — never edit `.replit` by hand):
 
-- **Server** — Gold Bridge dev server (port 5000, webview output). Built
-  from `apps/crm/client/`, served by `server/index.js`. Also serves all
-  `/api/*` routes including `/api/admin/*` (consumed by chg-rehab Super
-  Admin) and `/api/deallink/*` (consumed by Deal Link via Vite proxy).
+- **Server** — Gold Bridge dev server (port 5000, webview output). Hosts
+  all `/api/*` routes (including `/api/admin/*` consumed by chg-rehab and
+  `/api/deallink/*` consumed by the Deal Link Vite proxy). No longer
+  serves a SPA — the CHG CRM front-end has been retired (CHG Phase 5).
 - **CHG Rehab** — `next dev -H 0.0.0.0 -p 3000` (console output). Boots in
   ~2 s.
 - **Deal Link** — `vite` on port 3001 (console output). Vite proxies
@@ -79,10 +77,11 @@ front-end Supabase env vars in `apps/deallink/.env.example`.
 - **Project** — parallel parent the platform auto-creates whenever there
   is more than one workflow. System-managed; cannot be edited.
 
-Four ports are forwarded to the public dev domain: `5000 → 80`
-(Gold Bridge), `3000 → 3000` (CHG Rehab), `3001 → 3001` (Deal Link),
+Three ports are forwarded to the public dev domain: `5000 → 80`
+(Gold Bridge API), `3000 → 3000` (CHG Rehab), `3001 → 3001` (Deal Link),
 and `3002 → 3002` (Investor Portal). The chg-rehab AppSwitcher uses
-`devPort` on each product entry to build the correct dev URL.
+`devPort` on each product entry to build the correct dev URL when running
+in the Replit dev domain.
 
 ## Databases
 
@@ -91,8 +90,8 @@ and `3002 → 3002` (Investor Portal). The chg-rehab AppSwitcher uses
   `SUPABASE_SERVICE_ROLE_KEY`. Cross-product entitlements live in
   `account_products` and are checked server-side via `requireProduct(code)`.
   The Deal Link domain tables (`deallink_profiles`, `deallink_deals`,
-  `deallink_leads`) are created by
-  `apps/crm/scripts/phase-5-deallink-tables.sql` — see
+  `deallink_leads`) are created by the SQL archived under
+  `archive/apps-crm/scripts/phase-5-deallink-tables.sql` — see
   `docs/phase-1/phase-5-deallink-runbook.md`.
 - **CHG Rehab + Investor Portal** share the **Replit Postgres** module
   declared in `.replit` (`postgresql-16`). The `DATABASE_URL` env var is
@@ -124,8 +123,6 @@ and `3002 → 3002` (Investor Portal). The chg-rehab AppSwitcher uses
 1. Runs `npm install` at the root (picks up new workspace deps).
 2. Generates the Prisma client for `apps/chg-rehab/`.
 3. Pushes the Prisma schema to `DATABASE_URL` (no-op when already in sync).
-4. Rebuilds `apps/crm/client/` so the Express dev server serves the latest
-   bundle without waiting for the next Server-workflow restart.
 
 Configured timeout: 5 minutes (`[postMerge]` in `.replit`).
 
@@ -159,9 +156,11 @@ across all subcategories (matches the original `prisma/seed.ts` behaviour).
 - **Never modify `.replit` by hand** — direct edits are blocked. Use the
   workflows skill (`configureWorkflow`), the deployment skill
   (`deployConfig`), and the post-merge skill (`setPostMergeConfig`).
-- **Don't move CHG CRM business logic.** The rename `apps/chg → apps/crm`
-  is path-only; the Express server, Supabase RLS, and React routes are
-  unchanged. CHG Phase 5 (Task #14) is the planned retirement.
+- **CHG Platform = chg-rehab.** As of CHG Phase 5, the CHG Platform lives
+  exclusively in `apps/chg-rehab`. The legacy `apps/crm` CRA front-end has
+  been archived under `archive/apps-crm/` and is no longer built or served.
+  The shared Express server (`server/`) is still required because chg-rehab
+  uses its `/api/admin/*` and other endpoints.
 - **CHG Rehab source is no longer verbatim** from the upstream Replit
   project — it now hosts Supabase auth, the Super Admin proxy, the
   Investor Portal back-office tabs, and shared Prisma models. The

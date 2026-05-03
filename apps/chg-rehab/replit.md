@@ -592,8 +592,8 @@ as `-b "$(cat /tmp/cookie.txt)"` to test as `seed-user-roey` /
 
 ## Cross-app navigation — 9-dot AppSwitcher
 
-- `components/AppSwitcher.tsx` is the Next.js port of the CHG CRM
-  switcher (`apps/crm/client/src/components/AppSwitcher.jsx`). It lives
+- `components/AppSwitcher.tsx` is the Next.js port of the original CHG CRM
+  switcher (now archived at `archive/apps-crm/client/src/components/AppSwitcher.jsx`). It lives
   in `TopNav.tsx` between `NotificationBell` and the user pill, with
   `currentProduct="chg-rehab"` so the Rehab tile is marked Current.
 - Tiles: CHG (port 5000), Deal Link (Coming soon), CHG Rehab (Current).

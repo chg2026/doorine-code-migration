@@ -19,10 +19,9 @@ type Product = {
   brandDomain?: string;
 };
 
-// Phase 4 cutover: the "CHG Platform" tile (code: 'chg') now points at the
-// chg-rehab Next.js app, which is the new home for CHG operations. The
-// legacy CRM at apps/crm is still reachable by direct URL during the
-// fallback window but is no longer a destination from the switcher.
+// Phase 5 cutover: the "CHG Platform" tile (code: 'chg') points at the
+// chg-rehab Next.js app, which is now the sole home for CHG operations.
+// The legacy CRM (apps/crm) has been retired and archived.
 const PRODUCTS: Product[] = [
   {
     code: "chg",

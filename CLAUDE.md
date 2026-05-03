@@ -8,18 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Start the Express API server (port 5000)
 npm run dev:server
 
-# Start CHG CRM frontend (React, port 5000)
-npm run dev:crm
-
-# Start Deal Link frontend (Vite, port 5000)
+# Start Deal Link frontend (Vite, port 3001)
 npm run dev:deallink
 
 # Start CHG Rehab (Next.js, port 3000) — separate workflow, separate deployment
 npm run dev:rehab
-
-# ⚠ Do NOT run `dev:server` and `dev:crm` at the same time — both bind port 5000.
-# The Server workflow already serves the built CRM SPA; only run `dev:crm` when
-# iterating on the CRA dev server with the Express server stopped.
 
 # Build all workspaces
 npm run build
@@ -27,16 +20,11 @@ npm run build
 # Lint all workspaces
 npm run lint
 
-# CHG client tests (the only test suite in the repo)
-cd apps/crm/client && npm test
-# Run a single test file
-cd apps/crm/client && npm test -- App.test.js
-
 # CHG Rehab (Next.js workspace) tests
 npm test --workspace=apps/chg-rehab
 ```
 
-**Deployment (Gold Bridge — Replit autoscale):** `npm install && npm run build:prod --workspace=apps/crm` → `npm run start --workspace=server`
+**Deployment (Gold Bridge — Replit autoscale):** `npm install` → `npm run start --workspace=server`
 
 **Deployment (CHG Rehab — separate Replit autoscale):** `npm install && npm run build --workspace=apps/chg-rehab` → `npm run start --workspace=apps/chg-rehab`
 
@@ -48,17 +36,16 @@ Server requires:
 - `SUPABASE_SERVICE_ROLE_KEY` (used in `requireAuth` middleware — never expose to client)
 - `PORT` (default 5000)
 
-Copy `apps/crm/.env.example` as a reference. No `.env` files are committed.
+Copy `.env.example` (root checklist) as a reference. No `.env` files are committed.
 
 CHG Rehab (`apps/chg-rehab/`) has its own env surface (Prisma `DATABASE_URL`, iron-session `SESSION_SECRET`, Replit OIDC, Stripe, Resend, GCS object storage). See `apps/chg-rehab/.env.example` and `apps/chg-rehab/replit.md`.
 
 ## Architecture
 
-**Gold Bridge** is an Atlassian-style multi-product SaaS for real estate companies. Two products share one Express server:
+**Gold Bridge** is an Atlassian-style multi-product SaaS for real estate companies. Following CHG Phase 5 the platform is two products that share one Express server:
 
-1. **CHG** (`apps/crm/client/`) — Paid enterprise CRM. Manages properties, units, construction projects, contractors, financials, tasks, and acquisitions. Multi-tenant, role-scoped. Served by the shared Express server on port 5000. (Workspace was renamed from `apps/chg` → `apps/crm` when CHG Rehab was added, to disambiguate the two CHG products.)
-2. **Deal Link** (`apps/deallink/`) — Free Linktree-style wholesaler platform. Off-market deal listings and public profiles. Currently a local-state prototype (no server integration yet — all data persists to `localStorage` under key `deallink:state:v1`).
-3. **CHG Rehab** (`apps/chg-rehab/`) — Standalone Next.js 15 + React 19 + Prisma 6 SaaS for rehab project management (pipeline, SOW, draws, warehouse, documents, admin). Runs on port 3000, deployed independently. Uses Replit OIDC + iron-session (NOT Supabase), the Replit Postgres module (NOT Supabase), Replit Object Storage, Stripe, and Resend. See `apps/chg-rehab/replit.md` for the full handoff doc.
+1. **CHG Platform** (`apps/chg-rehab/`) — Next.js 15 + React 19 + Prisma 6 SaaS that owns CRM + Rehab end-to-end (pipeline, SOW, draws, warehouse, documents, admin). Runs on port 3000, deployed independently. Uses Supabase auth + iron-session, the Replit Postgres module, Replit Object Storage, Stripe, and Resend. See `apps/chg-rehab/replit.md` for the full handoff doc. (The legacy CRA front-end at `apps/crm` was retired in CHG Phase 5 and is archived under `archive/apps-crm/`.)
+2. **Deal Link** (`apps/deallink/`) — Linktree-style wholesaler platform. Off-market deal listings and public profiles, persisted to Supabase via the shared Express server.
 
 ### Request Flow
 
@@ -104,9 +91,9 @@ Departments: `acquisitions`, `construction`, `property_management`, `contractors
 npm workspaces — no Turborepo or Nx. Workspaces: `apps/*`, `packages/*`, `server/`.
 
 - `packages/ui/` and `packages/api-client/` are scaffolded stubs (empty, ready for shared code).
-- `apps/crm/` has a nested `client/` subfolder (legacy structure from git subtree import).
-- `apps/crm/` and `apps/deallink/` were merged in via `git subtree add` — full history is preserved.
+- `apps/deallink/` was merged in via `git subtree add` — full history is preserved.
 - `apps/chg-rehab/` was merged in from a separate Replit project (manual extract from three zip archives, not git subtree — no history preserved).
+- `archive/apps-crm/` holds the retired CRA-based CHG CRM (CHG Phase 5). Kept read-only for reference; not built or wired into any workflow.
 
 ## Key Data Model Notes
 

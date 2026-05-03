@@ -26,12 +26,8 @@ if [ -f apps/chg-rehab/prisma/schema.prisma ]; then
   fi
 fi
 
-# Gold Bridge / CHG CRM (apps/crm) still ships a CRA build that the Express
-# server serves as a SPA. Rebuild it so the dev preview reflects merged
-# client-side changes without waiting for the Server workflow's next restart.
-if [ -f apps/crm/client/package.json ]; then
-  echo "[post-merge] rebuilding apps/crm client"
-  npm run build:prod --workspace=apps/crm
-fi
+# Legacy apps/crm has been retired (Phase 5 — archived under archive/apps-crm).
+# The Express server in server/ is still used by chg-rehab for /api/admin/*,
+# but no longer serves a CRA SPA build, so there is nothing to rebuild here.
 
 echo "[post-merge] done"

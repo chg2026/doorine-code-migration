@@ -24,7 +24,7 @@ Current migrations:
 
 | File | Purpose |
 | ---- | ------- |
-| `20260101000000_user_profiles_is_investor.sql` | Adds `user_profiles.is_investor` for the investor portal (Phase 6). Replaces the previous one-off `apps/crm/scripts/phase-6-investor-portal.sql`. |
+| `20260101000000_user_profiles_is_investor.sql` | Adds `user_profiles.is_investor` for the investor portal (Phase 6). Replaces the previous one-off `archive/apps-crm/scripts/phase-6-investor-portal.sql`. |
 
 ## Applying migrations
 

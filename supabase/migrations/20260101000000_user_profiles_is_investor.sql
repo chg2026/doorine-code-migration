@@ -6,7 +6,7 @@
 -- rejected from the CHG Rehab admin app by middleware.
 --
 -- This file is the canonical source for the Phase 6 schema change. It
--- supersedes apps/crm/scripts/phase-6-investor-portal.sql, which is kept
+-- supersedes archive/apps-crm/scripts/phase-6-investor-portal.sql, which is kept
 -- only for historical reference.
 --
 -- Idempotent: safe to run multiple times.
