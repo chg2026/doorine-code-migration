@@ -164,6 +164,7 @@ async function syncSupabaseUser(
     account_id: string | null;
     is_super_admin: boolean | null;
     is_account_admin: boolean | null;
+    is_investor: boolean | null;
     status: string | null;
     // Supabase-js types embedded relationships as either an object or an
     // array depending on whether it inferred a 1-1 vs 1-N FK; we coerce
@@ -173,7 +174,7 @@ async function syncSupabaseUser(
   };
   const { data: profile, error } = await admin
     .from("user_profiles")
-    .select("id, email, full_name, phone, avatar_url, account_id, is_super_admin, is_account_admin, status, profile_score, accounts ( id, name )")
+    .select("id, email, full_name, phone, avatar_url, account_id, is_super_admin, is_account_admin, is_investor, status, profile_score, accounts ( id, name )")
     .eq("id", authUserId)
     .maybeSingle<UserProfileRow>();
   if (error) {
@@ -189,6 +190,11 @@ async function syncSupabaseUser(
     return null;
   }
   if (profile.status === "suspended") {
+    return null;
+  }
+  // Cross-app boundary: investors live on apps/investor-portal. Surface them
+  // here as "logged out" — middleware redirects them to the right login.
+  if (profile.is_investor) {
     return null;
   }
 

@@ -41,6 +41,9 @@ model Company {
   notificationState    NotificationState?
   contactNotifications ContactNotificationLog[]
   staleSweepAlerts     StaleSweepAlertLog[]
+  investors            Investor[]
+  offerings            Offering[]
+  investorDocuments    InvestorDocument[]
 }
 
 model User {
@@ -108,6 +111,7 @@ model Property {
   company       Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   assets        PropertyAsset[]
   financials    PropertyFinancialSection[]
+  offerings     Offering[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -740,4 +744,369 @@ model ContactNotificationLog {
   @@index([companyId, contactId])
   @@index([companyId, status, failedAt])
   @@index([companyId, status, resolvedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Investor Portal (apps/investor-portal) — added in Investor Portal Phase 1.
+// Mirrors chg-rehab `User`/`Subscription` patterns: a Supabase-mirrored
+// identity table (`Investor`) per Operator `Company`, plus the deal/cap
+// table data the portal renders (offerings, subscriptions, capital calls,
+// distributions, documents, updates, activity feed, CRM communications).
+// ─────────────────────────────────────────────────────────────────────────
+
+model Investor {
+  id                  String                          @id // Supabase auth uid
+  companyId           String
+  email               String?                         @unique
+  firstName           String?
+  lastName            String?
+  phone               String?
+  accreditedStatus    InvestorAccreditedStatus        @default(Unverified)
+  status              InvestorStatus                  @default(Lead)
+  portalLastLoginAt   DateTime?
+  createdAt           DateTime                        @default(now())
+  updatedAt           DateTime                        @updatedAt
+
+  company             Company                         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subscriptions       InvestorSubscription[]
+  documents           InvestorDocument[]
+  activities          InvestorActivity[]
+  communications      InvestorCommunication[]
+  notes               InvestorNote[]
+  notificationPrefs   InvestorNotificationPreference[]
+
+  @@index([companyId, status])
+}
+
+model Offering {
+  id              String                @id @default(cuid())
+  companyId       String
+  propertyId      String?
+  name            String
+  propertyType    OfferingPropertyType  @default(Other)
+  marketCity      String?
+  marketState     String?
+  description     String?
+  targetIrrLow    Decimal?              @db.Decimal(6, 2)
+  targetIrrHigh   Decimal?              @db.Decimal(6, 2)
+  prefReturnPct   Decimal?              @db.Decimal(6, 2)
+  holdMonths      Int?
+  minInvestment   Decimal?              @db.Decimal(14, 2)
+  raiseTarget     Decimal?              @db.Decimal(14, 2)
+  raisedToHard    Decimal?              @db.Decimal(14, 2)
+  raisedToSoft    Decimal?              @db.Decimal(14, 2)
+  closeDate       DateTime?
+  stage           OfferingStage         @default(Prospecting)
+  status          OfferingStatus        @default(Active)
+  coverImageUrl   String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  company         Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  property        Property?             @relation(fields: [propertyId], references: [id])
+  subscriptions   InvestorSubscription[]
+  capitalCalls    CapitalCall[]
+  distributions   Distribution[]
+  documents       InvestorDocument[]
+  updates         DealUpdate[]
+
+  @@index([companyId, status])
+  @@index([companyId, stage])
+}
+
+// Investor↔Offering subscription (cap-table row). Named `InvestorSubscription`
+// because chg-rehab already owns a `Subscription` model for Stripe billing.
+model InvestorSubscription {
+  id                    String                       @id @default(cuid())
+  investorId            String
+  offeringId            String
+  committedAmount       Decimal                      @db.Decimal(14, 2)
+  fundedAmount          Decimal                      @default(0) @db.Decimal(14, 2)
+  commitmentType        SubscriptionCommitmentType   @default(Soft)
+  signedAt              DateTime?
+  fundedAt              DateTime?
+  ownershipPct          Decimal?                     @db.Decimal(8, 4)
+  currentValue          Decimal?                     @db.Decimal(14, 2)
+  lifetimeDistributions Decimal                      @default(0) @db.Decimal(14, 2)
+  irrToDate             Decimal?                     @db.Decimal(6, 2)
+  cocToDate             Decimal?                     @db.Decimal(6, 2)
+  status                InvestorSubscriptionStatus   @default(Pending)
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+
+  investor              Investor                     @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  offering              Offering                     @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  callAllocations       CapitalCallAllocation[]
+  distributionAllocations DistributionAllocation[]
+
+  @@unique([investorId, offeringId])
+  @@index([offeringId, status])
+}
+
+model CapitalCall {
+  id            String                  @id @default(cuid())
+  offeringId    String
+  noticeNumber  String
+  totalAmount   Decimal                 @db.Decimal(14, 2)
+  dueDate       DateTime?
+  status        CapitalCallStatus       @default(Draft)
+  issuedAt      DateTime?
+  memo          String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  offering      Offering                @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  allocations   CapitalCallAllocation[]
+
+  @@unique([offeringId, noticeNumber])
+  @@index([offeringId, status])
+}
+
+model CapitalCallAllocation {
+  id              String     @id @default(cuid())
+  capitalCallId   String
+  subscriptionId  String
+  amountDue       Decimal    @db.Decimal(14, 2)
+  amountReceived  Decimal    @default(0) @db.Decimal(14, 2)
+  receivedAt      DateTime?
+
+  capitalCall     CapitalCall          @relation(fields: [capitalCallId], references: [id], onDelete: Cascade)
+  subscription    InvestorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([capitalCallId, subscriptionId])
+  @@index([subscriptionId])
+}
+
+model Distribution {
+  id              String                  @id @default(cuid())
+  offeringId      String
+  periodLabel     String
+  distributionType DistributionType       @default(CashFlow)
+  totalAmount     Decimal                 @db.Decimal(14, 2)
+  perDollarRate   Decimal?                @db.Decimal(10, 6)
+  paidOn          DateTime?
+  status          DistributionStatus      @default(Pending)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  offering        Offering                @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  allocations     DistributionAllocation[]
+
+  @@index([offeringId, status])
+}
+
+model DistributionAllocation {
+  id              String                       @id @default(cuid())
+  distributionId  String
+  subscriptionId  String
+  amount          Decimal                      @db.Decimal(14, 2)
+  wireRef         String?
+  status          DistributionAllocationStatus @default(Pending)
+
+  distribution    Distribution         @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  subscription    InvestorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([distributionId, subscriptionId])
+  @@index([subscriptionId])
+}
+
+model InvestorDocument {
+  id            String                  @id @default(cuid())
+  companyId     String
+  investorId    String?
+  offeringId    String?
+  name          String
+  docType       InvestorDocType         @default(Other)
+  objectPath    String?
+  sizeBytes     Int?
+  uploadedById  String?
+  uploadedAt    DateTime                @default(now())
+  taxYear       Int?
+
+  company       Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  investor      Investor?               @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  offering      Offering?               @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  activities    InvestorActivity[]
+
+  @@index([investorId])
+  @@index([offeringId, docType])
+  @@index([companyId])
+}
+
+model DealUpdate {
+  id            String                @id @default(cuid())
+  offeringId    String
+  updateType    DealUpdateType        @default(Quarterly)
+  title         String
+  body          String?
+  metricsJson   Json?
+  postedById    String?
+  postedAt      DateTime              @default(now())
+  published     Boolean               @default(false)
+
+  offering      Offering              @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  activities    InvestorActivity[]
+
+  @@index([offeringId, postedAt])
+}
+
+model InvestorActivity {
+  id                    String                  @id @default(cuid())
+  investorId            String
+  eventType             InvestorActivityType    @default(Other)
+  title                 String
+  description           String?
+  relatedSubscriptionId String?
+  relatedDocumentId     String?
+  relatedUpdateId       String?
+  createdAt             DateTime                @default(now())
+
+  investor              Investor                @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  relatedDocument       InvestorDocument?       @relation(fields: [relatedDocumentId], references: [id])
+  relatedUpdate         DealUpdate?             @relation(fields: [relatedUpdateId], references: [id])
+
+  @@index([investorId, createdAt])
+}
+
+model InvestorCommunication {
+  id           String                       @id @default(cuid())
+  investorId   String
+  channel      InvestorCommunicationChannel @default(Note)
+  subject      String?
+  body         String?
+  durationMin  Int?
+  loggedById   String?
+  loggedAt     DateTime                     @default(now())
+
+  investor     Investor                     @relation(fields: [investorId], references: [id], onDelete: Cascade)
+
+  @@index([investorId, loggedAt])
+}
+
+model InvestorNote {
+  id          String    @id @default(cuid())
+  investorId  String
+  body        String
+  authorId    String?
+  createdAt   DateTime  @default(now())
+
+  investor    Investor  @relation(fields: [investorId], references: [id], onDelete: Cascade)
+
+  @@index([investorId])
+}
+
+model InvestorNotificationPreference {
+  id          String    @id @default(cuid())
+  investorId  String
+  event       String    // distribution | document | update | newdeal | captable
+  email       Boolean   @default(true)
+  inApp       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  investor    Investor  @relation(fields: [investorId], references: [id], onDelete: Cascade)
+
+  @@unique([investorId, event])
+  @@index([investorId])
+}
+
+enum InvestorAccreditedStatus {
+  Unverified
+  Self
+  Verified
+}
+
+enum InvestorStatus {
+  Lead
+  Prospect
+  Active
+  Inactive
+}
+
+enum OfferingPropertyType {
+  MF
+  SF
+  MX
+  Other
+}
+
+enum OfferingStage {
+  Prospecting
+  Diligence
+  Raise
+  Closing
+  Closed
+}
+
+enum OfferingStatus {
+  Active
+  Archived
+}
+
+enum SubscriptionCommitmentType {
+  Soft
+  Hard
+}
+
+enum InvestorSubscriptionStatus {
+  Pending
+  Active
+  Closed
+}
+
+enum CapitalCallStatus {
+  Draft
+  Issued
+  Funded
+  Cancelled
+}
+
+enum DistributionType {
+  CashFlow
+  ReturnOfCapital
+  Sale
+}
+
+enum DistributionStatus {
+  Pending
+  Sent
+}
+
+enum DistributionAllocationStatus {
+  Pending
+  Sent
+  Failed
+}
+
+enum InvestorDocType {
+  PPM
+  Agreement
+  Statement
+  TaxK1
+  Update
+  Other
+}
+
+enum DealUpdateType {
+  Quarterly
+  Leasing
+  Annual
+  Distribution
+  Market
+}
+
+enum InvestorActivityType {
+  Distribution
+  Document
+  Update
+  CapitalCall
+  Subscription
+  Other
+}
+
+enum InvestorCommunicationChannel {
+  Email
+  Phone
+  Note
+  Meeting
 }
