@@ -614,4 +614,55 @@ router.delete('/roles/:id', async (req, res) => {
   }
 })
 
+// ─── Products (global) ─────────────────────────────────────────────────────
+//
+// `brand_domain` is a GLOBAL property of a product (one production host per
+// product), not per-account. The Gold Bridge AppSwitcher reads it from the
+// /auth/me entitlements payload (the products row is joined in) and uses it
+// to compute the production link for that product's tile. Setting Deal
+// Link's brand_domain here is what flips the tile from "Coming soon" to a
+// live link in production for any account that holds an active entitlement.
+
+router.get('/products', async (req, res) => {
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('id, code, name, brand_domain, status')
+    .order('code')
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data || [])
+})
+
+router.patch('/products/:code', async (req, res) => {
+  const code = String(req.params.code || '').toLowerCase()
+  const body = req.body || {}
+  const update = {}
+  if ('brand_domain' in body) {
+    const raw = body.brand_domain
+    if (raw === null || raw === '') {
+      update.brand_domain = null
+    } else if (typeof raw !== 'string') {
+      return res.status(400).json({ error: 'brand_domain must be a string or null' })
+    } else {
+      // Strip protocol + path; only the bare host is stored. AppSwitcher
+      // builds `https://${brand_domain}`, so leading "https://" or trailing
+      // path would double up.
+      const host = raw.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase()
+      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(host)) {
+        return res.status(400).json({ error: 'brand_domain must be a valid hostname' })
+      }
+      update.brand_domain = host
+    }
+  }
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: 'no editable fields supplied' })
+
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .update(update)
+    .eq('code', code)
+    .select('id, code, name, brand_domain, status')
+    .single()
+  if (error) return res.status(error.code === 'PGRST116' ? 404 : 500).json({ error: error.message })
+  res.json(data)
+})
+
 module.exports = router

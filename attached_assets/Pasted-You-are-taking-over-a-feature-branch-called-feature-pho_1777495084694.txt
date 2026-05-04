@@ -1,0 +1,67 @@
+You are taking over a feature branch called `feature/phone-auth` on a React + Express + Supabase monorepo 
+(Gold Bridge CHG CRM). The branch is deployed on Replit at the dev URL. The phone auth backend works 
+(OTP send/verify via Twilio + Supabase confirmed via curl). The front-end is broken in several specific ways. 
+Fix all issues listed below. Do NOT touch anything outside of these files. Do NOT modify any existing 
+email/password auth logic. All changes are additive only.
+
+---
+
+REPO STRUCTURE:
+- server/routes/auth.js         — Express auth routes (OTP endpoints already exist)
+- server/routes/users.js        — PATCH /complete-profile already exists
+- apps/chg/client/src/pages/Login.jsx
+- apps/chg/client/src/pages/PhoneAuth.jsx      — already exists, route /phone-auth
+- apps/chg/client/src/context/AuthContext.jsx
+- apps/chg/client/src/components/ProfileCompletionBanner.jsx
+- apps/chg/client/src/lib/api.js
+
+---
+
+FIX 1 — Add phone auth entry point to Login.jsx
+In Login.jsx, add a divider and a "Sign in with phone number" button BELOW the existing form and ABOVE the 
+"Don't have an account?" line. It should navigate to /phone-auth using React Router <Link>. Style it as a 
+secondary outlined button matching the existing Tailwind classes. Do not remove or change anything in the 
+existing email/password form.
+
+FIX 2 — Remove blocking await in /auth/me  
+In server/routes/auth.js, find the GET /me handler. The line:
+  await supabaseAdmin.from('user_profiles').update({ last_login: new Date().toISOString() }).eq('id', profile.id)
+is currently BEFORE res.json(result). Move it AFTER res.json(result), or fire it without await so it does 
+not block the response. Use: 
+  supabaseAdmin.from('user_profiles').update({ last_login: new Date().toISOString() }).eq('id', profile.id)
+  (no await — fire and forget)
+
+FIX 3 — Fix AuthContext setLoading(false) not called via onAuthStateChange path
+In apps/chg/client/src/context/AuthContext.jsx, inside the onAuthStateChange callback, after 
+`await fetchProfile(s.user.id)`, ensure setLoading(false) is called. Also confirm the 8-second safety 
+timeout exists on the getSession() initialization path. The full pattern should be:
+  - getSession() resolves → fetchProfile → .finally(() => setLoading(false)) + clearTimeout(safetyTimer)
+  - onAuthStateChange fires → fetchProfile → then setLoading(false) if it was still true
+  - safetyTimer fallback after 8000ms sets setLoading(false) regardless
+
+FIX 4 — ProfileCompletionBanner: handle null profile gracefully
+In Dashboard.jsx the banner receives `profile?.profile_score`. If profile is null during loading, 
+profileScore is undefined and the banner hides. This is correct behavior DURING loading. After loading 
+completes (loading === false), if profile is still null (auth failed), redirect to /login instead of 
+rendering a broken dashboard. In AuthContext, if fetchProfile fails and returns null, check inside 
+ProtectedRoute: if (!loading && !profile && user) — sign out and redirect to /login.
+
+FIX 5 — Keep server alive on Replit
+In the Replit workflow config (.replit file), confirm the run command is:
+  npm run start --workspace=server
+NOT a raw `node index.js`. The Replit workflow keeps this alive. If the .replit file uses a different 
+command, update it to use the npm workspace start script which is defined as `node index.js` in 
+server/package.json.
+
+---
+
+AFTER ALL FIXES:
+1. Run: npm run build:prod --workspace=apps/chg
+2. Run: npm run dev --workspace=server
+3. Verify at the dev URL:
+   - /login shows email form + "Sign in with phone number" link below it
+   - Clicking that link goes to /phone-auth
+   - /phone-auth shows phone input, sends OTP, accepts 6-digit code
+   - After OTP: new users see NameModal, returning users go to dashboard
+   - Dashboard loads in < 2 seconds, shows stats, shows profile banner for phone users
+   - Email login still works unchanged

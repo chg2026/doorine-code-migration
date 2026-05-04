@@ -8,11 +8,17 @@
 
 ---
 
+> **⚠️ Historical audit — apps/crm is retired.**
+>
+> This audit was written against the live `apps/crm/` workspace in April 2026. That workspace has since been retired and moved to `archive/apps-crm/`. All file paths below referencing `apps/crm/...` (e.g. `apps/crm/scripts/phase-4-admin-entitlements.sql`, `apps/crm/client/src/pages/admin/`) now resolve under `archive/apps-crm/` rather than the working tree. The active monorepo today is `apps/chg-rehab`, `apps/crmdeallink`, and `apps/investor-portal`. Preserved for historical reference only.
+
+---
+
 ## 1. What Phase 4 ships (recap)
 
 Goal from blueprint §09: super admin can manage product entitlements per account.
 
-- **PR A — DB migration** (`apps/chg/scripts/phase-4-admin-entitlements.sql`)
+- **PR A — DB migration** (`apps/crm/scripts/phase-4-admin-entitlements.sql`)
   - Adds `account_products.disabled_at TIMESTAMPTZ`
   - Adds `account_products.disabled_by UUID → auth.users(id) ON DELETE SET NULL`
   - Adds index `idx_account_products_account_status (account_id, status)`
@@ -27,7 +33,7 @@ Goal from blueprint §09: super admin can manage product entitlements per accoun
   - All four write `activity_log` rows with `entity_type='account_product'` and one of: `entitlement.grant`, `entitlement.regrant`, `entitlement.plan_change`, `entitlement.revoke`
   - Helpers: `syncEntitlement` (generic upsert; clears `disabled_at`/`disabled_by` on re-grant), `syncChgEntitlement` (back-compat wrapper), `logEntitlementActivity`
 
-- **PR C — Admin UI** (`apps/chg/client/src/pages/admin/`)
+- **PR C — Admin UI** (`apps/crm/client/src/pages/admin/`)
   - New `EntitlementsPanel.jsx` — modal with list, grant, plan-change, revoke, re-grant
   - `AdminDashboard.jsx` AccountsTab gets:
     - New **Products** column showing pills for each *active* entitlement
@@ -74,16 +80,16 @@ Both use `e.code` and match the middleware's shape. ✅
 
 ### 2.5 Build pipeline + deploy
 
-- `apps/chg/client/build/` is gitignored (commit 31de8b4)
+- `apps/crm/client/build/` is gitignored (commit 31de8b4)
 - `.replit` workflow: `npm install` → `npm run build:client` → `npm run dev --workspace=server`
-- `npm run build:client` → `npm run build:prod --workspace=apps/chg` → `cd client && npm install && npm run build`
+- `npm run build:client` → `npm run build:prod --workspace=apps/crm` → `cd client && npm install && npm run build`
 - Local build verified successful for both PR C (232.99 kB gz) and PR D (232.66 kB gz)
 - Static assets served immutable; `index.html` no-cache (`server/index.js:48–62`)
 - `REACT_APP_SUPABASE_URL` baked into bundle on Replit confirmed via `grep` (Nicole's diagnostic 2026-04-27): build is connected to staging (`cmlfnhzjfhuynzuleyxt.supabase.co`)
 
 ### 2.6 401 axios redirect
 
-`apps/chg/client/src/lib/api.js:17–26` — any 401 from any API call triggers `supabase.auth.signOut()` + `window.location.href = '/login'`. So a stale-token state cannot leave the user on `/` with a "logged in" appearance.
+`apps/crm/client/src/lib/api.js:17–26` — any 401 from any API call triggers `supabase.auth.signOut()` + `window.location.href = '/login'`. So a stale-token state cannot leave the user on `/` with a "logged in" appearance.
 
 ---
 
@@ -97,7 +103,7 @@ The login → AuthContext → `/auth/me` path is independent of Phase 4:
 
 PR D's diff is two files, six lines:
 - `server/routes/admin.js`: rename `code` → `product_code`/`product_name` in the inner projection of `/admin/accounts` (only); change one element of `PLANS_BY_PRODUCT.chg` from `'pro'` → `'professional'`.
-- `apps/chg/client/src/pages/admin/EntitlementsPanel.jsx`: change one element of `PLANS_BY_PRODUCT.chg` from `'pro'` → `'professional'`.
+- `apps/crm/client/src/pages/admin/EntitlementsPanel.jsx`: change one element of `PLANS_BY_PRODUCT.chg` from `'pro'` → `'professional'`.
 
 Neither file is part of the auth path. **The current `/auth/me` failure on staging (§6) is not caused by Phase 4.**
 

@@ -1,0 +1,62 @@
+Here's what I'm understanding. Let me read it back, then propose the phases.
+
+What I understand the end state to be
+Branding stays as "CHG Platform" but the actual codebase folder we keep is apps/chg-rehab (the modern one). The apps/crm folder gets retired once everything it owns has been moved over.
+
+Login (one front door for everyone):
+
+Email + password ✓
+Phone number ✓
+Lands in CHG Platform (which is now technically chg-rehab)
+Top bar of CHG Platform (taken from chg-rehab, with one addition):
+
+Existing chg-rehab tabs	+ new
+Pipeline · Underwriting · Rehab Manager · Warehouse · Property Record · Contacts · Documents Hub · Admin Settings	Super Admin ← added at the end
+Plus the existing top-bar extras:
+
+Gold Bridge app switcher (9-dot grid for jumping between CHG, Deal Link, etc.)
+Profile menu
+Side nav of the old apps/crm (Dashboard, Acquisitions, Construction, Properties, Tenants, Contractors, Finance, Tasks) — gone. Those are conceptually replaced by the chg-rehab top-bar modules.
+
+Three things we're carrying over from apps/crm into chg-rehab:
+
+Login flow — both email and phone
+Profile pages
+Super Admin dashboard (Overview, Accounts, Users, Roles, Products tabs)
+Did I get that right?
+
+One important thing I need to flag before we phase this
+I just looked under the hood and found the two apps don't speak the same auth language right now:
+
+apps/crm uses Supabase auth directly (Supabase session in the browser, JWT bearer to the server)
+apps/chg-rehab uses iron-session cookies (a separate, older session system)
+So "same login lands in CHG Platform" isn't just a copy/paste of the login page — we have to make chg-rehab actually accept Supabase logins. That's solvable but it's the biggest single piece of work in this whole project, and it needs to be Phase 1 because everything else depends on it.
+
+Proposed phases (each one independently safe to ship)
+Each phase ends in a state where both apps still work — nothing breaks until the final cutover.
+
+Phase 1 — Make chg-rehab accept Supabase logins (auth bridge)
+Replace chg-rehab's iron-session auth with Supabase auth (same one apps/crm uses)
+Wire up email + password sign-in on chg-rehab's existing /login page
+Add phone sign-in (port the /phone-auth page)
+Verify all 4 test accounts can log into chg-rehab
+✅ End state: chg-rehab works as before, but now logged in via Supabase. apps/crm untouched.
+Phase 2 — Port the Profile page into chg-rehab
+Audit what apps/crm's profile page does (avatar, name, email change, password change, phone)
+Build the Next.js equivalent inside chg-rehab
+Hook the profile menu in TopNav to it
+✅ End state: chg-rehab has a working profile page. apps/crm still works.
+Phase 3 — Port Super Admin into chg-rehab top bar
+Add "Super Admin" tab to chg-rehab's TopNav (gated on is_super_admin = true)
+Port the 5 admin sub-tabs (Overview, Accounts, Users, Roles, Products) as Next.js pages
+Reuse the existing /api/admin/* endpoints from the shared Express server (no need to rewrite the backend)
+✅ End state: chg-rehab has full Super Admin functionality. apps/crm still works in parallel.
+Phase 4 — Cutover the Gold Bridge app switcher
+Change the "CHG Platform" tile to point at chg-rehab (port 3000) instead of apps/crm (port 5000)
+Update post-login default landing
+✅ End state: clicking "CHG Platform" anywhere in the ecosystem now opens the chg-rehab version. apps/crm still reachable directly if needed for fallback.
+Phase 5 — Retire apps/crm
+After 1-2 sessions of confirmed stability on chg-rehab, stop the apps/crm workflow
+Remove its tile from any leftover references
+Optionally archive the folder (keep the code in git history just in case)
+✅ End state: one CHG Platform, one codebase, done.

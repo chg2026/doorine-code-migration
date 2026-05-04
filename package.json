@@ -2,7 +2,7 @@
   "name": "rei-code",
   "private": true,
   "version": "0.0.0",
-  "description": "Gold Bridge platform monorepo — CHG CRM and Deal Link",
+  "description": "Gold Bridge platform monorepo — CHG CRM, Deal Link, and CHG Rehab",
   "workspaces": [
     "apps/*",
     "packages/*",
@@ -10,16 +10,36 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=server",
-    "dev:chg": "npm run dev --workspace=apps/chg",
     "dev:deallink": "npm run dev --workspace=apps/deallink",
     "dev:server": "npm run dev --workspace=server",
-    "build:client": "npm run build:prod --workspace=apps/chg",
-    "start:replit": "npm run build:client && npm run dev --workspace=server",
+    "dev:rehab": "npm run dev --workspace=apps/chg-rehab",
+    "dev:investor": "npm run dev --workspace=apps/investor-portal",
+    "build:rehab": "npm run build --workspace=apps/chg-rehab",
+    "start:replit": "npm run dev --workspace=server",
+    "start:rehab": "npm run start --workspace=apps/chg-rehab",
+    "rehab:db:push": "npm run db:push --workspace=apps/chg-rehab",
+    "rehab:db:seed": "npm run db:seed --workspace=apps/chg-rehab",
+    "rehab:db:generate": "npm run db:generate --workspace=apps/chg-rehab",
+    "rehab:test": "npm run test --workspace=apps/chg-rehab",
+    "rehab:cron": "npm run cron:notifications-sweep --workspace=apps/chg-rehab",
+    "rehab:lint": "npm run lint --workspace=apps/chg-rehab",
+    "rehab:db:investor-column": "tsx apps/chg-rehab/scripts/ensure-investor-column.ts",
+    "supabase:migrate": "node scripts/apply-supabase-migrations.mjs",
+    "rehab:db:seed-investor": "npm run db:seed-investor --workspace=apps/chg-rehab",
+    "start:investor": "npm run start --workspace=apps/investor-portal",
+    "dev:contractor": "npm run dev --workspace=apps/contractor-portal",
+    "start:contractor": "npm run start --workspace=apps/contractor-portal",
+    "build:contractor": "npm run build --workspace=apps/contractor-portal",
     "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   }
 }

@@ -1,10 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '../store.jsx';
 import { Kicker, Hairline, Avatar } from '../components/UI.jsx';
 
+// Public marketing page. No store/auth dependency — Landing is one of the
+// few routes a logged-out visitor can hit, so it must render with zero
+// API calls. The "View example profile" CTA is a hard-coded link; the
+// public read API will return a 404 page if no such handle exists in the
+// connected database.
+const EXAMPLE_HANDLE = 'jrodriguez.deals';
+
 export default function Landing() {
-  const { state } = useStore();
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header style={{ padding: '20px 32px', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--line)' }}>
@@ -25,7 +30,7 @@ export default function Landing() {
         </p>
         <div style={{ display: 'inline-flex', gap: 10 }}>
           <Link to="/onboarding" className="btn solid">Claim your handle →</Link>
-          <Link to={`/p/${state.profile.handle}`} className="btn">View example profile</Link>
+          <Link to={`/p/${EXAMPLE_HANDLE}`} className="btn">View example profile</Link>
         </div>
         <div style={{ marginTop: 14, fontSize: 12, color: 'var(--dim)', fontFamily: 'var(--mono)' }}>
           deallink.io/<u>yourname</u>
@@ -55,8 +60,8 @@ export default function Landing() {
         <Kicker>Sample wholesaler</Kicker>
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <Avatar size={64} initials="JR" />
-          <div className="serif" style={{ fontSize: 22 }}>@jrodriguez.deals</div>
-          <Link to={`/p/${state.profile.handle}`} className="btn solid sm">Open profile →</Link>
+          <div className="serif" style={{ fontSize: 22 }}>@{EXAMPLE_HANDLE}</div>
+          <Link to={`/p/${EXAMPLE_HANDLE}`} className="btn solid sm">Open profile →</Link>
         </div>
       </section>
 

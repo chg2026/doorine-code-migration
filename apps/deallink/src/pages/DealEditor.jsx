@@ -19,7 +19,23 @@ export default function DealEditor({ mode }) {
   const [form, setForm] = React.useState(existing || EMPTY);
   const [error, setError] = React.useState(null);
 
-  React.useEffect(() => { if (mode === 'edit' && existing) setForm(existing); }, [id]);
+  // Deals load async via the store. If the user lands on /admin/deal/:id
+  // before hydration, `existing` is null on first render even though the
+  // deal will appear once /api/deallink/deals resolves. Sync the form
+  // whenever the matching deal materializes / changes.
+  React.useEffect(() => {
+    if (mode === 'edit' && existing) setForm(existing);
+  }, [mode, existing]);
+
+  if (mode === 'edit' && !state.loaded) {
+    return (
+      <AdminShell tab="deals">
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--mute)', fontFamily: 'var(--mono)', fontSize: 12 }}>
+          Loading deal…
+        </div>
+      </AdminShell>
+    );
+  }
 
   if (mode === 'edit' && !existing) {
     return (
