@@ -37,6 +37,7 @@ const PRODUCTS: Product[] = [
     tagline: "Wholesaler deal links",
     color: "#16A34A",
     initial: "D",
+    devPort: 3001,
   },
 ];
 

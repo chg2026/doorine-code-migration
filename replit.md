@@ -84,12 +84,14 @@ listed in `CLAUDE.md`; Deal Link needs the front-end Supabase env vars in
 - **Project** — parallel parent the platform auto-creates whenever there
   is more than one workflow. System-managed; cannot be edited.
 
-Four ports are forwarded to the public dev domain: `3000 → 80`
-(CHG Rehab — the default preview), `3001 → 3001` (Deal Link),
-`3002 → 3002` (Investor Portal), and `5000 → 5000` (Gold Bridge API,
-internal-only — chg-rehab proxies super-admin endpoints to it via
-`localhost:5000`). The chg-rehab AppSwitcher uses `devBareHost` for the
-CHG tile (served at the bare host) and `devPort` for cross-port tiles.
+Four ports are forwarded to the public dev domain: `5000 → 80`
+(Server/Gold Bridge API — the default Replit preview/webview; the Replit
+platform requires the webview workflow to use port 5000), `3000 → 3000`
+(CHG Rehab — select port 3000 in the preview panel to use), `3001 → 3001`
+(Deal Link), and `3002 → 3002` (Investor Portal). The chg-rehab AppSwitcher
+uses `devBareHost` for the CHG tile (served at the bare host — the same
+replit.dev domain that CHG Rehab itself is running on) and `devPort` for
+cross-port tiles (Deal Link uses `devPort: 3001`).
 
 ## Databases
 

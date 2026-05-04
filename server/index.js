@@ -18,7 +18,7 @@ const { requireDepartment, requireProduct, scopeToAccount } = require('./middlew
 //   /api/users   — self-service profile; every authenticated user needs it regardless of product
 app.use('/api/auth', require('./routes/auth'))
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'CHG CRM is running', version: '2.0.0', timestamp: new Date().toISOString() })
+  res.json({ status: 'Gold Bridge API is running', version: '2.0.0', timestamp: new Date().toISOString() })
 })
 
 app.use('/api/admin', requireAuth, require('./routes/admin'))
@@ -49,7 +49,7 @@ app.use('/api/tasks', requireAuth, chgProduct, scopeToAccount, requireDepartment
 app.use('/api/invoices', requireAuth, chgProduct, scopeToAccount, requireDepartment('finance'), require('./routes/invoices'))
 
 app.get('/', (req, res) => {
-  res.json({ status: 'CHG CRM API is running', version: '2.0.0', timestamp: new Date().toISOString() })
+  res.json({ status: 'Gold Bridge API is running', version: '2.0.0', timestamp: new Date().toISOString() })
 })
 
 app.use((err, req, res, next) => {
@@ -58,7 +58,7 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`CHG CRM server running on port ${PORT}`)
+  console.log(`Gold Bridge API server running on port ${PORT}`)
 })
 
 // Daily SMS nudge for phone-only users who haven't added their email.
