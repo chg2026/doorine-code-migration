@@ -46,8 +46,16 @@ async function resolve(): Promise<SessionContractor | null> {
   let account: CpAccount | null = await prisma.cpAccount.findUnique({ where: { id: user.id } });
   if (!account) {
     const fullName = (profile.full_name || "").trim() || (profile.email || user.email || "Contractor");
-    account = await prisma.cpAccount.create({
-      data: {
+    account = await prisma.cpAccount.upsert({
+      where: { id: user.id },
+      update: {
+        email: profile.email || user.email || `${user.id}@unknown`,
+        contactName: fullName,
+        companyName: fullName,
+        phone: profile.phone,
+        lastLoginAt: new Date(),
+      },
+      create: {
         id: user.id,
         email: profile.email || user.email || `${user.id}@unknown`,
         contactName: fullName,

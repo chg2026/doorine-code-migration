@@ -140,8 +140,16 @@ async function resolveCurrentInvestor(): Promise<SessionInvestor | null> {
     create: { id: accountId, name: fullName || email || "Investor account" },
   });
 
-  const created = await prisma.investor.create({
-    data: {
+  const created = await prisma.investor.upsert({
+    where: { id: supaUser.id },
+    update: {
+      email: email || null,
+      firstName: firstName || null,
+      lastName,
+      phone: profile.phone ?? supaUser.phone ?? null,
+      portalLastLoginAt: new Date(),
+    },
+    create: {
       id: supaUser.id,
       companyId: accountId,
       email: email || null,

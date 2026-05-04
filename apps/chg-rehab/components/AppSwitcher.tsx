@@ -90,9 +90,14 @@ function resolveUrl(product: Product): string | null {
  * interfere, then sets the location to the target after fetching the session.
  */
 async function openWithSso(baseHref: string): Promise<void> {
-  const win = window.open("", "_blank", "noopener,noreferrer");
+  // Open WITHOUT noopener/noreferrer so the browser returns a live window
+  // reference. We need to set win.location.href after the async session fetch —
+  // noopener makes window.open() return null, which causes a fallback that
+  // navigates the current page instead of opening a new tab.
+  const win = window.open("about:blank", "_blank");
   if (!win) {
-    window.location.href = baseHref;
+    // Popup was blocked — last resort: navigate current tab.
+    window.location.href = `${baseHref}/login`;
     return;
   }
   try {
@@ -109,10 +114,10 @@ async function openWithSso(baseHref: string): Promise<void> {
       ]);
       win.location.href = `${baseHref}/login#${params.toString()}`;
     } else {
-      win.location.href = baseHref;
+      win.location.href = `${baseHref}/login`;
     }
   } catch {
-    win.location.href = baseHref;
+    win.location.href = `${baseHref}/login`;
   }
 }
 

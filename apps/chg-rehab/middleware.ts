@@ -93,11 +93,16 @@ export async function middleware(req: NextRequest) {
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+  type ProfileFlags = {
+    is_investor: boolean | null;
+    is_contractor: boolean | null;
+    is_super_admin: boolean | null;
+  };
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("is_investor, is_contractor")
+    .select("is_investor, is_contractor, is_super_admin")
     .eq("id", user.id)
-    .maybeSingle<{ is_investor: boolean | null; is_contractor: boolean | null }>();
+    .maybeSingle<ProfileFlags>();
   if (profileErr) {
     // Fail closed on lookup error — better to 503 than to leak cross-app.
     // If the error mentions "is_contractor", the migration at
@@ -125,27 +130,32 @@ export async function middleware(req: NextRequest) {
       { status: 503 }
     );
   }
-  if (profile?.is_investor) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "investor_account" }, { status: 403 });
+  // Super-admins are allowed into CHG Rehab regardless of other role flags.
+  // This lets admin test accounts that also carry is_investor / is_contractor
+  // access the CRM and use the app switcher to reach the other portals.
+  if (!profile?.is_super_admin) {
+    if (profile?.is_investor) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "investor_account" }, { status: 403 });
+      }
+      const target = INVESTOR_PORTAL_BASE_URL
+        ? new URL("/login", INVESTOR_PORTAL_BASE_URL)
+        : new URL("/login?error=investor_account", req.url);
+      target.searchParams.set(
+        "error",
+        "Investor accounts use the investor portal."
+      );
+      return NextResponse.redirect(target);
     }
-    const target = INVESTOR_PORTAL_BASE_URL
-      ? new URL("/login", INVESTOR_PORTAL_BASE_URL)
-      : new URL("/login?error=investor_account", req.url);
-    target.searchParams.set(
-      "error",
-      "Investor accounts use the investor portal."
-    );
-    return NextResponse.redirect(target);
-  }
-  if (profile?.is_contractor) {
-    // Contractor accounts belong on apps/contractor-portal, not chg-rehab.
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "contractor_account" }, { status: 403 });
+    if (profile?.is_contractor) {
+      // Contractor accounts belong on apps/contractor-portal, not chg-rehab.
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "contractor_account" }, { status: 403 });
+      }
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("error", "Contractor accounts use the contractor portal.");
+      return NextResponse.redirect(loginUrl);
     }
-    const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("error", "Contractor accounts use the contractor portal.");
-    return NextResponse.redirect(loginUrl);
   }
 
   return res;
