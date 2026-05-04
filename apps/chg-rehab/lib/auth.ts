@@ -351,12 +351,23 @@ async function syncSupabaseUser(
 async function refreshFromSupabase(existing: User, authEmail: string | null): Promise<SessionUser | null> {
   if (!existing.active) return null;
 
+  type RefreshProfile = {
+    email: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+    status: string | null;
+    profile_score: number | null;
+    is_super_admin: boolean | null;
+    is_investor: boolean | null;
+    is_contractor: boolean | null;
+  };
+
   const admin = getSupabaseAdminClient();
   const { data: profile } = await admin
     .from("user_profiles")
     .select("email, full_name, avatar_url, status, profile_score, is_super_admin, is_investor, is_contractor")
     .eq("id", existing.id)
-    .maybeSingle();
+    .maybeSingle<RefreshProfile>();
 
   if (profile?.status === "suspended") return null;
 
@@ -389,7 +400,7 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
       profile?.profile_score ?? null,
       !!profile?.is_super_admin,
       !!profile?.is_investor,
-      !!(profile as any)?.is_contractor,
+      !!profile?.is_contractor,
     );
   }
 
@@ -398,6 +409,6 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
     profile?.profile_score ?? null,
     !!profile?.is_super_admin,
     !!profile?.is_investor,
-    !!(profile as any)?.is_contractor,
+    !!profile?.is_contractor,
   );
 }
