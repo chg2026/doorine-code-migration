@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const SERVER_PORT = process.env.DEALLINK_API_PORT || '5000';
+const SERVER_PORT = process.env.DEALLINK_API_PORT || '8080';
 
 export default defineConfig({
   plugins: [react()],

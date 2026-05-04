@@ -10,7 +10,7 @@ import { getSupabaseServerClient } from "./supabaseServer";
 function legacyBaseUrl(): string {
   const explicit = process.env.LEGACY_API_BASE_URL?.trim();
   if (explicit) return explicit.replace(/\/+$/, "");
-  return "http://localhost:5000";
+  return "http://localhost:8080";
 }
 
 /**

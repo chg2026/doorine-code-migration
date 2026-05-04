@@ -28,7 +28,7 @@
 import Stripe from "stripe";
 import { prisma } from "../lib/prisma";
 
-const ORIGIN = process.env.SMOKE_ORIGIN || "http://localhost:5000";
+const ORIGIN = process.env.SMOKE_ORIGIN || "http://localhost:8080";
 const ADMIN_USER_ID = process.env.SMOKE_ADMIN_ID || "seed-user-roey";
 
 function fail(msg: string): never {
