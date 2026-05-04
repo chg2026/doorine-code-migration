@@ -199,16 +199,22 @@ async function syncSupabaseUser(
     return null;
   }
   // Contractor-portal accounts must NOT resolve to a chg-rehab session.
-  // Queried separately so a missing column (migration not yet applied) does
-  // not crash the entire auth flow — supabase-js returns null data on error,
-  // which safely defaults to "not a contractor" here. Once the migration
-  // (supabase/migrations/20260301000000_user_profiles_is_contractor.sql) is
-  // applied, this check becomes fully effective.
-  const { data: contractorCheck } = await admin
+  // Fail closed: if the query errors (e.g. column not yet migrated), deny
+  // the session rather than allow cross-portal access.
+  // Apply supabase/migrations/20260301000000_user_profiles_is_contractor.sql
+  // via the Supabase Dashboard to resolve a persistent column-not-found error.
+  const { data: contractorCheck, error: contractorErr } = await admin
     .from("user_profiles")
     .select("is_contractor")
     .eq("id", authUserId)
     .maybeSingle<{ is_contractor: boolean | null }>();
+  if (contractorErr) {
+    console.error(
+      "[auth] is_contractor lookup failed (migration pending?):",
+      contractorErr.message
+    );
+    return null;
+  }
   if (contractorCheck?.is_contractor) {
     return null;
   }

@@ -95,15 +95,25 @@ export async function middleware(req: NextRequest) {
   });
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("is_investor")
+    .select("is_investor, is_contractor")
     .eq("id", user.id)
-    .maybeSingle<{ is_investor: boolean | null }>();
+    .maybeSingle<{ is_investor: boolean | null; is_contractor: boolean | null }>();
   if (profileErr) {
-    // Fail closed on lookup error too — better to 503 than to leak.
+    // Fail closed on lookup error — better to 503 than to leak cross-app.
+    // If the error mentions "is_contractor", the migration at
+    // supabase/migrations/20260301000000_user_profiles_is_contractor.sql
+    // has not been applied yet. Run the SQL in the Supabase Dashboard.
     console.error(
       "[middleware] user_profiles lookup failed:",
       profileErr.message
     );
+    if (profileErr.message.includes("is_contractor")) {
+      console.error(
+        "[middleware] MIGRATION REQUIRED: ALTER TABLE public.user_profiles " +
+          "ADD COLUMN IF NOT EXISTS is_contractor boolean NOT NULL DEFAULT false; " +
+          "— run this in the Supabase Dashboard > SQL Editor"
+      );
+    }
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { error: "service_unavailable" },
@@ -111,7 +121,7 @@ export async function middleware(req: NextRequest) {
       );
     }
     return new NextResponse(
-      "Service temporarily unavailable. Please try again.",
+      "Service temporarily unavailable. Please contact support.",
       { status: 503 }
     );
   }
@@ -127,6 +137,15 @@ export async function middleware(req: NextRequest) {
       "Investor accounts use the investor portal."
     );
     return NextResponse.redirect(target);
+  }
+  if (profile?.is_contractor) {
+    // Contractor accounts belong on apps/contractor-portal, not chg-rehab.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "contractor_account" }, { status: 403 });
+    }
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("error", "Contractor accounts use the contractor portal.");
+    return NextResponse.redirect(loginUrl);
   }
 
   return res;
