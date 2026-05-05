@@ -28,15 +28,13 @@ export default function Login() {
     }
   }, []);
 
-  // ── Declarative redirect — no paint-then-navigate blink ──────────────────
-  // Render a spinner while auth resolves so the login form never flashes for
-  // an already-authenticated user. Once resolved, redirect immediately via
-  // <Navigate> rather than inside a useEffect (effects run after paint).
-  // While auth is resolving, render nothing — the background is white so it
-  // looks seamless. With initialResolvedRef in AuthContext this lasts <100ms.
-  if (auth.loading) return null;
-
-  if (auth.user) {
+  // If auth has already resolved and the user is signed in, redirect now —
+  // before painting the form — so there's no flash of the login page.
+  // While auth.loading is true we fall through and render the form below;
+  // the component will re-render once loading settles and redirect then.
+  // This guarantees the page is NEVER blank: unauthenticated users see the
+  // form immediately, authenticated users get the form for <100 ms then go.
+  if (!auth.loading && auth.user) {
     const dest = (loc.state && loc.state.from) || '/admin';
     return <Navigate to={dest} replace />;
   }
