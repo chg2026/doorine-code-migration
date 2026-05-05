@@ -44,8 +44,18 @@ async function ensureContractorAuthUser(input: {
   if (created.data.user) {
     authUserId = created.data.user.id;
   } else if (created.error) {
-    const { data: list } = await admin.auth.admin.listUsers({ perPage: 200 });
-    const found = list?.users?.find((u) => u.email?.toLowerCase() === input.email.toLowerCase());
+    // Paginate through ALL Supabase auth users to find the existing account.
+    // A single-page call (perPage: 200) silently misses users beyond page 1,
+    // causing the seed to fall back to a fake ID and orphaning demo data.
+    let page = 1;
+    let found: { id: string } | undefined;
+    while (!found) {
+      const { data: pageData, error: pageErr } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+      if (pageErr || !pageData) break;
+      found = pageData.users.find((u) => u.email?.toLowerCase() === input.email.toLowerCase());
+      if (found || pageData.users.length < 200) break;
+      page++;
+    }
     if (found) {
       authUserId = found.id;
       await admin.auth.admin.updateUserById(found.id, { password: input.password, email_confirm: true });

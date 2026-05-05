@@ -33,11 +33,15 @@ export async function POST(req: NextRequest) {
 
   const admin = getSupabaseAdminClient();
   let authUserId: string | null = null;
-  for (let page = 1; page <= 5 && !authUserId; page++) {
+  // Paginate through ALL Supabase auth users with no hard page cap.
+  // The previous 5-page limit (max 1,000 users) silently missed accounts
+  // beyond that range; the premature break on a full page could also exit
+  // early when the target user happened to be on that page but wasn't yet found.
+  for (let page = 1; !authUserId; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) break;
+    if (error || !data) break;
     const found = data.users.find((u) => (u.email || "").toLowerCase() === invite.email.toLowerCase());
-    if (found) authUserId = found.id;
+    if (found) { authUserId = found.id; break; }
     if (data.users.length < 200) break;
   }
 
