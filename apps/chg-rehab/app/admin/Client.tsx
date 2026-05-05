@@ -2200,6 +2200,310 @@ function CompliancePanel({
   );
 }
 
+function generateStrongPassword(): string {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghjkmnpqrstuvwxyz";
+  const digits = "23456789";
+  const special = "!@#$%&*";
+  const all = upper + lower + digits + special;
+
+  function cryptoRandInt(max: number): number {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return arr[0] % max;
+  }
+
+  const rand = (set: string) => set[cryptoRandInt(set.length)];
+  const core: string[] = [rand(upper), rand(lower), rand(digits), rand(special)];
+  for (let i = 0; i < 8; i++) core.push(rand(all));
+
+  // Fisher-Yates shuffle using crypto randomness
+  for (let i = core.length - 1; i > 0; i--) {
+    const j = cryptoRandInt(i + 1);
+    [core[i], core[j]] = [core[j], core[i]];
+  }
+  return core.join("");
+}
+
+function ProvisionContractorForm({ isAdmin }: { isAdmin: boolean }) {
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [status, setStatus] = useState<
+    | { type: "idle" }
+    | { type: "loading" }
+    | {
+        type: "success";
+        state: "created" | "upgraded" | "already_contractor";
+        userId: string;
+        usedPassword: string;
+      }
+    | { type: "error"; message: string }
+  >({ type: "idle" });
+
+  function handleGenerate() {
+    const pw = generateStrongPassword();
+    setPassword(pw);
+    setShowPassword(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus({ type: "loading" });
+    try {
+      const res = await fetch("/api/admin/contractors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, fullName, password }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus({ type: "error", message: json.error || "Request failed" });
+        return;
+      }
+      setStatus({
+        type: "success",
+        state: json.state as "created" | "upgraded" | "already_contractor",
+        userId: json.userId,
+        usedPassword: password,
+      });
+    } catch (err) {
+      setStatus({ type: "error", message: err instanceof Error ? err.message : "Network error" });
+    }
+  }
+
+  function handleReset() {
+    setEmail("");
+    setFullName("");
+    setPassword("");
+    setShowPassword(false);
+    setStatus({ type: "idle" });
+  }
+
+  const isLoading = status.type === "loading";
+
+  const successBannerConfig =
+    status.type === "success"
+      ? status.state === "already_contractor"
+        ? {
+            bg: "#fef3c7",
+            border: "#fbbf24",
+            headline: "Already a contractor.",
+            body: "This email already has an active contractor account and can log in to the contractor portal.",
+            showPassword: false,
+          }
+        : status.state === "upgraded"
+        ? {
+            bg: "#dbeafe",
+            border: "#93c5fd",
+            headline: "Contractor access activated.",
+            body: "This user existed but was not yet a contractor. Their password has been updated and contractor access is now active.",
+            showPassword: true,
+          }
+        : {
+            bg: "#d1fae5",
+            border: "#6ee7b7",
+            headline: "Contractor account created.",
+            body: "The contractor can now log in to the contractor portal.",
+            showPassword: true,
+          }
+      : null;
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {status.type === "success" && successBannerConfig && (
+        <div
+          style={{
+            background: successBannerConfig.bg,
+            border: `1px solid ${successBannerConfig.border}`,
+            borderRadius: 6,
+            padding: "10px 14px",
+            fontSize: 12,
+            color: "#111827",
+          }}
+        >
+          <div>
+            <strong>{successBannerConfig.headline}</strong> {successBannerConfig.body}
+            {successBannerConfig.showPassword && status.usedPassword && (
+              <div style={{ marginTop: 6 }}>
+                Password set:{" "}
+                <code
+                  style={{
+                    background: "#f3f4f6",
+                    padding: "2px 6px",
+                    borderRadius: 4,
+                    fontFamily: "monospace",
+                    fontSize: 12,
+                  }}
+                >
+                  {status.usedPassword}
+                </code>
+                <span style={{ color: "#6b7280", marginLeft: 6 }}>
+                  — copy this now, it will not be shown again.
+                </span>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            style={{
+              marginTop: 8,
+              fontSize: 11,
+              color: "#374151",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              textDecoration: "underline",
+            }}
+          >
+            Create another
+          </button>
+        </div>
+      )}
+
+      {status.type === "error" && (
+        <div
+          style={{
+            background: "#fee2e2",
+            border: "1px solid #fca5a5",
+            borderRadius: 6,
+            padding: "10px 14px",
+            fontSize: 12,
+            color: "#7f1d1d",
+          }}
+        >
+          {status.message}
+        </div>
+      )}
+
+      {status.type !== "success" && (
+        <>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500 }}>
+              Email address
+            </label>
+            <input
+              className="admin-input"
+              type="email"
+              required
+              disabled={!isAdmin || isLoading}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="contractor@example.com"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500 }}>
+              Full name
+            </label>
+            <input
+              className="admin-input"
+              type="text"
+              required
+              minLength={2}
+              disabled={!isAdmin || isLoading}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Jane Smith"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500 }}>
+              Password
+            </label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ position: "relative", flex: 1 }}>
+                <input
+                  className="admin-input"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  disabled={!isAdmin || isLoading}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 8 characters"
+                  style={{ width: "100%", paddingRight: 68 }}
+                />
+                <button
+                  type="button"
+                  disabled={!isAdmin || isLoading}
+                  onClick={() => setShowPassword((v) => !v)}
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    color: "var(--text-secondary)",
+                    padding: 0,
+                  }}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              <button
+                type="button"
+                className="btn"
+                disabled={!isAdmin || isLoading}
+                onClick={handleGenerate}
+                style={{ whiteSpace: "nowrap", fontSize: 12 }}
+              >
+                Generate
+              </button>
+            </div>
+            {password.length > 0 && password.length < 8 && (
+              <span style={{ fontSize: 11, color: "#ef4444" }}>
+                Password must be at least 8 characters.
+              </span>
+            )}
+            {password.length >= 8 && (
+              <span style={{ fontSize: 11, color: "#6b7280" }}>
+                Strength:{" "}
+                <span
+                  style={{
+                    color:
+                      password.length >= 12 &&
+                      /[A-Z]/.test(password) &&
+                      /[0-9]/.test(password) &&
+                      /[^A-Za-z0-9]/.test(password)
+                        ? "#059669"
+                        : "#d97706",
+                  }}
+                >
+                  {password.length >= 12 &&
+                  /[A-Z]/.test(password) &&
+                  /[0-9]/.test(password) &&
+                  /[^A-Za-z0-9]/.test(password)
+                    ? "Strong"
+                    : "Moderate"}
+                </span>
+              </span>
+            )}
+          </div>
+          <div style={{ paddingTop: 4 }}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={!isAdmin || isLoading}
+              style={{ minWidth: 140 }}
+            >
+              {isLoading ? "Creating…" : "Create contractor login"}
+            </button>
+          </div>
+        </>
+      )}
+    </form>
+  );
+}
+
 function ContractorPortalPanel({
   isAdmin,
   settings,
@@ -2214,6 +2518,18 @@ function ContractorPortalPanel({
   return (
     <div className="admin-panel active">
       <PanelTitle>Contractor portal</PanelTitle>
+
+      <div className="admin-group">
+        <div className="admin-group-title">Provision contractor login</div>
+        <div style={{ padding: "4px 0 8px" }}>
+          <div className="admin-desc" style={{ marginBottom: 14 }}>
+            Create a contractor portal account directly — no invite link required. The contractor
+            can log in immediately with the credentials you set here.
+          </div>
+          <ProvisionContractorForm isAdmin={isAdmin} />
+        </div>
+      </div>
+
       <div className="admin-group">
         <div className="admin-group-title">Update cadence (Contractor-Led mode)</div>
         <div className="admin-row">
