@@ -29,6 +29,12 @@ export function AuthProvider({ children }) {
   // user (e.g. React StrictMode double-effect, detectSessionInUrl re-emission).
   const resolvedUserIdRef = useRef(undefined);
 
+  // Tracks whether the initial auth state has been resolved. A ref (not a local
+  // let) so it survives React StrictMode's unmount→remount cycle — without this
+  // the local variable resets to false on every re-mount and resolveInitial fires
+  // again, toggling loading=true→false repeatedly (the 3-second blank blink).
+  const initialResolvedRef = useRef(false);
+
   const fetchMe = useCallback(async () => {
     try {
       const { data } = await api.get('/auth/me');
@@ -46,13 +52,9 @@ export function AuthProvider({ children }) {
     // Safety valve: if auth doesn't resolve within 8 s, unblock the UI.
     const safety = setTimeout(() => setLoading(false), 8000);
 
-    // Track whether the initial auth state has been resolved. Only after this
-    // do we respond to subsequent events (SIGNED_IN, SIGNED_OUT, etc.).
-    let initialResolved = false;
-
     function resolveInitial(sessionUser) {
-      if (initialResolved) return;
-      initialResolved = true;
+      if (initialResolvedRef.current) return;
+      initialResolvedRef.current = true;
       clearTimeout(safety);
       if (sessionUser) {
         resolvedUserIdRef.current = sessionUser.id;
@@ -80,7 +82,7 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      if (!initialResolved) {
+      if (!initialResolvedRef.current) {
         // SIGNED_IN arrived before (or instead of) INITIAL_SESSION resolving —
         // this is the normal SSO hash path when INITIAL_SESSION had no session.
         if (s?.user) resolveInitial(s.user);

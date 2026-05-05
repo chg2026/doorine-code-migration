@@ -32,13 +32,9 @@ export default function Login() {
   // Render a spinner while auth resolves so the login form never flashes for
   // an already-authenticated user. Once resolved, redirect immediately via
   // <Navigate> rather than inside a useEffect (effects run after paint).
-  if (auth.loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--mute)', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1 }}>
-        Loading…
-      </div>
-    );
-  }
+  // While auth is resolving, render nothing — the background is white so it
+  // looks seamless. With initialResolvedRef in AuthContext this lasts <100ms.
+  if (auth.loading) return null;
 
   if (auth.user) {
     const dest = (loc.state && loc.state.from) || '/admin';
