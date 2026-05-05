@@ -70,7 +70,7 @@ export default function Login() {
             Share a public profile. Post inventory once. Capture buyers.
           </div>
         </div>
-        <Kicker>© 2026 · BuildFlow</Kicker>
+        <Kicker>© 2026 · BuildFlow · boot:{typeof window !== 'undefined' ? window.__DL_BOOT__ : ''}</Kicker>
       </div>
       <form className="pane right" onSubmit={submit}>
         <div style={{ maxWidth: 360, width: '100%' }}>

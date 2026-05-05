@@ -39,7 +39,12 @@ export default defineConfig({
     port: 3001,
     strictPort: true,
     allowedHosts: true,
-    hmr: { clientPort: 443 },
+    // No clientPort override — HMR WebSocket uses the same port as the server
+    // (3001). Setting clientPort:443 was wrong here: Deal Link is accessed at
+    // :3001 directly, not through a port-443 reverse proxy, so port 443 had no
+    // WebSocket route for HMR. The failed WS connection caused Vite to do full
+    // page reloads every few seconds, producing the repeating blank screen.
+    hmr: true,
     // Fallback proxy: used only when effectiveApiBaseUrl is blank (no REPLIT_DEV_DOMAIN
     // and no explicit VITE_API_BASE_URL — e.g. a plain local clone without Replit).
     proxy: {
