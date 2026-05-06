@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vestry Capital — Investor Portal",
+  title: "CHG Rehab — Investor Portal",
   description: "Track your real estate investments, distributions, and documents.",
 };
 

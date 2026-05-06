@@ -10,8 +10,8 @@ export default function LoginClient({
   next: string;
   initialError: string;
 }) {
-  const [email, setEmail] = useState("james.wilson@vestry-demo.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
 
@@ -57,7 +57,7 @@ export default function LoginClient({
           <div>
             <div className="login-brand">
               <div className="login-mark" />
-              <span style={{ fontSize: 16, fontWeight: 600 }}>Vestry Capital</span>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>CHG Rehab</span>
             </div>
             <div className="login-headline">
               Your investments,
@@ -81,7 +81,7 @@ export default function LoginClient({
               <span>Distribution history &amp; statements</span>
             </div>
           </div>
-          <div className="login-foot-left">© 2026 Vestry Capital · Privacy · Terms</div>
+          <div className="login-foot-left">© 2026 CHG Rehab · Privacy · Terms</div>
         </div>
 
         <div className="login-right">
@@ -122,9 +122,6 @@ export default function LoginClient({
             </button>
           </form>
 
-          <div className="login-helper">
-            Demo: <strong>james.wilson@vestry-demo.com</strong> / <strong>password123</strong>
-          </div>
         </div>
       </div>
     </div>

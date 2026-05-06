@@ -97,7 +97,7 @@ export default async function FundingPage({
         )}
         <div style={{ marginTop: 12, fontSize: 11, color: "var(--text-tertiary)", lineHeight: 1.5 }}>
           Always confirm wire details by phone with the operator before sending
-          funds. Vestry will never email you new wire instructions out of the blue.
+          funds. The operator will never email you new wire instructions out of the blue.
         </div>
       </div>
 

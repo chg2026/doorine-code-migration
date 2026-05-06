@@ -41,7 +41,7 @@ export default function PortalSidebar({
     <div className="sb">
       <div className="sb-top">
         <div className="sb-mark" />
-        <span className="sb-brand">Vestry Capital</span>
+        <span className="sb-brand">CHG Rehab</span>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         <div className="nav-sec">Investor</div>

@@ -94,7 +94,7 @@ export default async function DistributionStatementPage({
       </div>
 
       <div style={{ marginTop: 16, fontSize: 11, color: "var(--text-tertiary)", textAlign: "center" }}>
-        Vestry Capital · Distribution statement · Generated {new Date().toLocaleDateString()}
+        CHG Rehab · Distribution statement · Generated {new Date().toLocaleDateString()}
       </div>
     </PortalPage>
   );
