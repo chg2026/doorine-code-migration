@@ -76,8 +76,8 @@ export default function QuoteBuilderClient({
       <div className="card">
         <div className="ctitle" style={{ marginBottom: 12 }}>Quote details</div>
         {blocked && (
-          <div style={{ background: "#FAEEDA", color: "#633806", padding: 10, borderRadius: 8, fontSize: 11, marginBottom: 12 }}>
-            You&apos;ve hit the free-tier limit of {quotaMax} external quotes per month. <a href="/account/upgrade" style={{ color: "#712B13", textDecoration: "underline" }}>Upgrade to Pro</a> to send unlimited.
+          <div className="bg-amber-light text-amber-dark" style={{ padding: 10, borderRadius: 8, fontSize: 11, marginBottom: 12 }}>
+            You&apos;ve hit the free-tier limit of {quotaMax} external quotes per month. <a href="/account/upgrade" className="text-coral-dark" style={{ textDecoration: "underline" }}>Upgrade to Pro</a> to send unlimited.
           </div>
         )}
         <div className="field"><label>Job / project name</label><input value={jobName} onChange={(e) => setJobName(e.target.value)} placeholder="Birchwood Townhomes — Drywall" /></div>
@@ -109,14 +109,18 @@ export default function QuoteBuilderClient({
             <input type="number" value={l.qty} onChange={(e) => update(l.id, { qty: Number(e.target.value) || 0 })} />
             <input type="number" value={l.unit} onChange={(e) => update(l.id, { unit: Number(e.target.value) || 0 })} placeholder="Unit $" />
             <div style={{ fontSize: 11, fontWeight: 500, padding: "0 8px" }}>{fmtCDec(l.qty * l.unit)}</div>
-            <button type="button" onClick={() => remove(l.id)} style={{ width: 24, height: 24, borderRadius: "50%", background: "#FCEBEB", border: "none", color: "#A32D2D", cursor: "pointer" }}>×</button>
+            <button type="button" onClick={() => remove(l.id)} className="bg-red-light text-red" style={{ width: 24, height: 24, borderRadius: "50%", border: "none", cursor: "pointer" }}>×</button>
           </div>
         ))}
         <button type="button" className="btn btn-sm" onClick={add}>+ Add line</button>
 
         <div className="field" style={{ marginTop: 16 }}><label>Notes</label><textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
 
-        {msg && <div style={{ marginBottom: 8, padding: 8, borderRadius: 8, background: msg.startsWith("Quote") ? "#E1F5EE" : "#FCEBEB", color: msg.startsWith("Quote") ? "#085041" : "#A32D2D", fontSize: 11 }}>{msg}</div>}
+        {msg && (
+          <div className={msg.startsWith("Quote") ? "bg-teal-light text-teal-dark" : "bg-red-light text-red"} style={{ marginBottom: 8, padding: 8, borderRadius: 8, fontSize: 11 }}>
+            {msg}
+          </div>
+        )}
 
         <button type="button" className="btn btn-p btn-full btn-lg" disabled={busy || blocked || !jobName} onClick={send}>
           {busy ? "Sending…" : "Send quote"}

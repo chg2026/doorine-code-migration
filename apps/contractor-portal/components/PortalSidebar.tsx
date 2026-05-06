@@ -59,7 +59,7 @@ export default function PortalSidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  // Operator lens section: expanded by default for power users (≥3 invitees),
+  // Operator lens section: expanded by default for power users (> 3 invitees),
   // collapsed for everyone else. State persists across page loads via localStorage.
   const [opOpen, setOpOpen] = useState(inviteeCount > 3);
 
