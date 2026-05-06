@@ -66,7 +66,7 @@ export default async function DashboardPage() {
       <div className="card">
         <div className="chd"><div className="ctitle">Compliance status</div><a className="btn btn-sm" href="/docs">Manage docs</a></div>
         {docs.length === 0 ? <EmptyState icon="🗂️" title="No documents" description="Upload your COI, W-9, and licenses to stay compliant." action={{ label: "Upload documents", href: "/docs" }} /> : docs.map((d) => (
-          <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "var(--bl)" }}>
+          <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(0,0,0,.1)" }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 500 }}>{d.name}</div>
               <div style={{ fontSize: 10, color: "#a09e99" }}>Expires: {d.expiresAt ? d.expiresAt.toLocaleDateString() : "N/A"}</div>

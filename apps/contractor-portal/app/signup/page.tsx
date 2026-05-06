@@ -43,7 +43,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         <div className="login-card" style={{ gridTemplateColumns: "1fr", maxWidth: 460 }}>
           <div className="login-right">
             <div className="login-title">Invite already used</div>
-            <div className="login-sub">This invitation has already been claimed. <a href="/login" style={{ color: "var(--coral)" }}>Sign in instead</a>.</div>
+            <div className="login-sub">This invitation has already been claimed. <a href="/login" style={{ color: "#D85A30" }}>Sign in instead</a>.</div>
           </div>
         </div>
       </div>

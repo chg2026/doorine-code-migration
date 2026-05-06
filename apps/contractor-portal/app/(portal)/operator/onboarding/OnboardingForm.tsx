@@ -37,7 +37,7 @@ export default function OnboardingForm() {
         <button className="btn btn-p btn-full" disabled={busy || !email}>{busy ? "Sending…" : "Send magic-link invite"}</button>
       </form>
       {msg && (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: msg.ok ? "var(--teal-l)" : "var(--red-l)", color: msg.ok ? "var(--teal-d)" : "var(--red)", fontSize: 11 }}>
+        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: msg.ok ? "#E1F5EE" : "#FCEBEB", color: msg.ok ? "#085041" : "#A32D2D", fontSize: 11 }}>
           {msg.text}
           {msg.link && <div style={{ marginTop: 6, fontFamily: "monospace", fontSize: 10, wordBreak: "break-all" }}>{msg.link}</div>}
         </div>

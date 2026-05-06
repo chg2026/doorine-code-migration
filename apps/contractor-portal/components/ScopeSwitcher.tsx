@@ -37,9 +37,9 @@ export default function ScopeSwitcher({
         fontSize: 11,
         fontWeight: 600,
         textDecoration: "none",
-        background: active ? "var(--coral)" : "transparent",
-        color: active ? "#fff" : "var(--t2)",
-        border: active ? "1px solid var(--coral)" : "1px solid rgba(0,0,0,.12)",
+        background: active ? "#D85A30" : "transparent",
+        color: active ? "#fff" : "#6b6a66",
+        border: active ? "1px solid #D85A30" : "1px solid rgba(0,0,0,.12)",
         transition: "all .1s",
       }}
     >
@@ -50,8 +50,8 @@ export default function ScopeSwitcher({
           fontWeight: 500,
           padding: "1px 6px",
           borderRadius: 8,
-          background: active ? "rgba(255,255,255,.22)" : "var(--bg2)",
-          color: active ? "#fff" : "var(--t2)",
+          background: active ? "rgba(255,255,255,.22)" : "#f7f6f3",
+          color: active ? "#fff" : "#6b6a66",
         }}
       >
         {count}
@@ -65,7 +65,7 @@ export default function ScopeSwitcher({
         display: "inline-flex",
         gap: 6,
         padding: 3,
-        background: "var(--bg2)",
+        background: "#f7f6f3",
         borderRadius: 999,
       }}
       title="Switch between your own portal and the operator lens for the contractors you've invited."

@@ -18,7 +18,7 @@ export default async function PhotosPage() {
   return (
     <PortalPage title="Photo uploads" subtitle="Document progress for your jobs and operators">
       {requested.length > 0 && (
-        <div className="card" style={{ borderLeft: "3px solid var(--amber)" }}>
+        <div className="card" style={{ borderLeft: "3px solid #854F0B" }}>
           <div className="ctitle" style={{ marginBottom: 8 }}>📸 Photo updates requested</div>
           {requested.map((j) => (
             <div key={j.id} className="fi">
@@ -39,7 +39,7 @@ export default async function PhotosPage() {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
               {j.photos.map((p) => (
-                <div key={p.id} style={{ aspectRatio: "1", borderRadius: 8, background: "var(--bg2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--t2)", textAlign: "center", padding: 6 }}>
+                <div key={p.id} style={{ aspectRatio: "1", borderRadius: 8, background: "#f7f6f3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#6b6a66", textAlign: "center", padding: 6 }}>
                   {p.phase}
                 </div>
               ))}

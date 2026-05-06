@@ -17,8 +17,8 @@ export default function UpgradePage() {
             <li>Compliance document vault</li>
           </ul>
         </div>
-        <div className="card" style={{ borderColor: "var(--coral)", borderWidth: 1.5 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: "var(--coral-d)" }}>Pro</div>
+        <div className="card" style={{ borderColor: "#D85A30", borderWidth: 1.5 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: "#712B13" }}>Pro</div>
           <div className="muted" style={{ fontSize: 11, marginBottom: 12 }}>Recommended</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>$29<span style={{ fontSize: 11, fontWeight: 500 }}>/mo</span></div>
           <ul style={{ marginTop: 12, paddingLeft: 18, fontSize: 12, lineHeight: 1.8 }}>
