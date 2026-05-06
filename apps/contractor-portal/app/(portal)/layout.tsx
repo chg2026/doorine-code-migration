@@ -29,6 +29,7 @@ export default async function PortalLayout({ children }: { children: React.React
         quotaUsed={quota.used}
         quotaMax={c.planTier === "free" ? FREE_TIER_EXTERNAL_QUOTES : null}
         showOperatorLens={showOperatorLens}
+        inviteeCount={invitees.length}
       />
       <div className="main">
         <PortalTopBar accountId={c.id} planTier={c.planTier} />

@@ -45,6 +45,9 @@
   .sb-brand { @apply text-[13px] font-bold text-t1 leading-tight; }
   .sb-sub { @apply text-[10px] text-t2; }
   .nav-sec { @apply text-[10px] font-semibold text-t3 uppercase; letter-spacing: .05em; padding: 10px 14px 3px; }
+  /* Clickable section header for collapsible nav groups */
+  .nav-sec-btn { @apply flex items-center justify-between w-full text-[10px] font-semibold text-t3 uppercase cursor-pointer bg-transparent border-0 font-sans text-left; letter-spacing: .05em; padding: 10px 14px 3px; }
+  .nav-sec-btn:hover { @apply text-t2; }
   .ni { @apply flex items-center gap-2 text-[11px] text-t2 cursor-pointer transition-colors no-underline; padding: 7px 14px; border-left: 2px solid transparent; }
   .ni:hover { @apply bg-bg2 text-t1; }
   .ni.on { @apply bg-bg2 text-t1 font-semibold; border-left-color: theme(colors.coral); }

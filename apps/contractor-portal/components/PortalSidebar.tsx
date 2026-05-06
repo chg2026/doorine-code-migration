@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
 interface NavItem { href: string; label: string; dot: string; badge?: string }
@@ -44,6 +45,7 @@ export default function PortalSidebar({
   quotaUsed,
   quotaMax,
   showOperatorLens,
+  inviteeCount,
 }: {
   initials: string;
   displayName: string;
@@ -52,9 +54,27 @@ export default function PortalSidebar({
   quotaUsed: number;
   quotaMax: number | null;
   showOperatorLens: boolean;
+  inviteeCount: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Operator lens section: expanded by default for power users (≥3 invitees),
+  // collapsed for everyone else. State persists across page loads via localStorage.
+  const [opOpen, setOpOpen] = useState(inviteeCount >= 3);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("cp:op-open");
+      if (saved !== null) setOpOpen(saved === "true");
+    } catch {}
+  }, []);
+
+  function toggleOp() {
+    const next = !opOpen;
+    setOpOpen(next);
+    try { localStorage.setItem("cp:op-open", String(next)); } catch {}
+  }
 
   async function signOut() {
     try {
@@ -72,7 +92,7 @@ export default function PortalSidebar({
         <span className="ni-dot" style={{ background: item.dot }} />
         {item.label}
         {item.badge ? (
-          <span className="ni-badge" style={{ background: "var(--coral-l)", color: "var(--coral-d)" }}>{item.badge}</span>
+          <span className="ni-badge" style={{ background: "#FAECE7", color: "#712B13" }}>{item.badge}</span>
         ) : null}
       </Link>
     );
@@ -96,8 +116,11 @@ export default function PortalSidebar({
         {NAV_WORK.map(renderItem)}
         {showOperatorLens ? (
           <>
-            <div className="nav-sec">Operator lens</div>
-            {NAV_OPERATOR.map(renderItem)}
+            <button type="button" className="nav-sec-btn" onClick={toggleOp}>
+              <span>Operator lens</span>
+              <span style={{ fontSize: 8, opacity: 0.7 }}>{opOpen ? "▾" : "▸"}</span>
+            </button>
+            {opOpen && NAV_OPERATOR.map(renderItem)}
           </>
         ) : null}
       </div>

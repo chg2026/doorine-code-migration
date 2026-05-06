@@ -43,7 +43,7 @@ export default async function DashboardPage() {
                 )}
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: j.progressPct > 60 ? "var(--teal)" : "var(--amber)" }}>{j.progressPct || "—"}%</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: j.progressPct > 60 ? "#0F6E56" : "#854F0B" }}>{j.progressPct || "—"}%</div>
                 <span className={`pill ${j.status === "active" ? "p-blue" : "p-amber"}`}>{j.status}</span>
               </div>
             </div>
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
           <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "var(--bl)" }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 500 }}>{d.name}</div>
-              <div style={{ fontSize: 10, color: "var(--t3)" }}>Expires: {d.expiresAt ? d.expiresAt.toLocaleDateString() : "N/A"}</div>
+              <div style={{ fontSize: 10, color: "#a09e99" }}>Expires: {d.expiresAt ? d.expiresAt.toLocaleDateString() : "N/A"}</div>
             </div>
             <span className={`pill ${d.status === "current" ? "p-teal" : d.status === "expiring" ? "p-amber" : "p-red"}`}>
               {d.status === "current" ? "Current" : d.status === "expiring" ? "Expiring soon" : "Expired"}

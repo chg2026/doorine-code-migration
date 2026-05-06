@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fmtC, fmtDate } from "@/lib/format";
@@ -22,7 +23,7 @@ export default async function BidsPage() {
       </div>
       <div className="card">
         <div className="chd"><div className="ctitle">Bid invitations</div></div>
-        {invitations.length === 0 ? <div className="empty-state">No bid invitations yet.</div> : (
+        {invitations.length === 0 ? <EmptyState icon="🏷️" title="No bid invitations yet" description="Operators will send you bid invitations when they have work that matches your trade." /> : (
           <table className="tbl">
             <thead><tr><th>Job</th><th>Trade</th><th>Range</th><th>Due</th><th>From</th><th>Your bid</th><th>Status</th></tr></thead>
             <tbody>
@@ -30,12 +31,12 @@ export default async function BidsPage() {
                 const myBid = b.proposals[0];
                 return (
                   <tr key={b.id}>
-                    <td><div style={{ fontSize: 11, fontWeight: 600 }}>{b.jobName}</div><div style={{ fontSize: 10, color: "var(--t2)" }}>{b.jobLocation}</div></td>
+                    <td><div style={{ fontSize: 11, fontWeight: 600 }}>{b.jobName}</div><div style={{ fontSize: 10, color: "#6b6a66" }}>{b.jobLocation}</div></td>
                     <td>{b.trade}</td>
                     <td>{b.scopeRangeLow ? fmtC(b.scopeRangeLow) : "—"} – {b.scopeRangeHigh ? fmtC(b.scopeRangeHigh) : "—"}</td>
-                    <td style={{ color: "var(--amber)" }}>{fmtDate(b.bidDueAt)}</td>
+                    <td style={{ color: "#854F0B" }}>{fmtDate(b.bidDueAt)}</td>
                     <td>{b.fromCompany?.name || "—"}</td>
-                    <td>{myBid ? fmtC(myBid.amount) : <span style={{ fontSize: 10, color: "var(--t3)" }}>—</span>}</td>
+                    <td>{myBid ? fmtC(myBid.amount) : <span style={{ fontSize: 10, color: "#a09e99" }}>—</span>}</td>
                     <td><span className={`pill ${b.status === "open" ? "p-amber" : b.status === "awarded" ? "p-teal" : "p-gray"}`}>{b.status}</span></td>
                   </tr>
                 );
