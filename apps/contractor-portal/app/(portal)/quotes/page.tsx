@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fmtC, fmtDate } from "@/lib/format";
@@ -20,21 +21,30 @@ export default async function QuoteHistoryPage() {
         <div className="kpi"><div className="kl">Accepted value</div><div className="kv green">{fmtC(quotes.filter(q => q.status === "accepted").reduce((s, q) => s + Number(q.totalAmount), 0))}</div></div>
       </div>
       <div className="card">
-        <table className="tbl">
-          <thead><tr><th>#</th><th>Job</th><th>Recipient</th><th>Amount</th><th>Sent</th><th>Status</th></tr></thead>
-          <tbody>
-            {quotes.length === 0 ? <tr><td colSpan={6} className="empty-state">No quotes sent yet.</td></tr> : quotes.map((q) => (
-              <tr key={q.id}>
-                <td style={{ fontWeight: 600 }}>{q.number}</td>
-                <td>{q.jobName}</td>
-                <td>{q.toCompany?.name || q.toAccount?.companyName || "—"}</td>
-                <td style={{ fontWeight: 600 }}>{fmtC(q.totalAmount)}</td>
-                <td className="muted">{fmtDate(q.sentAt)}</td>
-                <td><span className={`pill ${q.status === "accepted" ? "p-teal" : q.status === "pending" ? "p-amber" : "p-red"}`}>{q.status}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {quotes.length === 0 ? (
+          <EmptyState
+            icon="📄"
+            title="No quotes sent yet"
+            description="Use the quote builder to send your first polished quote to an operator or client."
+            action={{ label: "+ Build a quote", href: "/quotes/new" }}
+          />
+        ) : (
+          <table className="tbl">
+            <thead><tr><th>#</th><th>Job</th><th>Recipient</th><th>Amount</th><th>Sent</th><th>Status</th></tr></thead>
+            <tbody>
+              {quotes.map((q) => (
+                <tr key={q.id}>
+                  <td style={{ fontWeight: 600 }}>{q.number}</td>
+                  <td>{q.jobName}</td>
+                  <td>{q.toCompany?.name || q.toAccount?.companyName || "—"}</td>
+                  <td style={{ fontWeight: 600 }}>{fmtC(q.totalAmount)}</td>
+                  <td className="muted">{fmtDate(q.sentAt)}</td>
+                  <td><span className={`pill ${q.status === "accepted" ? "p-teal" : q.status === "pending" ? "p-amber" : "p-red"}`}>{q.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </PortalPage>
   );

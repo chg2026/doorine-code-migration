@@ -61,7 +61,7 @@ export default function PortalSidebar({
 
   // Operator lens section: expanded by default for power users (≥3 invitees),
   // collapsed for everyone else. State persists across page loads via localStorage.
-  const [opOpen, setOpOpen] = useState(inviteeCount >= 3);
+  const [opOpen, setOpOpen] = useState(inviteeCount > 3);
 
   useEffect(() => {
     try {

@@ -21,7 +21,7 @@ export default async function OpOnboardingPage() {
           <table className="tbl">
             <thead><tr><th>Email</th><th>Trade</th><th>Sent</th><th>Status</th></tr></thead>
             <tbody>
-              {invites.length === 0 ? <tr><td colSpan={4} className="empty-state">No invites yet.</td></tr> : invites.map((i) => (
+              {invites.length === 0 ? <tr><td colSpan={4} style={{ textAlign: "center", padding: "20px", fontSize: 11, color: "#6b6a66" }}>No invites sent yet.</td></tr> : invites.map((i) => (
                 <tr key={i.id}>
                   <td>{i.email}</td>
                   <td>{i.trade || "—"}</td>

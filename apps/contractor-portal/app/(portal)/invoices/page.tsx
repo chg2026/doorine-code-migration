@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fmtC, fmtDate } from "@/lib/format";
@@ -25,21 +26,30 @@ export default async function InvoicesPage() {
         <div className="kpi"><div className="kl">Total invoices</div><div className="kv">{invoices.length}</div></div>
       </div>
       <div className="card">
-        <table className="tbl">
-          <thead><tr><th>Invoice #</th><th>Job</th><th>Recipient</th><th>Amount</th><th>Submitted</th><th>Status</th></tr></thead>
-          <tbody>
-            {invoices.length === 0 ? <tr><td colSpan={6} className="empty-state">No invoices yet.</td></tr> : invoices.map((i) => (
-              <tr key={i.id}>
-                <td style={{ fontWeight: 600 }}>{i.number}</td>
-                <td>{i.jobName}</td>
-                <td>{i.toCompany?.name || i.toAccount?.companyName || "—"}</td>
-                <td style={{ fontWeight: 600 }}>{fmtC(i.totalAmount)}</td>
-                <td className="muted">{fmtDate(i.submittedAt)}</td>
-                <td><span className={`pill ${i.status === "paid" ? "p-teal" : i.status === "approved" ? "p-blue" : i.status === "pending" ? "p-amber" : "p-red"}`}>{i.status}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {invoices.length === 0 ? (
+          <EmptyState
+            icon="🧾"
+            title="No invoices yet"
+            description="Submit your first invoice to start tracking payments from operators."
+            action={{ label: "+ New invoice", href: "/invoices/new" }}
+          />
+        ) : (
+          <table className="tbl">
+            <thead><tr><th>Invoice #</th><th>Job</th><th>Recipient</th><th>Amount</th><th>Submitted</th><th>Status</th></tr></thead>
+            <tbody>
+              {invoices.map((i) => (
+                <tr key={i.id}>
+                  <td style={{ fontWeight: 600 }}>{i.number}</td>
+                  <td>{i.jobName}</td>
+                  <td>{i.toCompany?.name || i.toAccount?.companyName || "—"}</td>
+                  <td style={{ fontWeight: 600 }}>{fmtC(i.totalAmount)}</td>
+                  <td className="muted">{fmtDate(i.submittedAt)}</td>
+                  <td><span className={`pill ${i.status === "paid" ? "p-teal" : i.status === "approved" ? "p-blue" : i.status === "pending" ? "p-amber" : "p-red"}`}>{i.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </PortalPage>
   );

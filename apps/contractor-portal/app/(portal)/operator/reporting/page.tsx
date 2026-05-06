@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { getInvitees } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
@@ -64,26 +65,33 @@ export default async function OperatorReportingPage() {
 
       <div className="card">
         <div className="chd"><div className="ctitle">Per-sub breakdown</div></div>
-        <table className="tbl">
-          <thead>
-            <tr><th>Sub</th><th>Trade</th><th>Quotes</th><th>Active jobs</th><th>Paid</th><th>Outstanding</th><th>Flags</th></tr>
-          </thead>
-          <tbody>
-            {perSub.length === 0 ? (
-              <tr><td colSpan={7} className="empty-state">No subs invited yet.</td></tr>
-            ) : perSub.map((r) => (
-              <tr key={r.id}>
-                <td style={{ fontWeight: 600 }}>{r.name}</td>
-                <td className="muted">{r.trade || "—"}</td>
-                <td>{r.quotes}</td>
-                <td>{r.activeJobs} <span className="muted">/ {r.jobs}</span></td>
-                <td>{fmtC(r.paid)}</td>
-                <td className={r.outstanding > 0 ? "amber" : ""}>{fmtC(r.outstanding)}</td>
-                <td className={r.complianceFlags > 0 ? "red" : ""}>{r.complianceFlags}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {perSub.length === 0 ? (
+          <EmptyState
+            icon="📊"
+            title="No subs invited yet"
+            description="Invite subs to your network to see their performance rolled up here."
+            action={{ label: "+ Invite contractor", href: "/operator/onboarding" }}
+          />
+        ) : (
+          <table className="tbl">
+            <thead>
+              <tr><th>Sub</th><th>Trade</th><th>Quotes</th><th>Active jobs</th><th>Paid</th><th>Outstanding</th><th>Flags</th></tr>
+            </thead>
+            <tbody>
+              {perSub.map((r) => (
+                <tr key={r.id}>
+                  <td style={{ fontWeight: 600 }}>{r.name}</td>
+                  <td className="muted">{r.trade || "—"}</td>
+                  <td>{r.quotes}</td>
+                  <td>{r.activeJobs} <span className="muted">/ {r.jobs}</span></td>
+                  <td>{fmtC(r.paid)}</td>
+                  <td className={r.outstanding > 0 ? "amber" : ""}>{fmtC(r.outstanding)}</td>
+                  <td className={r.complianceFlags > 0 ? "red" : ""}>{r.complianceFlags}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </PortalPage>
   );

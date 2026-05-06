@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -35,31 +36,37 @@ export default async function OperatorMessagesPage() {
   return (
     <PortalPage title="Operator messages" subtitle={`${threads.length} active conversations across your network`}>
       <div className="card" style={{ padding: 0 }}>
-        <table className="tbl">
-          <thead>
-            <tr><th>Subject</th><th>With</th><th>Last message</th><th>When</th></tr>
-          </thead>
-          <tbody>
-            {threads.length === 0 ? (
-              <tr><td colSpan={4} className="empty-state">No conversations yet.</td></tr>
-            ) : threads.map((t) => {
-              const other = t.contractorAId === c.id
-                ? (t.contractorB?.companyName || t.layer1Company?.name || "—")
-                : t.contractorA.companyName;
-              const last = t.messages[0];
-              return (
-                <tr key={t.id}>
-                  <td style={{ fontWeight: 600 }}>{t.subject}</td>
-                  <td>{other}</td>
-                  <td className="muted" style={{ maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {last ? `${last.senderName}: ${last.body}` : "—"}
-                  </td>
-                  <td className="muted">{t.lastMessageAt.toLocaleDateString()}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {threads.length === 0 ? (
+          <EmptyState
+            icon="💬"
+            title="No conversations yet"
+            description="Conversations with your subs and upstream operators will appear here."
+          />
+        ) : (
+          <table className="tbl">
+            <thead>
+              <tr><th>Subject</th><th>With</th><th>Last message</th><th>When</th></tr>
+            </thead>
+            <tbody>
+              {threads.map((t) => {
+                const other = t.contractorAId === c.id
+                  ? (t.contractorB?.companyName || t.layer1Company?.name || "—")
+                  : t.contractorA.companyName;
+                const last = t.messages[0];
+                return (
+                  <tr key={t.id}>
+                    <td style={{ fontWeight: 600 }}>{t.subject}</td>
+                    <td>{other}</td>
+                    <td className="muted" style={{ maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {last ? `${last.senderName}: ${last.body}` : "—"}
+                    </td>
+                    <td className="muted">{t.lastMessageAt.toLocaleDateString()}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </PortalPage>
   );

@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { getInvitees } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
@@ -24,20 +25,28 @@ export default async function OpCompliancePage() {
         <div className="kpi"><div className="kl">Expired / missing</div><div className="kv red">{docs.filter(d => d.status === "expired" || d.status === "missing").length}</div></div>
       </div>
       <div className="card">
-        <table className="tbl">
-          <thead><tr><th>Sub</th><th>Document</th><th>Type</th><th>Expires</th><th>Status</th></tr></thead>
-          <tbody>
-            {docs.length === 0 ? <tr><td colSpan={5} className="empty-state">No compliance docs tracked.</td></tr> : docs.map((d) => (
-              <tr key={d.id}>
-                <td>{d.account.companyName}</td>
-                <td>{d.name}</td>
-                <td className="muted" style={{ textTransform: "capitalize" }}>{d.docType}</td>
-                <td className="muted">{fmtDate(d.expiresAt)}</td>
-                <td><span className={`pill ${d.status === "current" ? "p-teal" : d.status === "expiring" ? "p-amber" : "p-red"}`}>{d.status}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {docs.length === 0 ? (
+          <EmptyState
+            icon="🗂️"
+            title="No compliance documents tracked"
+            description="When subs upload their COI, W-9, and licenses, their compliance status will appear here."
+          />
+        ) : (
+          <table className="tbl">
+            <thead><tr><th>Sub</th><th>Document</th><th>Type</th><th>Expires</th><th>Status</th></tr></thead>
+            <tbody>
+              {docs.map((d) => (
+                <tr key={d.id}>
+                  <td>{d.account.companyName}</td>
+                  <td>{d.name}</td>
+                  <td className="muted" style={{ textTransform: "capitalize" }}>{d.docType}</td>
+                  <td className="muted">{fmtDate(d.expiresAt)}</td>
+                  <td><span className={`pill ${d.status === "current" ? "p-teal" : d.status === "expiring" ? "p-amber" : "p-red"}`}>{d.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </PortalPage>
   );
