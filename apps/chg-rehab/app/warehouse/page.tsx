@@ -12,7 +12,7 @@ export default async function WarehousePage() {
   if (!user) redirect("/login");
   if (!(await can(user, "warehouse", "view"))) redirect("/");
 
-  const [departments, templates, settings, canEdit, canManage] = await Promise.all([
+  const [departments, templates, settings, canEdit, canManage, allDeptsForManager] = await Promise.all([
     prisma.warehouseDepartment.findMany({
       where: { companyId: user.companyId, hidden: false },
       include: {
@@ -36,16 +36,16 @@ export default async function WarehousePage() {
     getCompanySettings(user.companyId),
     can(user, "warehouse", "edit"),
     can(user, "warehouse", "admin"),
+    // All (incl. hidden) departments/subs for the Category Manager — folded
+    // into the same Promise.all to eliminate a sequential round-trip.
+    prisma.warehouseDepartment.findMany({
+      where: { companyId: user.companyId },
+      include: {
+        subcategories: { orderBy: [{ pinned: "desc" }, { order: "asc" }] },
+      },
+      orderBy: [{ pinned: "desc" }, { order: "asc" }],
+    }),
   ]);
-
-  // Also load all (incl. hidden) departments/subs for the Category Manager
-  const allDeptsForManager = await prisma.warehouseDepartment.findMany({
-    where: { companyId: user.companyId },
-    include: {
-      subcategories: { orderBy: [{ pinned: "desc" }, { order: "asc" }] },
-    },
-    orderBy: [{ pinned: "desc" }, { order: "asc" }],
-  });
 
   const dataDepts = departments.map((d) => ({
     id: d.id,

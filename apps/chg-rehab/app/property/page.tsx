@@ -275,11 +275,16 @@ function statusBadgeStyle(status: string): React.CSSProperties {
 // ── Overview ──────────────────────────────────────────────────────────
 async function OverviewTab({ property, companyId }: { property: NonNullable<Awaited<ReturnType<typeof prisma.property.findFirst>>>; companyId: string }) {
   const m = (property.meta || {}) as PropertyMeta;
-  const project = await prisma.project.findFirst({
-    where: { companyId, propertyId: property.id },
-    orderBy: { createdAt: "desc" },
-    include: { phases: true },
-  });
+  // Fetch project and settings in parallel (activity needs project.id for its OR clause).
+  const [project, setting] = await Promise.all([
+    prisma.project.findFirst({
+      where: { companyId, propertyId: property.id },
+      orderBy: { createdAt: "desc" },
+      include: { phases: true },
+    }),
+    prisma.companySetting.findUnique({ where: { companyId } }),
+  ]);
+
   const activity = await prisma.activityLogEntry.findMany({
     where: { companyId, OR: [{ entityId: property.id }, { entityId: project?.id || "_none_" }] },
     orderBy: { createdAt: "desc" },
@@ -290,8 +295,6 @@ async function OverviewTab({ property, companyId }: { property: NonNullable<Awai
   const totalInvested = (m.purchasePrice ?? 0) + (m.closingCosts ?? 0) + (m.rehabSpent ?? 0);
   const profit = (m.arv ?? 0) - totalInvested;
   const activePhase = project?.phases.find((p) => p.status === "Active");
-
-  const setting = await prisma.companySetting.findUnique({ where: { companyId } });
   const settingMeta = (setting?.meta as Record<string, unknown> | null) ?? {};
   const defaultProjectMode = (settingMeta.defaultProjectMode as string | undefined) ?? null;
 

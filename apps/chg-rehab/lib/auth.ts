@@ -362,6 +362,29 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
     is_contractor: boolean | null;
   };
 
+  // Fast path: the middleware already looked up user_profiles this request and
+  // cached the role flags in a short-lived HttpOnly cookie. If the cookie is
+  // still valid for this user we skip the Supabase round-trip entirely and
+  // return immediately using the existing Prisma row + cached flags.
+  // Drift (email/name/avatar) is not checked on cache-hit — changes will be
+  // picked up on the next cache miss (≤5 min). This is the intended trade-off.
+  const cookieStore = await cookies();
+  const cachedRoleRaw = cookieStore.get("_chg_role")?.value;
+  if (cachedRoleRaw) {
+    try {
+      const c = JSON.parse(atob(cachedRoleRaw)) as {
+        uid: string; inv: boolean; ctr: boolean; sa: boolean;
+        ps: number | null; exp: number;
+      };
+      if (c.uid === existing.id && c.exp > Date.now()) {
+        if (c.inv || c.ctr) return null; // wrong-role accounts never reach chg-rehab pages
+        return toSessionUser(existing, c.ps ?? null, !!c.sa, false, false);
+      }
+    } catch {
+      // Malformed cookie — fall through to Supabase.
+    }
+  }
+
   const admin = getSupabaseAdminClient();
   const { data: profile } = await admin
     .from("user_profiles")

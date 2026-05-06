@@ -4,6 +4,20 @@ import { createClient } from "@supabase/supabase-js";
 
 const INVESTOR_PORTAL_BASE_URL = process.env.INVESTOR_PORTAL_BASE_URL || "";
 
+// Short-lived role-flags cache stored in a server-set HttpOnly cookie.
+// Avoids the second Supabase round-trip (user_profiles lookup) on every
+// request for already-authenticated users. TTL is intentionally short so
+// role changes (e.g. granting investor access) take effect within minutes.
+const ROLE_CACHE_COOKIE = "_chg_role";
+const ROLE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+type ProfileFlags = {
+  is_investor: boolean | null;
+  is_contractor: boolean | null;
+  is_super_admin: boolean | null;
+  profile_score?: number | null;
+};
+
 const PUBLIC_PATHS = [
   "/login",
   "/phone-auth",
@@ -90,45 +104,88 @@ export async function middleware(req: NextRequest) {
       { status: 503 }
     );
   }
-  const admin = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  type ProfileFlags = {
-    is_investor: boolean | null;
-    is_contractor: boolean | null;
-    is_super_admin: boolean | null;
-  };
-  const { data: profile, error: profileErr } = await admin
-    .from("user_profiles")
-    .select("is_investor, is_contractor, is_super_admin")
-    .eq("id", user.id)
-    .maybeSingle<ProfileFlags>();
-  if (profileErr) {
-    // Fail closed on lookup error — better to 503 than to leak cross-app.
-    // If the error mentions "is_contractor", the migration at
-    // supabase/migrations/20260301000000_user_profiles_is_contractor.sql
-    // has not been applied yet. Run the SQL in the Supabase Dashboard.
-    console.error(
-      "[middleware] user_profiles lookup failed:",
-      profileErr.message
-    );
-    if (profileErr.message.includes("is_contractor")) {
-      console.error(
-        "[middleware] MIGRATION REQUIRED: ALTER TABLE public.user_profiles " +
-          "ADD COLUMN IF NOT EXISTS is_contractor boolean NOT NULL DEFAULT false; " +
-          "— run this in the Supabase Dashboard > SQL Editor"
-      );
+
+  // --- Role-flags cache ---------------------------------------------------
+  // Try reading the short-lived role cache cookie set on the previous request.
+  // On hit we skip the Supabase user_profiles round-trip entirely (~100-150ms
+  // saved per request). On miss (first request, cookie expired, user changed)
+  // we query Supabase and prime the cookie for subsequent requests.
+  let profile: ProfileFlags | null = null;
+
+  const cachedRoleRaw = req.cookies.get(ROLE_CACHE_COOKIE)?.value;
+  if (cachedRoleRaw) {
+    try {
+      const c = JSON.parse(atob(cachedRoleRaw)) as {
+        uid: string; inv: boolean; ctr: boolean; sa: boolean;
+        ps: number | null; exp: number;
+      };
+      if (c.uid === user.id && c.exp > Date.now()) {
+        profile = {
+          is_investor: c.inv,
+          is_contractor: c.ctr,
+          is_super_admin: c.sa,
+          profile_score: c.ps,
+        };
+      }
+    } catch {
+      // Malformed cookie — treat as cache miss.
     }
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "service_unavailable" },
+  }
+
+  if (!profile) {
+    const admin = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data, error: profileErr } = await admin
+      .from("user_profiles")
+      .select("is_investor, is_contractor, is_super_admin, profile_score")
+      .eq("id", user.id)
+      .maybeSingle<ProfileFlags>();
+    if (profileErr) {
+      // Fail closed on lookup error — better to 503 than to leak cross-app.
+      // If the error mentions "is_contractor", the migration at
+      // supabase/migrations/20260301000000_user_profiles_is_contractor.sql
+      // has not been applied yet. Run the SQL in the Supabase Dashboard.
+      console.error(
+        "[middleware] user_profiles lookup failed:",
+        profileErr.message
+      );
+      if (profileErr.message.includes("is_contractor")) {
+        console.error(
+          "[middleware] MIGRATION REQUIRED: ALTER TABLE public.user_profiles " +
+            "ADD COLUMN IF NOT EXISTS is_contractor boolean NOT NULL DEFAULT false; " +
+            "— run this in the Supabase Dashboard > SQL Editor"
+        );
+      }
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "service_unavailable" },
+          { status: 503 }
+        );
+      }
+      return new NextResponse(
+        "Service temporarily unavailable. Please contact support.",
         { status: 503 }
       );
     }
-    return new NextResponse(
-      "Service temporarily unavailable. Please contact support.",
-      { status: 503 }
-    );
+    profile = data;
+
+    // Prime the cache cookie so the next request skips this lookup.
+    const cacheVal = btoa(JSON.stringify({
+      uid: user.id,
+      inv: !!profile?.is_investor,
+      ctr: !!profile?.is_contractor,
+      sa: !!profile?.is_super_admin,
+      ps: profile?.profile_score ?? null,
+      exp: Date.now() + ROLE_CACHE_TTL_MS,
+    }));
+    res.cookies.set(ROLE_CACHE_COOKIE, cacheVal, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: ROLE_CACHE_TTL_MS / 1000,
+    });
   }
   // Super-admins are allowed into CHG Rehab regardless of other role flags.
   // This lets admin test accounts that also carry is_investor / is_contractor
