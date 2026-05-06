@@ -27,11 +27,16 @@
 
 @layer components {
   /* Layout shell */
-  .portal { @apply grid min-h-screen; grid-template-columns: 200px 1fr; }
+  /* .portal is a plain block — sidebar is position:fixed so it must NOT be
+     a grid child. A CSS grid with grid-template-columns:200px 1fr and a
+     fixed sidebar causes .main to land in the 200px column instead of 1fr. */
+  .portal { @apply block min-h-screen; }
   .sidebar { @apply bg-bg1 flex flex-col fixed top-0 left-0 bottom-0 overflow-y-auto z-10 border-r border-black/10; width: 200px; }
   .main { @apply flex flex-col min-h-screen min-w-0; margin-left: 200px; }
   .topbar { @apply bg-bg1 sticky top-0 z-[9] flex items-center justify-between border-b border-black/10; padding: 12px 20px; }
   .content { @apply flex-1; padding: 18px 20px; }
+  /* Page-level header — sits below the sticky account topbar, not sticky itself */
+  .pg-hd { @apply flex items-center justify-between border-b border-black/10 bg-bg1; padding: 12px 20px; }
 
   /* Sidebar */
   .sb-top { @apply flex items-center gap-[9px] border-b border-black/10; padding: 14px; }

@@ -13,7 +13,7 @@ export default function PortalPage({
 }) {
   return (
     <>
-      <div className="topbar">
+      <div className="pg-hd">
         <div>
           <div className="pg-title">{title}</div>
           {subtitle ? <div className="pg-sub">{subtitle}</div> : null}

@@ -32,7 +32,7 @@ export default async function PortalLayout({ children }: { children: React.React
       />
       <div className="main">
         <PortalTopBar accountId={c.id} planTier={c.planTier} />
-        <div className="content">{children}</div>
+        {children}
       </div>
     </div>
   );
