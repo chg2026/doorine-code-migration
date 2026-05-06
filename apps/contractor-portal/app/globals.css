@@ -171,15 +171,17 @@
   .es-desc { @apply text-[11px] text-t2 leading-relaxed; max-width: 260px; }
   .es-cta { margin-top: 14px; }
 
-  /* Responsive grids — collapse on smaller screens */
+  /* Responsive grids — collapse on smaller screens.
+   * 900 px: 4-col → 2-col, 3-col → 1-col, 2-col → 1-col, kanban → 2-col.
+   * 600 px: remaining multi-col → 1-col; sidebar hides (hamburger task #44). */
   @media (max-width: 900px) {
     .g4 { grid-template-columns: repeat(2, 1fr); }
-    .kanban { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 640px) {
-    .g4 { grid-template-columns: 1fr; }
     .g3 { grid-template-columns: 1fr; }
     .g2 { grid-template-columns: 1fr; }
+    .kanban { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .g4 { grid-template-columns: 1fr; }
     .kanban { grid-template-columns: 1fr; }
     .main { margin-left: 0; }
     .sidebar { transform: translateX(-200px); }

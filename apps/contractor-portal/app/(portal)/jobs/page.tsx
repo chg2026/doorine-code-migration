@@ -1,4 +1,5 @@
 import PortalPage from "@/components/PortalPage";
+import EmptyState from "@/components/EmptyState";
 import { getCurrentContractor } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fmtC } from "@/lib/format";
@@ -22,25 +23,31 @@ export default async function JobsPage() {
 
       <div className="card">
         <div className="chd"><div className="ctitle">All jobs</div></div>
-        <table className="tbl">
-          <thead><tr><th>Job</th><th>Trade</th><th>Contract</th><th>Invoiced</th><th>Paid</th><th>Progress</th><th>Due</th><th>Status</th></tr></thead>
-          <tbody>
-            {jobs.length === 0 ? (
-              <tr><td colSpan={8} className="empty-state">No jobs yet.</td></tr>
-            ) : jobs.map((j) => (
-              <tr key={j.id}>
-                <td><div style={{ fontSize: 11, fontWeight: 600 }}>{j.name}</div><div style={{ fontSize: 10, color: "#6b6a66" }}>{j.subtitle}</div></td>
-                <td>{j.trade}</td>
-                <td>{fmtC(j.contractAmount)}</td>
-                <td>{fmtC(j.invoicedAmount)}</td>
-                <td className={Number(j.paidAmount) > 0 ? "green" : ""}>{fmtC(j.paidAmount)}</td>
-                <td>{j.progressPct > 0 ? <><div style={{ fontSize: 10, fontWeight: 600 }}>{j.progressPct}%</div><div className="prog"><div className="prog-f" style={{ width: `${j.progressPct}%`, background: j.progressPct > 60 ? "#1D9E75" : "#BA7517" }} /></div></> : <span style={{ fontSize: 10, color: "#a09e99" }}>—</span>}</td>
-                <td style={{ fontSize: 10, color: "#6b6a66" }}>{j.dueDate || "—"}</td>
-                <td><span className={`pill ${j.status === "active" ? "p-blue" : j.status === "upcoming" ? "p-amber" : j.status === "complete" ? "p-teal" : "p-gray"}`}>{j.status}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {jobs.length === 0 ? (
+          <EmptyState
+            icon="🏗️"
+            title="No jobs yet"
+            description="Your active and upcoming jobs will appear here once an operator assigns you work."
+          />
+        ) : (
+          <table className="tbl">
+            <thead><tr><th>Job</th><th>Trade</th><th>Contract</th><th>Invoiced</th><th>Paid</th><th>Progress</th><th>Due</th><th>Status</th></tr></thead>
+            <tbody>
+              {jobs.map((j) => (
+                <tr key={j.id}>
+                  <td><div style={{ fontSize: 11, fontWeight: 600 }}>{j.name}</div><div style={{ fontSize: 10, color: "#6b6a66" }}>{j.subtitle}</div></td>
+                  <td>{j.trade}</td>
+                  <td>{fmtC(j.contractAmount)}</td>
+                  <td>{fmtC(j.invoicedAmount)}</td>
+                  <td className={Number(j.paidAmount) > 0 ? "green" : ""}>{fmtC(j.paidAmount)}</td>
+                  <td>{j.progressPct > 0 ? <><div style={{ fontSize: 10, fontWeight: 600 }}>{j.progressPct}%</div><div className="prog"><div className="prog-f" style={{ width: `${j.progressPct}%`, background: j.progressPct > 60 ? "#1D9E75" : "#BA7517" }} /></div></> : <span style={{ fontSize: 10, color: "#a09e99" }}>—</span>}</td>
+                  <td style={{ fontSize: 10, color: "#6b6a66" }}>{j.dueDate || "—"}</td>
+                  <td><span className={`pill ${j.status === "active" ? "p-blue" : j.status === "upcoming" ? "p-amber" : j.status === "complete" ? "p-teal" : "p-gray"}`}>{j.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </PortalPage>
   );
