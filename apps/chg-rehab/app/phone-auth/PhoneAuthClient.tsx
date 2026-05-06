@@ -8,7 +8,7 @@ const PHONE_RE = /^\+1[2-9]\d{9}$/;
 
 export default function PhoneAuthClient({ next }: { next: string }) {
   const [stage, setStage] = useState<"ENTER_PHONE" | "ENTER_CODE">("ENTER_PHONE");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+1");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,7 +95,10 @@ export default function PhoneAuthClient({ next }: { next: string }) {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPhone(val.startsWith("+1") ? val : "+1");
+                }}
                 className="login-input"
                 placeholder="+12125551234"
                 autoFocus
