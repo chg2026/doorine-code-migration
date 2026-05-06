@@ -15,6 +15,8 @@ router.use(requireSuperAdmin)
 const PLANS_BY_PRODUCT = {
   chg: ['starter', 'professional', 'enterprise'],
   deallink: ['free', 'pro'],
+  'investor-portal': ['standard'],
+  'contractor-portal': ['free', 'pro'],
 }
 
 function isValidPlan(productCode, plan) {
