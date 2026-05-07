@@ -211,10 +211,16 @@ async function syncSupabaseUser(
     console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=suspended`);
     return null;
   }
+  // Super-admins are trusted to access chg-rehab regardless of investor/
+  // contractor flags on their profile (mirrors the middleware bypass).
+  // This lets admin test accounts carry is_investor or is_contractor without
+  // being locked out of the CRM.
+  const isSuperAdmin = !!profile.is_super_admin;
+
   // Investor-portal accounts must NOT resolve to a chg-rehab session, even
   // if they somehow get past middleware (e.g. SUPABASE_SERVICE_ROLE_KEY
-  // missing). Fail closed here.
-  if (profile.is_investor) {
+  // missing). Fail closed here. Super-admins are exempt.
+  if (profile.is_investor && !isSuperAdmin) {
     console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=is_investor`);
     return null;
   }
@@ -236,7 +242,7 @@ async function syncSupabaseUser(
     console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=is_contractor_lookup_error | error=${contractorErr.message}`);
     return null;
   }
-  if (contractorCheck?.is_contractor) {
+  if (contractorCheck?.is_contractor && !isSuperAdmin) {
     console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=is_contractor`);
     return null;
   }
@@ -399,9 +405,11 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
         ps: number | null; exp: number;
       };
       if (c.uid === existing.id && c.exp > Date.now()) {
-        if (c.inv || c.ctr) {
+        // Super-admins bypass investor/contractor rejection — mirrors the
+        // middleware guard and the syncSupabaseUser bypass added alongside.
+        if ((c.inv || c.ctr) && !c.sa) {
           console.log(`[auth:diag] refreshFromSupabase | user=${existing.id} | profile_source=role_cache | action=return_null | reason=${c.inv ? "is_investor" : "is_contractor"}`);
-          return null; // wrong-role accounts never reach chg-rehab pages
+          return null; // wrong-role, non-super-admin
         }
         return toSessionUser(existing, c.ps ?? null, !!c.sa, false, false);
       }
