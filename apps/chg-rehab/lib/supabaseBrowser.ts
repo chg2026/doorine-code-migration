@@ -13,7 +13,8 @@ export function getSupabaseBrowserClient(): SupabaseClient {
   if (!_client) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-    _client = createBrowserClient(url, key);
+    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined;
+    _client = createBrowserClient(url, key, { cookieOptions: { domain: cookieDomain } });
   }
   return _client;
 }

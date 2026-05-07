@@ -17,7 +17,9 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
  */
 export async function getSupabaseServerClient() {
   const cookieStore = await cookies();
+  const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined;
   return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookieOptions: { domain: cookieDomain },
     cookies: {
       getAll() {
         return cookieStore.getAll();
