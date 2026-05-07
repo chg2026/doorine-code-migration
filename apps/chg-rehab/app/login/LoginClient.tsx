@@ -25,15 +25,19 @@ export default function LoginClient({
     setLoading(true);
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
+      console.log(
+        `[auth:diag] LoginClient | email=${email.trim()} | error_code=${signInErr?.code ?? signInErr?.status ?? "none"} | error_msg=${signInErr?.message ?? "none"} | session=${signInData?.session ? "present" : "absent"} | user_id=${signInData?.user?.id ?? "none"} | next=${next}`
+      );
       if (signInErr) throw signInErr;
 
       // Hard navigation: server components (RootLayout, every page) must
       // re-run with the freshly-set Supabase cookies, otherwise the user
       // would land on a cached "logged-out" render.
+      console.log(`[auth:diag] LoginClient | sign_in=OK | user=${signInData?.user?.id} | navigating_to=${next || "/"}`);
       window.location.href = next || "/";
     } catch (err: any) {
       setError(err?.message || "Sign-in failed. Please try again.");

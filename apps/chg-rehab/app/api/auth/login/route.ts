@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
   );
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  console.log(
+    `[auth:diag] api/auth/login | email=${email} | error_code=${error?.code ?? error?.status ?? "none"} | error_msg=${error?.message ?? "none"} | session=${data.session ? "present" : "absent"} | user_id=${data.user?.id ?? "none"}`
+  );
   if (error || !data.session) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }

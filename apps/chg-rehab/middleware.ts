@@ -67,9 +67,12 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
 
   if (!user) {
+    console.log(
+      `[auth:diag] middleware | path=${pathname} | session=NONE | reason=${getUserError?.code ?? getUserError?.message ?? "no_session"} | action=redirect_login`
+    );
     // API consumers expect JSON 401 (route handlers themselves return 401 in
     // the same shape). Page navigations redirect to /login.
     if (pathname.startsWith("/api/")) {
@@ -79,6 +82,8 @@ export async function middleware(req: NextRequest) {
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
+
+  console.log(`[auth:diag] middleware | path=${pathname} | session=OK | user=${user.id}`);
 
   // Cross-app role check (Investor Portal). Always derive `is_investor`
   // server-side from `user_profiles` — never trust client state. Investors
@@ -126,6 +131,9 @@ export async function middleware(req: NextRequest) {
           is_super_admin: c.sa,
           profile_score: c.ps,
         };
+        console.log(
+          `[auth:diag] middleware | path=${pathname} | user=${user.id} | profile_source=role_cache | is_investor=${c.inv} | is_contractor=${c.ctr} | is_super_admin=${c.sa}`
+        );
       }
     } catch {
       // Malformed cookie — treat as cache miss.
@@ -168,6 +176,14 @@ export async function middleware(req: NextRequest) {
         { status: 503 }
       );
     }
+    console.log(
+      `[auth:diag] middleware | path=${pathname} | user=${user.id} | profile_source=supabase_db | profile_row=${data === null ? "MISSING" : "found"} | is_investor=${data?.is_investor ?? null} | is_contractor=${data?.is_contractor ?? null} | is_super_admin=${data?.is_super_admin ?? null}`
+    );
+    if (data === null) {
+      console.log(
+        `[auth:diag] middleware | path=${pathname} | user=${user.id} | WARNING: no user_profiles row — this will cause getCurrentUser() to return null and page-level guards to redirect /login`
+      );
+    }
     profile = data;
 
     // Prime the cache cookie so the next request skips this lookup.
@@ -192,6 +208,9 @@ export async function middleware(req: NextRequest) {
   // access the CRM and use the app switcher to reach the other portals.
   if (!profile?.is_super_admin) {
     if (profile?.is_investor) {
+      console.log(
+        `[auth:diag] middleware | path=${pathname} | user=${user.id} | is_investor=true | action=redirect_investor_portal`
+      );
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "investor_account" }, { status: 403 });
       }
@@ -205,6 +224,9 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(target);
     }
     if (profile?.is_contractor) {
+      console.log(
+        `[auth:diag] middleware | path=${pathname} | user=${user.id} | is_contractor=true | action=redirect_login_wrong_role`
+      );
       // Contractor accounts belong on apps/contractor-portal, not chg-rehab.
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "contractor_account" }, { status: 403 });
@@ -215,6 +237,9 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  console.log(
+    `[auth:diag] middleware | path=${pathname} | user=${user.id} | action=allowed_through | is_super_admin=${!!profile?.is_super_admin}`
+  );
   return res;
 }
 

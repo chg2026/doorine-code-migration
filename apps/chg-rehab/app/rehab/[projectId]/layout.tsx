@@ -14,7 +14,10 @@ export default async function RehabProjectLayout({
   params: Promise<{ projectId: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    console.log("[auth:diag] rehab/[projectId]/layout | getCurrentUser()=null | action=redirect_login | reason=no_session_or_no_profile_row");
+    redirect("/login");
+  }
   const { projectId } = await params;
   const code = decodeURIComponent(projectId);
   const project = await loadProjectByCode(user.companyId, code);

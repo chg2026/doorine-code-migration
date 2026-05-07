@@ -130,10 +130,19 @@ const userCache = new WeakMap<Headers, SessionUser | null>();
 
 async function resolveCurrentUser(): Promise<SessionUser | null> {
   const supabase = await getSupabaseServerClient();
-  const { data: { user: supaUser } } = await supabase.auth.getUser();
-  if (!supaUser) return null;
+  const { data: { user: supaUser }, error: getUserErr } = await supabase.auth.getUser();
+  if (!supaUser) {
+    console.log(
+      `[auth:diag] resolveCurrentUser | session=NONE | reason=${getUserErr?.code ?? getUserErr?.message ?? "no_session"}`
+    );
+    return null;
+  }
 
+  console.log(`[auth:diag] resolveCurrentUser | session=OK | user=${supaUser.id}`);
   const synced = await syncSupabaseUser(supaUser.id, supaUser.email ?? null, supaUser.phone ?? null);
+  if (!synced) {
+    console.log(`[auth:diag] resolveCurrentUser | user=${supaUser.id} | syncSupabaseUser=null (deactivated, no profile row, wrong role, or lookup error)`);
+  }
   return synced;
 }
 
@@ -183,6 +192,7 @@ async function syncSupabaseUser(
     .maybeSingle<UserProfileRow>();
   if (error) {
     console.error("[auth] failed to load user_profile for", authUserId, error.message);
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | profile_row=ERROR | error=${error.message} | action=return_null`);
     return null;
   }
   if (!profile) {
@@ -191,15 +201,21 @@ async function syncSupabaseUser(
     // bounces the user to /login (the Supabase profile must be repaired
     // on the platform side).
     console.warn("[auth] no user_profile row for auth user", authUserId);
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | profile_row=MISSING | action=return_null | fix=create_user_profiles_row_in_supabase`);
     return null;
   }
+  console.log(
+    `[auth:diag] syncSupabaseUser | user=${authUserId} | profile_row=found | status=${profile.status ?? "active"} | is_investor=${profile.is_investor} | account_id=${profile.account_id ?? "null"}`
+  );
   if (profile.status === "suspended") {
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=suspended`);
     return null;
   }
   // Investor-portal accounts must NOT resolve to a chg-rehab session, even
   // if they somehow get past middleware (e.g. SUPABASE_SERVICE_ROLE_KEY
   // missing). Fail closed here.
   if (profile.is_investor) {
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=is_investor`);
     return null;
   }
   // Contractor-portal accounts must NOT resolve to a chg-rehab session.
@@ -217,15 +233,18 @@ async function syncSupabaseUser(
       "[auth] is_contractor lookup failed (migration pending?):",
       contractorErr.message
     );
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=is_contractor_lookup_error | error=${contractorErr.message}`);
     return null;
   }
   if (contractorCheck?.is_contractor) {
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=is_contractor`);
     return null;
   }
 
   const accountId: string | null = profile.account_id ?? null;
   if (!accountId) {
     console.warn("[auth] user_profile has no account_id", authUserId);
+    console.log(`[auth:diag] syncSupabaseUser | user=${authUserId} | action=return_null | reason=no_account_id`);
     return null;
   }
 
@@ -349,7 +368,10 @@ async function syncSupabaseUser(
  * stomp that.
  */
 async function refreshFromSupabase(existing: User, authEmail: string | null): Promise<SessionUser | null> {
-  if (!existing.active) return null;
+  if (!existing.active) {
+    console.log(`[auth:diag] refreshFromSupabase | user=${existing.id} | action=return_null | reason=inactive_user`);
+    return null;
+  }
 
   type RefreshProfile = {
     email: string | null;
@@ -377,7 +399,10 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
         ps: number | null; exp: number;
       };
       if (c.uid === existing.id && c.exp > Date.now()) {
-        if (c.inv || c.ctr) return null; // wrong-role accounts never reach chg-rehab pages
+        if (c.inv || c.ctr) {
+          console.log(`[auth:diag] refreshFromSupabase | user=${existing.id} | profile_source=role_cache | action=return_null | reason=${c.inv ? "is_investor" : "is_contractor"}`);
+          return null; // wrong-role accounts never reach chg-rehab pages
+        }
         return toSessionUser(existing, c.ps ?? null, !!c.sa, false, false);
       }
     } catch {
@@ -392,7 +417,13 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
     .eq("id", existing.id)
     .maybeSingle<RefreshProfile>();
 
-  if (profile?.status === "suspended") return null;
+  if (!profile) {
+    console.log(`[auth:diag] refreshFromSupabase | user=${existing.id} | profile_source=supabase_db | profile_row=MISSING | action=continue_with_existing_prisma_row`);
+  }
+  if (profile?.status === "suspended") {
+    console.log(`[auth:diag] refreshFromSupabase | user=${existing.id} | action=return_null | reason=suspended`);
+    return null;
+  }
 
   const fullName = (profile?.full_name || "").trim();
   const [firstName, ...rest] = fullName ? fullName.split(/\s+/) : [];

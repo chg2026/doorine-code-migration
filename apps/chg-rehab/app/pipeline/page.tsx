@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 
 export default async function PipelinePage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    console.log("[auth:diag] pipeline/page | getCurrentUser()=null | action=redirect_login | reason=no_session_or_no_profile_row");
+    redirect("/login");
+  }
 
   const canView = await can(user, "pipeline", "view");
   if (!canView) {
