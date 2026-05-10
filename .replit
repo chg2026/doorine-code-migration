@@ -16,13 +16,12 @@ name = "Server"
 mode = "sequential"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm install && npm run dev --workspace=server"
-waitForPort = 8080
+args = "npm run start --workspace=apps/chg-rehab"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[workflows.workflow]]
 name = "Project"
@@ -53,13 +52,13 @@ args = "Contractor Portal"
 name = "CHG Rehab"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm install && PORT=5000 npm run dev --workspace=apps/chg-rehab"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[workflows.workflow]]
 name = "Deal Link"
