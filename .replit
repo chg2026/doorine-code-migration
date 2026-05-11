@@ -2,7 +2,8 @@ modules = ["nodejs-20", "python-3.11", "postgresql-16"]
 
 [agent]
 expertMode = true
-integrations = ["github:1.0.0"]
+integrations = ["github:1.0.0", "javascript_database:1.0.0"]
+stack = "BEST_EFFORT_FALLBACK"
 
 [nix]
 channel = "stable-25_05"
@@ -20,7 +21,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm install && npm run dev --workspace=server"
+args = "npm run dev --workspace=server"
 waitForPort = 8080
 
 [[workflows.workflow]]
@@ -57,44 +58,44 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm install && PORT=5000 npm run dev --workspace=apps/chg-rehab"
+args = "PORT=5000 npm run dev --workspace=apps/chg-rehab"
 waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Deal Link"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm install && npm run dev --workspace=apps/deallink"
-waitForPort = 3001
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev --workspace=apps/deallink"
+waitForPort = 3001
 
 [[workflows.workflow]]
 name = "Investor Portal"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm install && npm run db:generate --workspace=apps/chg-rehab && npm run dev --workspace=apps/investor-portal"
-waitForPort = 3002
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev --workspace=apps/investor-portal"
+waitForPort = 3002
 
 [[workflows.workflow]]
 name = "Contractor Portal"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm install && npm run db:generate --workspace=apps/chg-rehab && npm run dev --workspace=apps/contractor-portal"
-waitForPort = 3003
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev --workspace=apps/contractor-portal"
+waitForPort = 3003
 
 [[ports]]
 localPort = 3000
@@ -104,20 +105,16 @@ localPort = 3001
 externalPort = 3001
 
 [[ports]]
-localPort = 3002
-externalPort = 3002
-
-[[ports]]
 localPort = 3003
 externalPort = 3003
 
 [[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
 localPort = 8080
 externalPort = 8080
+
+[[ports]]
+localPort = 3002
+externalPort = 3002
 
 [deployment]
 deploymentTarget = "autoscale"
