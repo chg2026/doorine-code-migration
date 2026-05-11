@@ -122,8 +122,8 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "install"]
-run = ["npm", "run", "start", "--workspace=server"]
+build = ["sh", "-c", "npm install && npm run build --workspace=apps/contractor-portal"]
+run = ["sh", "-c", "cd apps/contractor-portal && npx next start -H 0.0.0.0"]
 
 [postMerge]
 path = "scripts/post-merge.sh"
