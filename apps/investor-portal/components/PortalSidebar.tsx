@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-import AppSwitcher from "./AppSwitcher";
 
 const NAV: { href: string; label: string; dot: string }[] = [
   { href: "/dashboard", label: "Dashboard", dot: "#1D9E75" },
@@ -45,12 +44,6 @@ export default function PortalSidebar({
       <div className="sb-top">
         <div className="sb-mark" />
         <span className="sb-brand">CHG Rehab</span>
-        <div style={{ marginLeft: "auto" }}>
-          <AppSwitcher
-            currentProduct="investor-portal"
-            enabledProducts={enabledProducts}
-          />
-        </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         <div className="nav-sec">Investor</div>
