@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import AppSwitcher from './AppSwitcher.jsx';
 
 const navGroups = [
   { label: null, items: [
@@ -134,6 +135,7 @@ export default function Layout({ children }) {
             </a>
           ) : <span />}
           <div className="flex-1" />
+          <AppSwitcher currentProduct="deallink" enabledProducts={auth.enabledProducts || []} iconColor="#94a3b8" />
           <button className="relative text-slate-400 hover:text-white" title="Notifications">
             <Bell className="w-5 h-5" />
             {state.leads?.length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />}

@@ -136,11 +136,16 @@ export function AuthProvider({ children }) {
     return (entitlements || []).some((e) => e.code === code && e.status === 'active');
   };
 
+  const enabledProducts = (entitlements || [])
+    .filter((e) => e && e.status === 'active' && e.code)
+    .map((e) => e.code);
+
   const value = {
     session,
     user,
     profile,
     entitlements,
+    enabledProducts,
     loading,
     isSuperAdmin,
     hasProductAccess,
