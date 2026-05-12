@@ -84,8 +84,8 @@ export default function Marketplace() {
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-700 flex items-center justify-between">
                   <div>
-                    <p className="text-white font-bold text-lg">${d.ask}k</p>
-                    <p className="text-green-400 text-xs">ARV ${d.arv}k</p>
+                    <p className="text-white font-bold text-lg">${Number(d.ask || 0).toLocaleString()}</p>
+                    <p className="text-green-400 text-xs">ARV ${Number(d.arv || 0).toLocaleString()}</p>
                   </div>
                   {d.seller?.handle ? (
                     <a href={`/p/${d.seller.handle}/${d.id}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold px-3 py-2 rounded-lg text-xs transition-colors">

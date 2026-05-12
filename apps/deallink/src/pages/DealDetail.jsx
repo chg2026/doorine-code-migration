@@ -51,9 +51,9 @@ export default function DealDetail() {
     ['Sqft', Number(d.sqft).toLocaleString()],
     ['Occupancy', d.occ],
     ['Access', d.access],
-    ['Asking', `$${Number(d.ask).toLocaleString()},000`],
-    ['ARV', `$${Number(d.arv).toLocaleString()},000`],
-    ['Spread', `$${Number(d.arv - d.ask).toLocaleString()},000`],
+    ['Asking', `$${Number(d.ask || 0).toLocaleString()}`],
+    ['ARV', `$${Number(d.arv || 0).toLocaleString()}`],
+    ['Spread', `$${Number((d.arv || 0) - (d.ask || 0)).toLocaleString()}`],
   ];
 
   return (
@@ -140,7 +140,7 @@ function LeadModal({ handle, deal, onClose, onSubmitted }) {
     <Modal onClose={onClose}>
       <Kicker>Interested in</Kicker>
       <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>{deal.addr}</div>
-      <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2, fontFamily: 'var(--mono)' }}>${deal.ask}k / ${deal.arv}k ARV</div>
+      <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2, fontFamily: 'var(--mono)' }}>${Number(deal.ask || 0).toLocaleString()} / ${Number(deal.arv || 0).toLocaleString()} ARV</div>
       <form onSubmit={submit} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <Field label="First name"><input value={first} onChange={(e) => setFirst(e.target.value)} required autoFocus /></Field>

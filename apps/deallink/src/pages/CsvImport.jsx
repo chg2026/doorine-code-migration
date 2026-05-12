@@ -72,7 +72,7 @@ export default function CsvImport() {
     return dataRows.map((cols, i) => {
       const obj = {};
       headers.forEach((h, idx) => { const key = mapping[h]; if (!key || key === '__ignore') return; obj[key] = cols[idx] || ''; });
-      ['ask', 'arv'].forEach((k) => { if (obj[k]) { const n = Number(String(obj[k]).replace(/[^0-9.]/g, '')); obj[k] = n >= 1000 ? Math.round(n / 1000) : n; } });
+      ['ask', 'arv'].forEach((k) => { if (obj[k]) { obj[k] = Math.round(Number(String(obj[k]).replace(/[^0-9.]/g, '')) || 0); } });
       ['beds', 'baths', 'sqft', 'units'].forEach((k) => { if (obj[k]) obj[k] = Number(String(obj[k]).replace(/[^0-9.]/g, '')) || 0; });
       let status = 'ok', issue = null;
       if (!obj.addr) { status = 'err'; issue = 'Address required'; }
@@ -190,7 +190,7 @@ export default function CsvImport() {
                     <td className="px-5 py-3"><span className={`inline-flex items-center gap-1.5 text-xs font-medium uppercase ${COLORS[r.status]}`}><Icon className="w-3 h-3" />{LABELS[r.status]}</span></td>
                     <td className="px-5 py-3 text-white text-sm">{r.obj.addr || '—'}</td>
                     <td className="px-5 py-3 text-slate-400 text-xs font-mono">{r.obj.zip || '—'}</td>
-                    <td className="px-5 py-3 text-white text-xs font-mono">{r.obj.ask ? `$${r.obj.ask}k` : '—'} / <span className="text-slate-400">{r.obj.arv ? `$${r.obj.arv}k` : '—'}</span></td>
+                    <td className="px-5 py-3 text-white text-xs font-mono">{r.obj.ask ? `$${Number(r.obj.ask).toLocaleString()}` : '—'} / <span className="text-slate-400">{r.obj.arv ? `$${Number(r.obj.arv).toLocaleString()}` : '—'}</span></td>
                     <td className="px-5 py-3 text-xs font-mono text-slate-400">{r.issue || '—'}</td>
                   </tr>
                 );

@@ -67,7 +67,7 @@ export default function PublicProfile() {
     if (filter === 'all') return true;
     if (filter === 'sfr') return d.type === 'SFR';
     if (filter === 'mf') return d.type === 'MF' || d.type === 'DUP';
-    if (filter === 'under150') return d.ask < 150;
+    if (filter === 'under150') return d.ask < 150000;
     if (filter === 'vacant') return d.occ === 'Vacant';
     return true;
   });
@@ -96,9 +96,9 @@ export default function PublicProfile() {
               <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: -0.2 }}>{featured.addr}</div>
               <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 3, fontFamily: 'var(--mono)' }}>{featured.city} · {featured.units}-unit · {Number(featured.sqft).toLocaleString()}sf</div>
               <div style={{ display: 'flex', gap: 16, marginTop: 12, fontFamily: 'var(--mono)', fontSize: 12 }}>
-                <span><span style={{ color: 'var(--mute)' }}>Ask </span><b>${featured.ask}k</b></span>
-                <span><span style={{ color: 'var(--mute)' }}>ARV </span><b>${featured.arv}k</b></span>
-                <span><span style={{ color: 'var(--mute)' }}>Spread </span><b>${featured.arv - featured.ask}k</b></span>
+                <span><span style={{ color: 'var(--mute)' }}>Ask </span><b>${Number(featured.ask || 0).toLocaleString()}</b></span>
+                <span><span style={{ color: 'var(--mute)' }}>ARV </span><b>${Number(featured.arv || 0).toLocaleString()}</b></span>
+                <span><span style={{ color: 'var(--mute)' }}>Spread </span><b>${Number((featured.arv || 0) - (featured.ask || 0)).toLocaleString()}</b></span>
               </div>
             </div>
           </Link>
@@ -141,8 +141,8 @@ export default function PublicProfile() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 11 }}>
-                    <div style={{ fontWeight: 600 }}>${d.ask}k</div>
-                    <div style={{ color: 'var(--mute)', fontSize: 10 }}>ARV ${d.arv}k</div>
+                    <div style={{ fontWeight: 600 }}>${Number(d.ask || 0).toLocaleString()}</div>
+                    <div style={{ color: 'var(--mute)', fontSize: 10 }}>ARV ${Number(d.arv || 0).toLocaleString()}</div>
                   </div>
                 </Link>
               ))}
@@ -158,8 +158,8 @@ export default function PublicProfile() {
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--mute)', marginTop: 2 }}>{d.zip} · {d.beds}/{d.baths}</div>
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 11 }}>
-                    <div style={{ fontWeight: 600 }}>${d.ask}k</div>
-                    <div style={{ color: 'var(--mute)', fontSize: 10 }}>${d.arv}k</div>
+                    <div style={{ fontWeight: 600 }}>${Number(d.ask || 0).toLocaleString()}</div>
+                    <div style={{ color: 'var(--mute)', fontSize: 10 }}>${Number(d.arv || 0).toLocaleString()}</div>
                   </div>
                 </Link>
               ))}

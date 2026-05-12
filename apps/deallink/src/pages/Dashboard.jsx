@@ -33,8 +33,8 @@ export default function Dashboard() {
   const { deals, leads, buyers, offers, profile } = state;
 
   const counts = deals.reduce((a, d) => { a[d.status] = (a[d.status] || 0) + 1; return a; }, {});
-  const totalAsk = deals.reduce((s, d) => s + (Number(d.ask) || 0), 0) * 1000;
-  const totalArv = deals.reduce((s, d) => s + (Number(d.arv) || 0), 0) * 1000;
+  const totalAsk = deals.reduce((s, d) => s + (Number(d.ask) || 0), 0);
+  const totalArv = deals.reduce((s, d) => s + (Number(d.arv) || 0), 0);
   const recent = deals.slice(0, 6);
   const recentLeads = leads.slice(0, 6);
 
@@ -83,8 +83,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right hidden sm:block mr-4">
-                    <p className="text-white text-sm font-semibold">${d.ask}k</p>
-                    <p className="text-slate-400 text-xs">ARV ${d.arv}k</p>
+                    <p className="text-white text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
+                    <p className="text-slate-400 text-xs">ARV ${Number(d.arv || 0).toLocaleString()}</p>
                   </div>
                   <StatusBadge status={d.status} />
                 </Link>

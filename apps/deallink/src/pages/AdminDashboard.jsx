@@ -83,9 +83,9 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 hidden sm:table-cell"><p className="text-white text-sm font-semibold">${d.ask}k</p></td>
+                    <td className="px-5 py-4 hidden sm:table-cell"><p className="text-white text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p></td>
                     <td className="px-5 py-4 hidden md:table-cell">
-                      <p className="text-green-400 text-sm font-semibold">${d.arv}k</p>
+                      <p className="text-green-400 text-sm font-semibold">${Number(d.arv || 0).toLocaleString()}</p>
                       {d.arv > 0 && d.ask > 0 && <p className="text-slate-500 text-xs">{Math.round((d.arv - d.ask) / d.arv * 100)}% spread</p>}
                     </td>
                     <td className="px-5 py-4 hidden lg:table-cell">

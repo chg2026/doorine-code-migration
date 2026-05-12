@@ -44,7 +44,7 @@ export default function Pipeline() {
                       <span className="text-white font-semibold text-sm">{col.label}</span>
                       <span className="bg-slate-800 text-slate-300 text-xs w-5 h-5 rounded-full flex items-center justify-center">{colDeals.length}</span>
                     </div>
-                    {totalValue > 0 && <span className="text-slate-400 text-xs">${totalValue}k</span>}
+                    {totalValue > 0 && <span className="text-slate-400 text-xs">${totalValue.toLocaleString()}</span>}
                   </div>
 
                   <Droppable droppableId={col.id}>
@@ -74,11 +74,11 @@ export default function Pipeline() {
                                   <div className="flex justify-between text-xs">
                                     <div>
                                       <p className="text-slate-500">Asking</p>
-                                      <p className="text-white font-semibold">${d.ask}k</p>
+                                      <p className="text-white font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
                                     </div>
                                     <div className="text-right">
                                       <p className="text-slate-500">ARV</p>
-                                      <p className="text-green-400 font-semibold">${d.arv}k</p>
+                                      <p className="text-green-400 font-semibold">${Number(d.arv || 0).toLocaleString()}</p>
                                     </div>
                                   </div>
                                 </div>

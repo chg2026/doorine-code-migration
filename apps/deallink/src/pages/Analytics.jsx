@@ -30,8 +30,8 @@ export default function Analytics() {
 
   const byStatus = DEAL_STATUSES.map((s) => ({ status: s, count: deals.filter((d) => d.status === s).length }));
   const byType = Object.entries(deals.reduce((a, d) => { a[d.type || 'Other'] = (a[d.type || 'Other'] || 0) + 1; return a; }, {})).map(([type, count]) => ({ type, count }));
-  const totalAsk = deals.reduce((s, d) => s + (Number(d.ask) || 0), 0) * 1000;
-  const totalArv = deals.reduce((s, d) => s + (Number(d.arv) || 0), 0) * 1000;
+  const totalAsk = deals.reduce((s, d) => s + (Number(d.ask) || 0), 0);
+  const totalArv = deals.reduce((s, d) => s + (Number(d.arv) || 0), 0);
   const totalSpread = totalArv - totalAsk;
 
   // group by month

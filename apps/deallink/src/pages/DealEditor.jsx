@@ -116,12 +116,12 @@ export default function DealEditor({ mode }) {
             <section>
               <h3 className="text-white font-semibold text-sm mb-3">Pricing & status</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Field label="Asking ($k)"><Input type="number" min="0" value={form.ask} onChange={(e) => patch({ ask: e.target.value })} /></Field>
-                <Field label="ARV ($k)"><Input type="number" min="0" value={form.arv} onChange={(e) => patch({ arv: e.target.value })} /></Field>
+                <Field label="Asking ($)"><Input type="number" min="0" step="1000" value={form.ask} onChange={(e) => patch({ ask: e.target.value })} placeholder="100000" /></Field>
+                <Field label="ARV ($)"><Input type="number" min="0" step="1000" value={form.arv} onChange={(e) => patch({ arv: e.target.value })} placeholder="150000" /></Field>
                 <Field label="Access"><Select value={form.access} onChange={(e) => patch({ access: e.target.value })}><option>Lockbox</option><option>Tenant</option><option>Call</option><option>Agent</option></Select></Field>
                 <Field label="Status"><Select value={form.status} onChange={(e) => patch({ status: e.target.value })}>{DEAL_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select></Field>
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-3">Spread: <b className={spread > 0 ? 'text-green-400' : 'text-red-400'}>${spread}k</b></p>
+              <p className="text-xs text-slate-400 font-mono mt-3">Spread: <b className={spread > 0 ? 'text-green-400' : 'text-red-400'}>${spread.toLocaleString()}</b></p>
             </section>
 
             <section>
@@ -160,7 +160,7 @@ export default function DealEditor({ mode }) {
               <div className="p-3">
                 <div className="flex items-center justify-between"><p className="text-white text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
                 <p className="text-slate-400 text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
-                <p className="text-white font-mono text-sm font-semibold mt-2">${form.ask || 0}k <span className="text-slate-400 font-normal">/ ${form.arv || 0}k ARV</span></p>
+                <p className="text-white font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-slate-400 font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
               </div>
             </div>
             <p className="text-xs text-slate-500 mt-3">This is what buyers see on your public profile.</p>

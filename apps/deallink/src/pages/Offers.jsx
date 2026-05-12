@@ -69,7 +69,7 @@ export default function Offers() {
                   </div>
                   <div className="text-right hidden md:block">
                     <p className="text-white text-sm font-semibold">${Number(o.amount).toLocaleString()}</p>
-                    {deal && <p className="text-slate-500 text-xs">vs ${deal.ask}k ask</p>}
+                    {deal && <p className="text-slate-500 text-xs">vs ${Number(deal.ask || 0).toLocaleString()} ask</p>}
                   </div>
                   <Select value={o.status} onChange={(e) => dispatch({ type: 'update_offer', id: o.id, patch: { status: e.target.value } })} className="w-32">
                     {STATUSES.map((s) => <option key={s}>{s}</option>)}
