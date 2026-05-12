@@ -40,14 +40,6 @@ export default function PortalSidebar({
     router.push("/login");
   }
 
-  // The shared AppSwitcher gates non-default products via boolean role flags.
-  // Derive those from the account's product entitlements so the tile shows
-  // up only when the account is entitled to that portal.
-  const isInvestor =
-    enabledProducts.includes("investor-portal") || enabledProducts.includes("investor");
-  const isContractor =
-    enabledProducts.includes("contractor-portal") || enabledProducts.includes("contractor");
-
   return (
     <div className="sb">
       <div className="sb-top">
@@ -55,9 +47,8 @@ export default function PortalSidebar({
         <span className="sb-brand">CHG Rehab</span>
         <div style={{ marginLeft: "auto" }}>
           <AppSwitcher
-            currentProduct="investor"
-            isInvestor={isInvestor}
-            isContractor={isContractor}
+            currentProduct="investor-portal"
+            enabledProducts={enabledProducts}
           />
         </div>
       </div>

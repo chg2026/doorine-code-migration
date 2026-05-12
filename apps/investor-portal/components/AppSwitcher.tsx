@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
-type RoleFlag = "isInvestor" | "isContractor";
-
 type Product = {
   code: string;
   name: string;
@@ -20,9 +18,10 @@ type Product = {
   // When true: on click, the current Supabase session is forwarded as a URL
   // hash fragment so the target app can hydrate without a separate login.
   ssoEnabled?: boolean;
-  // When set, this tile is only shown to users who have the matching boolean
-  // flag on their session (isInvestor or isContractor).
-  requiredFlag?: RoleFlag;
+  // When true, this tile is only shown to accounts whose `enabledProducts`
+  // list contains this product's `code`. The default-visible products
+  // (e.g. CHG itself) leave this unset.
+  gated?: boolean;
 };
 
 const PRODUCTS: Product[] = [
@@ -46,25 +45,25 @@ const PRODUCTS: Product[] = [
     productionUrl: (process.env.NEXT_PUBLIC_DEALLINK_URL || "").replace(/\/$/, "") || undefined,
   },
   {
-    code: "investor",
+    code: "investor-portal",
     name: "Investor Portal",
     tagline: "Dashboard & returns",
     color: "#7C3AED",
     initial: "I",
     devPort: 3002,
     ssoEnabled: true,
-    requiredFlag: "isInvestor",
+    gated: true,
     productionUrl: (process.env.NEXT_PUBLIC_INVESTOR_URL || "").replace(/\/$/, "") || undefined,
   },
   {
-    code: "contractor",
+    code: "contractor-portal",
     name: "Contractor Portal",
     tagline: "Job tracking & invoices",
     color: "#D97706",
     initial: "C",
     devPort: 3003,
     ssoEnabled: true,
-    requiredFlag: "isContractor",
+    gated: true,
     productionUrl: (process.env.NEXT_PUBLIC_CONTRACTOR_URL || "").replace(/\/$/, "") || undefined,
   },
 ];
@@ -123,12 +122,10 @@ async function openWithSso(baseHref: string): Promise<void> {
 
 export default function AppSwitcher({
   currentProduct = "chg",
-  isInvestor = false,
-  isContractor = false,
+  enabledProducts = [],
 }: {
   currentProduct?: string;
-  isInvestor?: boolean;
-  isContractor?: boolean;
+  enabledProducts?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -141,12 +138,12 @@ export default function AppSwitcher({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const roleFlags: Record<RoleFlag, boolean> = { isInvestor, isContractor };
+  const enabledSet = new Set(enabledProducts);
 
-  // Only show products that have no requiredFlag (visible to all) or whose
-  // requiredFlag matches the current user's session flags.
+  // Only show products that aren't gated (visible to all) or whose product
+  // `code` is present in the account's entitlement list.
   const visibleProducts = PRODUCTS.filter(
-    (p) => !p.requiredFlag || roleFlags[p.requiredFlag],
+    (p) => !p.gated || enabledSet.has(p.code) || p.code === currentProduct,
   );
 
   return (
