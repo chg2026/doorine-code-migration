@@ -125,10 +125,12 @@ export default function AppSwitcher({
   currentProduct = "chg",
   isInvestor = false,
   isContractor = false,
+  enabledProducts,
 }: {
   currentProduct?: string;
   isInvestor?: boolean;
   isContractor?: boolean;
+  enabledProducts?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -143,11 +145,17 @@ export default function AppSwitcher({
 
   const roleFlags: Record<RoleFlag, boolean> = { isInvestor, isContractor };
 
-  // Only show products that have no requiredFlag (visible to all) or whose
-  // requiredFlag matches the current user's session flags.
-  const visibleProducts = PRODUCTS.filter(
-    (p) => !p.requiredFlag || roleFlags[p.requiredFlag],
-  );
+  // Visibility:
+  //   - Tiles without a requiredFlag are always shown.
+  //   - When `enabledProducts` is provided (entitlements-driven), a flagged
+  //     tile is shown if its product code is in that list.
+  //   - When `enabledProducts` is not provided, fall back to the legacy
+  //     per-user role-flag check.
+  const visibleProducts = PRODUCTS.filter((p) => {
+    if (!p.requiredFlag) return true;
+    if (enabledProducts) return enabledProducts.includes(p.code);
+    return roleFlags[p.requiredFlag];
+  });
 
   return (
     <div style={{ position: "relative" }} ref={ref}>

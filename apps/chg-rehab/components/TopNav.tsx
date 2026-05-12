@@ -64,6 +64,7 @@ export default function TopNav({ user }: { user: SessionUser }) {
           currentProduct="chg"
           isInvestor={user.isInvestor ?? false}
           isContractor={user.isContractor ?? false}
+          enabledProducts={user.accountProducts ?? []}
         />
         <Link
           href="/account"

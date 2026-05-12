@@ -88,6 +88,7 @@ function toSessionUser(
   isSuperAdmin = false,
   isInvestor = false,
   isContractor = false,
+  accountProducts: string[] = [],
 ): SessionUser {
   return {
     id: u.id,
@@ -101,7 +102,45 @@ function toSessionUser(
     isSuperAdmin,
     isInvestor,
     isContractor,
+    accountProducts,
   };
+}
+
+/**
+ * Look up the active product codes entitled to an account by joining
+ * `account_products` to `products`. Returns an empty array on missing
+ * accountId or query error so the caller can fail-open to the legacy
+ * role-flag visibility.
+ */
+async function loadAccountProductCodes(accountId: string | null): Promise<string[]> {
+  if (!accountId) return [];
+  try {
+    const admin = getSupabaseAdminClient();
+    const { data, error } = await admin
+      .from("account_products")
+      .select("products ( code, status )")
+      .eq("account_id", accountId);
+    if (error) {
+      console.warn("[auth] account_products lookup failed:", error.message);
+      return [];
+    }
+    type ProductRow = { code: string | null; status: string | null };
+    type Row = { products: ProductRow | ProductRow[] | null };
+    const rows = (data ?? []) as Row[];
+    const codes = new Set<string>();
+    for (const row of rows) {
+      const products = Array.isArray(row.products) ? row.products : row.products ? [row.products] : [];
+      for (const p of products) {
+        if (p?.code && (p.status ?? "active") === "active") {
+          codes.add(p.code);
+        }
+      }
+    }
+    return Array.from(codes);
+  } catch (err) {
+    console.warn("[auth] account_products lookup threw:", (err as Error).message);
+    return [];
+  }
 }
 
 /**
@@ -362,7 +401,8 @@ async function syncSupabaseUser(
 
   // Users that reach this point passed both is_investor and is_contractor
   // fail-closed checks above, so both flags are known-false for new accounts.
-  return toSessionUser(created, profile.profile_score ?? null, !!profile.is_super_admin, false, false);
+  const accountProducts = await loadAccountProductCodes(accountId);
+  return toSessionUser(created, profile.profile_score ?? null, !!profile.is_super_admin, false, false, accountProducts);
 }
 
 /**
@@ -411,7 +451,8 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
           console.log(`[auth:diag] refreshFromSupabase | user=${existing.id} | profile_source=role_cache | action=return_null | reason=${c.inv ? "is_investor" : "is_contractor"}`);
           return null; // wrong-role, non-super-admin
         }
-        return toSessionUser(existing, c.ps ?? null, !!c.sa, false, false);
+        const cachedAccountProducts = await loadAccountProductCodes(existing.companyId);
+        return toSessionUser(existing, c.ps ?? null, !!c.sa, false, false, cachedAccountProducts);
       }
     } catch {
       // Malformed cookie — fall through to Supabase.
@@ -442,6 +483,8 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
   const nextLast = lastName ?? existing.lastName;
   const nextImg = profile?.avatar_url ?? existing.profileImageUrl;
 
+  const accountProducts = await loadAccountProductCodes(existing.companyId);
+
   if (
     nextEmail !== existing.email ||
     nextFirst !== existing.firstName ||
@@ -463,6 +506,7 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
       !!profile?.is_super_admin,
       !!profile?.is_investor,
       !!profile?.is_contractor,
+      accountProducts,
     );
   }
 
@@ -472,5 +516,6 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
     !!profile?.is_super_admin,
     !!profile?.is_investor,
     !!profile?.is_contractor,
+    accountProducts,
   );
 }

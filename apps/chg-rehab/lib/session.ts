@@ -36,6 +36,12 @@ export interface SessionUser {
    * tile is shown in the app switcher for dual-role users.
    */
   isContractor?: boolean;
+  /**
+   * Active product codes (from `account_products` joined to `products`) for
+   * this user's account. Drives App Switcher visibility based on entitlements
+   * rather than per-user role flags.
+   */
+  accountProducts: string[];
 }
 
 /**
