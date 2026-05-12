@@ -132,6 +132,14 @@ export default function LoginClient({ next, initialError }: { next: string; init
             Demo: <strong>mike@torresdrywall.com</strong> / <strong>password123</strong>
           </div>
           )}
+          {ssoExchanging ? null : (
+          <div className="login-helper" style={{ marginTop: 12 }}>
+            Don&apos;t have an account?{" "}
+            <a href="/signup" style={{ color: "#D85A30", fontWeight: 600 }}>
+              Sign up
+            </a>
+          </div>
+          )}
         </div>
       </div>
     </div>
