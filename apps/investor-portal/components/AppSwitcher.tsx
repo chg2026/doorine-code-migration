@@ -157,7 +157,7 @@ export default function AppSwitcher({
         style={{
           background: "transparent",
           border: "none",
-          color: "#6b7280",
+          color: "#374151",
           cursor: "pointer",
           padding: 6,
           borderRadius: 6,
@@ -168,10 +168,10 @@ export default function AppSwitcher({
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLButtonElement).style.color = "#111827";
-          (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.05)";
+          (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6";
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = "#6b7280";
+          (e.currentTarget as HTMLButtonElement).style.color = "#374151";
           (e.currentTarget as HTMLButtonElement).style.background = "transparent";
         }}
       >
@@ -192,9 +192,11 @@ export default function AppSwitcher({
         <div
           style={{
             position: "absolute",
-            right: 0,
+            left: 0,
             top: "calc(100% + 6px)",
             width: 288,
+            minWidth: 260,
+            maxWidth: "calc(100vw - 24px)",
             background: "#fff",
             color: "#111827",
             border: "1px solid #e5e7eb",
