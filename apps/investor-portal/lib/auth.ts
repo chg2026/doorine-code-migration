@@ -123,7 +123,8 @@ async function resolveCurrentInvestor(): Promise<SessionInvestor | null> {
         portalLastLoginAt: new Date(),
       },
     });
-    return toSessionInvestor(updated);
+    const accountProducts = await loadAccountProductCodes(accountId);
+    return toSessionInvestor(updated, accountProducts);
   }
 
   // First sign-in: bootstrap the Investor row from user_profiles.
@@ -159,10 +160,11 @@ async function resolveCurrentInvestor(): Promise<SessionInvestor | null> {
       portalLastLoginAt: new Date(),
     },
   });
-  return toSessionInvestor(created);
+  const accountProducts = await loadAccountProductCodes(accountId);
+  return toSessionInvestor(created, accountProducts);
 }
 
-function toSessionInvestor(i: Investor): SessionInvestor {
+function toSessionInvestor(i: Investor, accountProducts: string[] = []): SessionInvestor {
   return {
     id: i.id,
     email: i.email,
@@ -172,5 +174,51 @@ function toSessionInvestor(i: Investor): SessionInvestor {
     companyId: i.companyId,
     status: i.status,
     accreditedStatus: i.accreditedStatus,
+    accountProducts,
   };
+}
+
+/**
+ * Look up the product codes this account is entitled to via the Supabase
+ * `account_products` table joined to `products`. Returns an array of `code`
+ * strings (e.g. ["chg", "deallink", "investor-portal"]) for active rows.
+ *
+ * Mirrors the loader the chg-rehab side uses to feed AppSwitcher visibility
+ * gating. Failures degrade to an empty array — the caller treats that as
+ * "no extra products".
+ */
+export async function loadAccountProductCodes(accountId: string): Promise<string[]> {
+  if (!accountId) return [];
+  try {
+    const admin = getSupabaseAdminClient();
+    type Row = {
+      status: string | null;
+      products: { code: string | null } | { code: string | null }[] | null;
+    };
+    const { data, error } = await admin
+      .from("account_products")
+      .select("status, products ( code )")
+      .eq("account_id", accountId)
+      .eq("status", "active")
+      .returns<Row[]>();
+    if (error) {
+      console.error("[investor-auth] loadAccountProductCodes failed:", error.message);
+      return [];
+    }
+    const codes = new Set<string>();
+    for (const row of data ?? []) {
+      const p = row.products;
+      if (Array.isArray(p)) {
+        for (const item of p) {
+          if (item?.code) codes.add(item.code);
+        }
+      } else if (p?.code) {
+        codes.add(p.code);
+      }
+    }
+    return [...codes];
+  } catch (err) {
+    console.error("[investor-auth] loadAccountProductCodes threw:", err);
+    return [];
+  }
 }

@@ -26,7 +26,11 @@ export default async function PortalLayout({ children }: { children: React.React
 
   return (
     <div className="portal">
-      <PortalSidebar initials={initials} displayName={displayName} />
+      <PortalSidebar
+        initials={initials}
+        displayName={displayName}
+        enabledProducts={investor.accountProducts ?? []}
+      />
       <div className="main">
         <PortalBanners banners={banners} />
         {children}

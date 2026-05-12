@@ -13,6 +13,12 @@ export interface SessionInvestor {
   companyId: string;
   status: string;
   accreditedStatus: string;
+  /**
+   * Product codes this investor's account is entitled to (from
+   * `account_products` joined to `products`). Drives the AppSwitcher's
+   * visibility gating across CHG, Deal Link, Investor Portal, etc.
+   */
+  accountProducts: string[];
 }
 
 /**
