@@ -9,8 +9,17 @@
 -- onConflict: 'account_id,product_id' fails with:
 --   "there is no unique or exclusion constraint matching the ON CONFLICT specification"
 --
--- This is idempotent — ADD CONSTRAINT IF NOT EXISTS is safe to re-run.
+-- Postgres does not support `ADD CONSTRAINT IF NOT EXISTS`, so we wrap the
+-- ALTER in a DO block that swallows the duplicate-object error to keep the
+-- migration idempotent.
 
-ALTER TABLE public.account_products
-  ADD CONSTRAINT IF NOT EXISTS account_products_account_id_product_id_key
-  UNIQUE (account_id, product_id);
+DO $$
+BEGIN
+  ALTER TABLE public.account_products
+    ADD CONSTRAINT account_products_account_id_product_id_key
+    UNIQUE (account_id, product_id);
+EXCEPTION
+  WHEN duplicate_table THEN NULL;
+  WHEN duplicate_object THEN NULL;
+END
+$$;

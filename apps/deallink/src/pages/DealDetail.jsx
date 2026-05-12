@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { PublicAPI } from '../lib/deallink-api.js';
-import { Kicker, Hairline, Stripe, Status, Modal, Field } from '../components/UI.jsx';
+import { Kicker, Hairline, Stripe, Status, Modal, Field } from '../components/LegacyPublicUI.jsx';
 
 export default function DealDetail() {
   const { handle, dealId } = useParams();
@@ -95,10 +95,10 @@ export default function DealDetail() {
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 20px 18px', borderTop: '1px solid var(--line)', background: 'var(--bg)', display: 'flex', justifyContent: 'center' }}>
         <button
           onClick={() => setOpen(true)}
-          disabled={d.status === 'sold'}
-          style={{ width: '100%', maxWidth: 420, background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 14, padding: '16px 20px', fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 600, letterSpacing: -0.1, cursor: d.status === 'sold' ? 'not-allowed' : 'pointer', opacity: d.status === 'sold' ? 0.5 : 1 }}
+          disabled={d.status === 'Closed'}
+          style={{ width: '100%', maxWidth: 420, background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 14, padding: '16px 20px', fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 600, letterSpacing: -0.1, cursor: d.status === 'Closed' ? 'not-allowed' : 'pointer', opacity: d.status === 'Closed' ? 0.5 : 1 }}
         >
-          {d.status === 'sold' ? 'This deal has been sold' : "I'm interested"}
+          {d.status === 'Closed' ? 'This deal has been sold' : "I'm interested"}
         </button>
       </div>
 

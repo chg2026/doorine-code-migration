@@ -1,114 +1,69 @@
 import React from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Building2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Kicker, Field } from '../components/UI.jsx';
+import { Button, Input, Field } from '../components/ui.jsx';
 
-// Real Supabase email/password sign-in. Replaces the prototype "any email +
-// password works" flow. The redirect target is whatever route bounced the
-// user here (preserved on location.state.from), defaulting to /admin.
 export default function Login() {
   const auth = useAuth();
-  const nav = useNavigate();
   const loc = useLocation();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
 
-  // SSO ingestion: when CHG Rehab's AppSwitcher opens Deal Link, it appends
-  // Supabase session tokens as a URL hash fragment:
-  //   /login#access_token=...&refresh_token=...&token_type=bearer
-  // Supabase's createClient handles this automatically via detectSessionInUrl
-  // (default: true) — it parses the hash and fires onAuthStateChange('SIGNED_IN').
-  // We only need to clean the tokens from the URL so they don't persist in
-  // browser history.
   React.useEffect(() => {
     if (window.location.hash.includes('access_token=')) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []);
 
-  // If auth has already resolved and the user is signed in, redirect now —
-  // before painting the form — so there's no flash of the login page.
-  // While auth.loading is true we fall through and render the form below;
-  // the component will re-render once loading settles and redirect then.
-  // This guarantees the page is NEVER blank: unauthenticated users see the
-  // form immediately, authenticated users get the form for <100 ms then go.
   if (!auth.loading && auth.user) {
-    const dest = (loc.state && loc.state.from) || '/admin';
+    const dest = (loc.state && loc.state.from) || '/dashboard';
     return <Navigate to={dest} replace />;
   }
 
   async function submit(e) {
     e.preventDefault();
     setError(null);
-    if (!email.trim() || !password) {
-      setError('Email and password are required.');
-      return;
-    }
+    if (!email.trim() || !password) { setError('Email and password are required.'); return; }
     setSubmitting(true);
-    try {
-      await auth.signIn(email.trim(), password);
-      // AuthContext.onAuthStateChange will set auth.user; this component will
-      // re-render and the auth.user guard above will trigger <Navigate>.
-    } catch (err) {
-      setError(err?.message || 'Sign-in failed.');
-    } finally {
-      setSubmitting(false);
-    }
+    try { await auth.signIn(email.trim(), password); }
+    catch (err) { setError(err?.message || 'Sign-in failed.'); }
+    finally { setSubmitting(false); }
   }
 
   return (
-    <div className="center-grid">
-      <div className="pane left">
-        <Link to="/" style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase' }}>DealLink</Link>
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-slate-950">
+      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-r border-slate-800">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
+          <span className="text-white font-bold text-lg">Deal<span className="text-amber-400">Link</span></span>
+        </Link>
         <div>
-          <div className="serif" style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05 }}>
-            One link for<br />every deal<br />you wholesale.
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--mute)', marginTop: 16, maxWidth: 320, lineHeight: 1.6 }}>
-            Share a public profile. Post inventory once. Capture buyers.
-          </div>
+          <h2 className="text-white text-4xl font-bold leading-tight">One link for<br />every deal you<br />wholesale.</h2>
+          <p className="text-slate-400 text-sm mt-4 max-w-sm">Share a public profile. Post inventory once. Capture buyers. Track every offer.</p>
         </div>
-        <Kicker>© 2026 · BuildFlow · boot:{typeof window !== 'undefined' ? window.__DL_BOOT__ : ''}</Kicker>
+        <p className="text-slate-600 text-xs font-mono">© 2026 · BuildFlow</p>
       </div>
-      <form className="pane right" onSubmit={submit}>
-        <div style={{ maxWidth: 360, width: '100%' }}>
-          <Kicker>Sign in</Kicker>
-          <div className="serif" style={{ fontSize: 26, marginTop: 8 }}>Welcome back.</div>
-          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <Field label="Email">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(null); }}
-                placeholder="you@email.com"
-                autoFocus
-                autoComplete="email"
-                disabled={submitting}
-              />
-            </Field>
-            <Field label="Password">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                disabled={submitting}
-              />
-            </Field>
-            {error && <div style={{ fontSize: 12, color: 'var(--err)' }}>{error}</div>}
-            <button type="submit" className="btn solid full" disabled={submitting}>
-              {submitting ? 'Signing in…' : 'Sign in →'}
-            </button>
-            <div style={{ fontSize: 12, color: 'var(--mute)', textAlign: 'center', marginTop: 6 }}>
-              Need an account? Sign up via <a href="/signup" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Gold Bridge</a> and ask
-              your admin to enable Deal Link.
-            </div>
+
+      <div className="flex flex-col justify-center p-6 lg:p-12">
+        <div className="w-full max-w-sm mx-auto">
+          <div className="lg:hidden flex items-center gap-2 mb-8">
+            <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
+            <span className="text-white font-bold text-lg">Deal<span className="text-amber-400">Link</span></span>
           </div>
+          <p className="text-amber-400 text-xs uppercase tracking-widest font-mono">Sign in</p>
+          <h1 className="text-2xl text-white font-bold mt-2">Welcome back.</h1>
+          <form onSubmit={submit} className="mt-8 space-y-4">
+            <Field label="Email"><Input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} placeholder="you@email.com" autoFocus disabled={submitting} /></Field>
+            <Field label="Password"><Input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" disabled={submitting} /></Field>
+            {error && <p className="text-sm text-red-400">{error}</p>}
+            <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Signing in…' : <>Sign in <ArrowRight className="w-4 h-4" /></>}</Button>
+            <p className="text-xs text-slate-400 text-center">Need an account? Sign up via <a href="https://goldbridgerei.com" className="text-amber-400 hover:underline">Gold Bridge</a> and ask your admin to enable Deal Link.</p>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

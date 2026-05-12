@@ -1,22 +1,17 @@
 import React from 'react';
-import AdminShell from '../components/AdminShell.jsx';
-import { useStore, useToast } from '../store.jsx';
-import { Kicker, Avatar, Field } from '../components/UI.jsx';
 import { Link } from 'react-router-dom';
+import { ExternalLink, Copy } from 'lucide-react';
+import Layout from '../components/Layout.jsx';
+import { useStore, useToast } from '../store.jsx';
+import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, PageHeader } from '../components/ui.jsx';
+import { initialsOf } from '../lib/utils.js';
 
 export default function AdminProfile() {
   const { state, dispatch } = useStore();
   const { show, node } = useToast();
   const [form, setForm] = React.useState(state.profile);
 
-  // The store hydrates async (`/api/deallink/profile`). On first render
-  // `state.profile` is the empty default — without this sync the form
-  // mounts blank and a save would overwrite the persisted profile with
-  // empty fields. Re-init the form whenever the underlying profile
-  // identity changes (hydrate, refetch, or another tab edit).
-  React.useEffect(() => {
-    if (state.loaded) setForm(state.profile);
-  }, [state.loaded, state.profile]);
+  React.useEffect(() => { if (state.loaded) setForm(state.profile); }, [state.loaded, state.profile]);
 
   function save(e) {
     e.preventDefault();
@@ -25,71 +20,85 @@ export default function AdminProfile() {
   }
 
   if (!state.loaded) {
-    return (
-      <AdminShell tab="profile">
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--mute)', fontFamily: 'var(--mono)', fontSize: 12 }}>
-          Loading profile…
-        </div>
-      </AdminShell>
-    );
+    return <Layout><div className="py-32 text-center text-slate-400 text-xs font-mono">Loading profile…</div></Layout>;
   }
 
+  const counts = state.deals.reduce((a, d) => { a[d.status] = (a[d.status] || 0) + 1; return a; }, {});
+
   return (
-    <AdminShell tab="profile">
-      <div style={{ padding: '24px 24px 14px' }}>
-        <Kicker>Public profile</Kicker>
-        <div className="serif" style={{ fontSize: 28, marginTop: 6 }}>How buyers see you</div>
-      </div>
+    <Layout>
+      <PageHeader title="Public profile" subtitle="How buyers see you" />
 
-      <div style={{ padding: '0 24px 24px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 24, alignItems: 'start' }}>
-        <form onSubmit={save} style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-            <Avatar size={56} initials={form.initials} />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>@{form.handle}</div>
-              <Link to={`/p/${state.profile.handle}`} target="_blank" style={{ fontSize: 11, color: 'var(--mute)', fontFamily: 'var(--mono)' }}>deallink.io/{state.profile.handle} ↗</Link>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
+        <Card>
+          <form onSubmit={save}>
+            <CardHeader><CardTitle>Profile details</CardTitle></CardHeader>
+            <CardBody>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-full bg-amber-400 flex items-center justify-center text-slate-900 font-bold text-lg">{form.initials || initialsOf(form.name || form.handle)}</div>
+                <div>
+                  <p className="text-white text-sm font-semibold">@{form.handle || 'unclaimed'}</p>
+                  {form.handle && (
+                    <a href={`/p/${form.handle}`} target="_blank" rel="noreferrer" className="text-amber-400 text-xs hover:underline flex items-center gap-1">
+                      deallink.io/{form.handle} <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Display name"><Input value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+                <Field label="Initials"><Input value={form.initials || ''} maxLength={3} onChange={(e) => setForm({ ...form, initials: e.target.value.toUpperCase() })} /></Field>
+                <Field label="Handle"><Input value={form.handle || ''} onChange={(e) => setForm({ ...form, handle: e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, '') })} /></Field>
+                <Field label="Email"><Input type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+                <Field label="City / region"><Input value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
+                <Field label="Featured deal">
+                  <Select value={form.featuredId || ''} onChange={(e) => setForm({ ...form, featuredId: e.target.value || null })}>
+                    <option value="">Auto · first active</option>
+                    {state.deals.filter((d) => !['Closed', 'Dead'].includes(d.status)).map((d) => <option key={d.id} value={d.id}>{d.addr}</option>)}
+                  </Select>
+                </Field>
+                <div className="md:col-span-2"><Field label="Bio"><Textarea rows={3} value={form.bio || ''} onChange={(e) => setForm({ ...form, bio: e.target.value })} /></Field></div>
+                <div className="md:col-span-2 flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <input id="optin" type="checkbox" checked={!!form.marketplaceOptIn} onChange={(e) => setForm({ ...form, marketplaceOptIn: e.target.checked })} className="w-4 h-4 accent-amber-400" />
+                  <label htmlFor="optin" className="text-sm text-slate-300">List my deals on the cross-wholesaler <Link to="/marketplace" className="text-amber-400 hover:underline">Marketplace</Link></label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-6">
+                <Button type="button" variant="secondary" onClick={() => setForm(state.profile)}>Reset</Button>
+                <Button type="submit">Save changes</Button>
+              </div>
+            </CardBody>
+          </form>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>This month</CardTitle></CardHeader>
+          <CardBody>
+            <div className="space-y-2 text-sm">
+              <Row l="New" v={counts['New'] || 0} />
+              <Row l="Marketed" v={counts['Marketed'] || 0} />
+              <Row l="Under Contract" v={counts['Under Contract'] || 0} />
+              <Row l="Closed" v={counts['Closed'] || 0} />
+              <Row l="Dead" v={counts['Dead'] || 0} />
+              <Row l="Leads" v={state.leads.length} />
+              <Row l="Buyers" v={state.buyers.length} />
+              <Row l="Offers" v={state.offers.length} />
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="Display name"><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-            <Field label="Initials"><input value={form.initials} maxLength={3} onChange={(e) => setForm({ ...form, initials: e.target.value.toUpperCase() })} /></Field>
-            <Field label="Handle"><input value={form.handle} onChange={(e) => setForm({ ...form, handle: e.target.value })} /></Field>
-            <Field label="Email"><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-            <Field label="City / region"><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
-            <Field label="Featured deal">
-              <select value={form.featuredId || ''} onChange={(e) => setForm({ ...form, featuredId: e.target.value || null })}>
-                <option value="">Auto · first active</option>
-                {state.deals.filter(d => d.status !== 'sold').map(d => <option key={d.id} value={d.id}>{d.addr}</option>)}
-              </select>
-            </Field>
-          </div>
-          <div style={{ marginTop: 14 }}>
-            <Field label="Bio (single line)"><input value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} /></Field>
-          </div>
-          <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <button type="button" className="btn sm" onClick={() => setForm(state.profile)}>Reset</button>
-            <button type="submit" className="btn sm solid">Save changes</button>
-          </div>
-        </form>
-
-        <aside style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: 16 }}>
-          <Kicker>This month</Kicker>
-          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8, fontFamily: 'var(--mono)', fontSize: 12 }}>
-            <Row l="Active deals" v={state.deals.filter(d => d.status === 'active').length} />
-            <Row l="Pending" v={state.deals.filter(d => d.status === 'pending').length} />
-            <Row l="Sold" v={state.deals.filter(d => d.status === 'sold').length} />
-            <Row l="Leads" v={state.leads.length} />
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <button className="btn sm full" onClick={() => { navigator.clipboard?.writeText(`https://deallink.io/${state.profile.handle}`); show('Link copied'); }}>Copy public link</button>
-          </div>
-        </aside>
+            {state.profile.handle && (
+              <Button variant="secondary" className="w-full mt-4" onClick={() => { navigator.clipboard?.writeText(`https://deallink.io/${state.profile.handle}`); show('Link copied'); }}>
+                <Copy className="w-4 h-4" /> Copy public link
+              </Button>
+            )}
+          </CardBody>
+        </Card>
       </div>
       {node}
-    </AdminShell>
+    </Layout>
   );
 }
 
 function Row({ l, v }) {
-  return <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--mute)' }}>{l}</span><span style={{ fontWeight: 600 }}>{v}</span></div>;
+  return <div className="flex justify-between"><span className="text-slate-400">{l}</span><span className="text-white font-semibold">{v}</span></div>;
 }

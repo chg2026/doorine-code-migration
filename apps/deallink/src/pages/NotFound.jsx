@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Kicker } from '../components/UI.jsx';
+import { Button } from '../components/ui.jsx';
 
 export default function NotFound() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center' }}>
-      <Kicker>404</Kicker>
-      <div className="serif" style={{ fontSize: 32, marginTop: 12 }}>Page not found</div>
-      <div style={{ fontSize: 13, color: 'var(--mute)', marginTop: 8 }}>The page you're looking for doesn't exist.</div>
-      <Link to="/" className="btn sm" style={{ marginTop: 20 }}>Back home</Link>
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+      <p className="text-amber-400 text-xs uppercase tracking-widest font-mono">404</p>
+      <h1 className="text-3xl text-white font-bold mt-3">Page not found</h1>
+      <p className="text-slate-400 text-sm mt-2">The page you're looking for doesn't exist.</p>
+      <Link to="/" className="mt-6"><Button>Back home</Button></Link>
     </div>
   );
 }

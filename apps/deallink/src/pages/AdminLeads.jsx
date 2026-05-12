@@ -1,60 +1,68 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import AdminShell from '../components/AdminShell.jsx';
+import { ListChecks, Mail, Phone } from 'lucide-react';
+import Layout from '../components/Layout.jsx';
 import { useStore } from '../store.jsx';
-import { Kicker } from '../components/UI.jsx';
+import { Card, PageHeader, EmptyState, Button } from '../components/ui.jsx';
+import { formatRelTime } from '../lib/utils.js';
 
 export default function AdminLeads() {
   const { state } = useStore();
   const leads = state.leads;
-  const dealMap = Object.fromEntries(state.deals.map(d => [d.id, d]));
+  const dealMap = Object.fromEntries(state.deals.map((d) => [d.id, d]));
+  const dealInterest = leads.filter((l) => l.kind === 'deal-interest').length;
+  const buyerList = leads.filter((l) => l.kind === 'buyer-list').length;
 
   return (
-    <AdminShell tab="leads">
-      <div style={{ padding: '24px 24px 14px' }}>
-        <Kicker>{leads.length} total · {leads.filter(l => l.kind === 'deal-interest').length} deal interest · {leads.filter(l => l.kind === 'buyer-list').length} buyer list</Kicker>
-        <div className="serif" style={{ fontSize: 28, marginTop: 6 }}>Leads</div>
-      </div>
+    <Layout>
+      <PageHeader
+        title="Leads"
+        subtitle={`${leads.length} total · ${dealInterest} deal interest · ${buyerList} buyer list`}
+      />
 
-      <div style={{ padding: '0 24px 24px', flex: 1 }}>
-        {leads.length === 0 ? (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: 60, textAlign: 'center' }}>
-            <div className="serif" style={{ fontSize: 20 }}>No leads yet</div>
-            <div style={{ fontSize: 13, color: 'var(--mute)', marginTop: 8 }}>
-              Share your link — buyers who tap "I'm interested" land here.
-            </div>
-            <Link to={`/p/${state.profile.handle}`} className="btn sm" style={{ marginTop: 18 }} target="_blank">Open public profile ↗</Link>
+      {leads.length === 0 ? (
+        <EmptyState
+          icon={ListChecks}
+          title="No leads yet"
+          body="Share your public link — buyers who tap I'm interested land here."
+          action={state.profile.handle ? <a href={`/p/${state.profile.handle}`} target="_blank" rel="noreferrer"><Button>Open public profile</Button></a> : null}
+        />
+      ) : (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Name</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell">Contact</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden md:table-cell">Type</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Deal</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden lg:table-cell">When</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700">
+                {leads.map((l) => {
+                  const deal = l.dealId ? dealMap[l.dealId] : null;
+                  return (
+                    <tr key={l.id} className="hover:bg-slate-800/50">
+                      <td className="px-5 py-4 text-white text-sm font-medium">{[l.first, l.last].filter(Boolean).join(' ') || '—'}</td>
+                      <td className="px-5 py-4 hidden sm:table-cell">
+                        <div className="space-y-1">
+                          {l.email && <div className="text-slate-300 text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 text-slate-500" /> {l.email}</div>}
+                          {l.phone && <div className="text-slate-400 text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 text-slate-500" /> {l.phone}</div>}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 hidden md:table-cell text-slate-300 text-xs">{l.buyerType || '—'}</td>
+                      <td className="px-5 py-4 text-sm">{deal ? <Link className="text-amber-400 hover:underline" to={`/admin/deal/${deal.id}`}>{deal.addr}</Link> : <span className="text-slate-500">Buyer list</span>}</td>
+                      <td className="px-5 py-4 hidden lg:table-cell text-slate-500 text-xs font-mono">{formatRelTime(l.createdAt)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div className="table" style={{ overflowX: 'auto' }}>
-            <div className="row head" style={{ gridTemplateColumns: '1.4fr 1.4fr 1fr 1fr 1.6fr 1fr', minWidth: 760 }}>
-              <span>Name</span><span>Email</span><span>Phone</span><span>Type</span><span>Deal</span><span>When</span>
-            </div>
-            {leads.map(l => {
-              const deal = l.dealId ? dealMap[l.dealId] : null;
-              return (
-                <div key={l.id} className="row" style={{ gridTemplateColumns: '1.4fr 1.4fr 1fr 1fr 1.6fr 1fr', minWidth: 760 }}>
-                  <span>{[l.first, l.last].filter(Boolean).join(' ') || '—'}</span>
-                  <span className="mono" style={{ fontSize: 12 }}>{l.email}</span>
-                  <span className="mono" style={{ fontSize: 12, color: 'var(--mute)' }}>{l.phone || '—'}</span>
-                  <span style={{ fontSize: 12 }}>{l.buyerType || '—'}</span>
-                  <span className="ellipsis">{deal ? <Link to={`/admin/deal/${deal.id}`}>{deal.addr}</Link> : <span style={{ color: 'var(--mute)' }}>Buyer list</span>}</span>
-                  <span style={{ fontSize: 11, color: 'var(--dim)', fontFamily: 'var(--mono)' }}>{relTime(l.createdAt)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </AdminShell>
+        </Card>
+      )}
+    </Layout>
   );
-}
-
-function relTime(ts) {
-  if (!ts) return '—';
-  const diff = (Date.now() - ts) / 1000;
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
 }

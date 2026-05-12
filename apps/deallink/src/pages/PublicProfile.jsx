@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { PublicAPI } from '../lib/deallink-api.js';
-import { Avatar, Kicker, Stripe, Hairline, Tag, Modal, Field } from '../components/UI.jsx';
+import { Avatar, Kicker, Stripe, Hairline, Tag, Modal, Field } from '../components/LegacyPublicUI.jsx';
 
 // Public, unauthenticated wholesaler profile page. Fetches from
 // /api/deallink/public/:handle so RLS + the server's hide_street masking

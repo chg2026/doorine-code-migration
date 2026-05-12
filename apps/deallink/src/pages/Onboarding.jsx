@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Building2, ArrowRight, Upload, Plus, Copy, Check } from 'lucide-react';
 import { useStore, useToast } from '../store.jsx';
-import { Kicker, Avatar, Field, Modal, Stripe, Hairline } from '../components/UI.jsx';
+import { Card, Button, Input, Field, Modal } from '../components/ui.jsx';
 
 export default function Onboarding() {
   const { state, dispatch } = useStore();
@@ -13,14 +14,12 @@ export default function Onboarding() {
   const [email, setEmail] = React.useState(state.profile?.email || '');
   const [name, setName] = React.useState(state.profile?.name || '');
 
-  React.useEffect(() => {
-    if (state.profile?.handle && step === 'claim') setStep('checklist');
-  }, [state.profile?.handle, step]);
+  React.useEffect(() => { if (state.profile?.handle && step === 'claim') setStep('checklist'); }, [state.profile?.handle, step]);
 
   async function claim(e) {
     e.preventDefault();
     if (!handle.trim()) return;
-    const initials = (name || handle).split(/\s+|\./).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || handle[0].toUpperCase();
+    const initials = (name || handle).split(/\s+|\./).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || handle[0].toUpperCase();
     await dispatch({
       type: 'update_profile',
       patch: {
@@ -35,7 +34,30 @@ export default function Onboarding() {
     show('Profile claimed');
   }
 
-  if (step === 'claim') return <ClaimStep handle={handle} setHandle={setHandle} email={email} setEmail={setEmail} name={name} setName={setName} onSubmit={claim} toast={node} />;
+  if (step === 'claim') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6">
+        <Link to="/" className="text-slate-400 text-xs uppercase tracking-widest mb-8 hover:text-amber-400">← DealLink</Link>
+        <div className="w-full max-w-md">
+          <p className="text-amber-400 text-xs uppercase tracking-widest text-center font-mono">Claim your handle</p>
+          <h1 className="text-3xl text-white font-bold text-center mt-3">deallink.io/<span className="text-amber-400 border-b-2 border-dashed border-amber-400/40 pb-1">{handle || 'yourname'}</span></h1>
+          <form onSubmit={claim} className="mt-8 space-y-4">
+            <Field label="Your handle">
+              <div className="flex border border-slate-700 rounded-lg overflow-hidden bg-slate-800">
+                <span className="px-3 py-2 text-slate-400 font-mono text-xs border-r border-slate-700">deallink.io/</span>
+                <input value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ''))} placeholder="yourname" className="flex-1 bg-transparent text-white text-sm px-3 outline-none" autoFocus />
+              </div>
+            </Field>
+            <Field label="Your name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="J Rodriguez" /></Field>
+            <Field label="Email"><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" required /></Field>
+            <Button type="submit" className="w-full">Create profile <ArrowRight className="w-4 h-4" /></Button>
+            <p className="text-xs text-slate-400 text-center">Already have one? <Link to="/login" className="text-amber-400 hover:underline">Sign in</Link></p>
+          </form>
+        </div>
+        {node}
+      </div>
+    );
+  }
 
   const items = [
     ['01', 'Claim your handle', 'Done', state.onboarding.claimed],
@@ -45,111 +67,51 @@ export default function Onboarding() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 16px' }}>
-      <div style={{ width: '100%', maxWidth: 480 }}>
-        <Link to="/" style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase' }}>← DealLink</Link>
-        <div style={{ marginTop: 32, textAlign: 'center' }}>
-          <Avatar size={64} initials={state.profile.initials || '?'} />
-          <div style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>@{state.profile.handle}</div>
-          <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>Let's get your profile live</div>
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center p-6">
+      <Link to="/" className="self-start text-slate-400 text-xs uppercase tracking-widest mb-8 hover:text-amber-400">← DealLink</Link>
+      <div className="w-full max-w-md">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-amber-400 flex items-center justify-center mx-auto"><Building2 className="w-8 h-8 text-slate-900" /></div>
+          <p className="text-white text-base font-semibold mt-4">@{state.profile.handle}</p>
+          <p className="text-slate-400 text-xs mt-1">Let's get your profile live</p>
         </div>
 
-        <div style={{ marginTop: 24, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 4 }}>
+        <Card className="mt-6">
           {items.map(([n, t, d, done], i) => (
-            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderBottom: i < items.length - 1 ? '1px solid var(--line)' : 'none' }}>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--dim)' }}>{n}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13 }}>{t}</div>
-                <div style={{ fontSize: 11, color: 'var(--mute)', fontFamily: 'var(--mono)', marginTop: 2 }}>{d}</div>
+            <div key={n} className={`flex items-center gap-4 p-4 ${i < items.length - 1 ? 'border-b border-slate-700' : ''}`}>
+              <span className="font-mono text-xs text-slate-500">{n}</span>
+              <div className="flex-1">
+                <p className="text-white text-sm">{t}</p>
+                <p className="text-slate-500 text-xs font-mono mt-0.5">{d}</p>
               </div>
-              {done
-                ? <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--ink)' }}>✓</span>
-                : <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--mute)' }}>→</span>}
+              {done ? <Check className="w-4 h-4 text-green-400" /> : <ArrowRight className="w-4 h-4 text-slate-600" />}
             </div>
           ))}
-        </div>
+        </Card>
 
-        <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+        <div className="mt-4">
           {!(state.onboarding.addedDeal || state.deals.length > 0)
-            ? <button className="btn solid full" onClick={() => setChoiceOpen(true)}>Add first deal</button>
+            ? <Button onClick={() => setChoiceOpen(true)} className="w-full">Add first deal</Button>
             : !state.onboarding.shared
-              ? <button className="btn solid full" onClick={() => { dispatch({ type: 'update_onboarding', patch: { shared: true } }); navigator.clipboard?.writeText(`https://deallink.io/${state.profile.handle}`); show('Link copied'); }}>Copy your link</button>
-              : <Link to="/admin" className="btn solid full">Open dashboard →</Link>}
+              ? <Button className="w-full" onClick={() => { dispatch({ type: 'update_onboarding', patch: { shared: true } }); navigator.clipboard?.writeText(`https://deallink.io/${state.profile.handle}`); show('Link copied'); }}><Copy className="w-4 h-4" /> Copy your link</Button>
+              : <Link to="/dashboard"><Button className="w-full">Open dashboard <ArrowRight className="w-4 h-4" /></Button></Link>}
         </div>
-        <div style={{ marginTop: 12, textAlign: 'center' }}>
-          <Link to="/admin" style={{ fontSize: 12, color: 'var(--mute)', textDecoration: 'underline' }}>Skip to dashboard</Link>
-        </div>
+        <div className="mt-3 text-center"><Link to="/dashboard" className="text-xs text-slate-400 hover:underline">Skip to dashboard</Link></div>
       </div>
 
-      {choiceOpen && (
-        <Modal onClose={() => setChoiceOpen(false)}>
-          <Kicker>Add your deals</Kicker>
-          <div className="serif" style={{ fontSize: 22, marginTop: 6, lineHeight: 1.2 }}>How do you want to start?</div>
-          <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button
-              className="btn solid"
-              style={{ padding: '16px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 12 }}
-              onClick={() => { setChoiceOpen(false); nav('/admin/import'); }}
-            >
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Import from CSV</div>
-                <div style={{ fontSize: 10, marginTop: 3, opacity: 0.7, fontFamily: 'var(--mono)' }}>One click · auto-mapped columns</div>
-              </div>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>→</span>
-            </button>
-            <button
-              className="btn"
-              style={{ padding: '16px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 12 }}
-              onClick={() => { setChoiceOpen(false); nav('/admin/deal/new'); }}
-            >
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Add manually</div>
-                <div style={{ fontSize: 10, color: 'var(--mute)', marginTop: 3, fontFamily: 'var(--mono)' }}>One deal at a time</div>
-              </div>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--mute)' }}>→</span>
-            </button>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 14, textAlign: 'center' }}>You can mix both · add photos after.</div>
-        </Modal>
-      )}
+      <Modal open={choiceOpen} onClose={() => setChoiceOpen(false)} title="How do you want to start?">
+        <div className="space-y-3">
+          <button onClick={() => { setChoiceOpen(false); nav('/admin/import'); }} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-lg p-4 text-left flex justify-between items-center">
+            <div><p className="font-semibold">Import from CSV</p><p className="text-xs opacity-70 mt-0.5">One click · auto-mapped columns</p></div>
+            <Upload className="w-5 h-5" />
+          </button>
+          <button onClick={() => { setChoiceOpen(false); nav('/admin/deal/new'); }} className="w-full bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg p-4 text-left flex justify-between items-center">
+            <div><p className="font-semibold">Add manually</p><p className="text-xs text-slate-400 mt-0.5">One deal at a time</p></div>
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+      </Modal>
       {node}
-    </div>
-  );
-}
-
-function ClaimStep({ handle, setHandle, email, setEmail, name, setName, onSubmit, toast }) {
-  return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-      <Link to="/" style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', marginBottom: 32 }}>← DealLink</Link>
-      <div className="kicker">Claim your handle</div>
-      <div className="serif" style={{ fontSize: 'clamp(24px, 4vw, 34px)', marginTop: 12, textAlign: 'center', lineHeight: 1.1 }}>
-        deallink.io/<span style={{ borderBottom: '1px dashed var(--ink)', paddingBottom: 2 }}>{handle || 'yourname'}</span>
-      </div>
-
-      <form onSubmit={onSubmit} style={{ width: '100%', maxWidth: 360, marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <Field label="Your handle">
-          <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--line)', background: 'var(--card)' }}>
-            <span style={{ padding: '10px 12px', color: 'var(--dim)', fontFamily: 'var(--mono)', fontSize: 12, borderRight: '1px solid var(--line)' }}>deallink.io/</span>
-            <input
-              value={handle}
-              onChange={(e) => setHandle(e.target.value.replace(/[^a-z0-9.-]/gi, ''))}
-              placeholder="yourname"
-              style={{ border: 'none', borderRadius: 0, flex: 1 }}
-              autoFocus
-            />
-            <span style={{ padding: '10px 12px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink)' }}>{handle ? '✓ available' : ''}</span>
-          </div>
-        </Field>
-        <Field label="Your name">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="J Rodriguez" />
-        </Field>
-        <Field label="Email">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" required />
-        </Field>
-        <button type="submit" className="btn solid full">Create profile →</button>
-        <div style={{ fontSize: 12, color: 'var(--mute)', textAlign: 'center' }}>Already have one? <Link to="/login" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Sign in</Link></div>
-      </form>
-      {toast}
     </div>
   );
 }

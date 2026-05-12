@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Kicker } from './UI.jsx';
+import { Kicker } from './LegacyPublicUI.jsx';
 
 // Rendered when the user is signed in but their account does not have an
 // active 'deallink' product entitlement. Mirrors the gate enforced

@@ -1,10 +1,19 @@
 // Typed-ish wrappers around the /api/deallink/* endpoints. The server
 // stores fields in snake_case (Postgres convention); the React UI uses
-// camelCase. This file is the single boundary where translation happens
-// — keep all API → UI shape conversion here so pages and the reducer
-// only ever see the camelCase shape.
+// camelCase. This file is the single boundary where translation happens.
 
 import api, { API_BASE } from './api.js';
+
+// Status helpers (new vocabulary: New | Marketed | Under Contract | Closed | Dead).
+export const DEAL_STATUSES = ['New', 'Marketed', 'Under Contract', 'Closed', 'Dead'];
+export const PUBLIC_STATUSES = new Set(['New', 'Marketed', 'Under Contract']);
+
+const LEGACY_STATUS = { active: 'Marketed', pending: 'Under Contract', sold: 'Closed' };
+function normalizeStatus(s) {
+  if (!s) return 'New';
+  if (DEAL_STATUSES.includes(s)) return s;
+  return LEGACY_STATUS[s] || 'New';
+}
 
 // ─── deals ────────────────────────────────────────────────────────────────
 export function dealFromApi(d) {
@@ -13,6 +22,7 @@ export function dealFromApi(d) {
     id: d.id,
     addr: d.addr || '',
     city: d.city || '',
+    state: d.state || '',
     zip: d.zip || '',
     type: d.type || 'SFR',
     units: d.units ?? 1,
@@ -23,8 +33,11 @@ export function dealFromApi(d) {
     arv: d.arv ?? 0,
     occ: d.occ || 'Vacant',
     access: d.access || 'Lockbox',
-    status: d.status || 'active',
+    status: normalizeStatus(d.status),
     notes: d.notes || '',
+    description: d.description || '',
+    photoUrl: d.photo_url || '',
+    tags: Array.isArray(d.tags) ? d.tags : [],
     hideStreet: !!d.hide_street,
     new: !!d.is_new,
     createdAt: d.created_at,
@@ -35,14 +48,16 @@ export function dealToApi(d) {
   if (!d) return {};
   const out = {};
   const map = {
-    addr: 'addr', city: 'city', zip: 'zip', type: 'type', units: 'units',
+    addr: 'addr', city: 'city', state: 'state', zip: 'zip', type: 'type', units: 'units',
     beds: 'beds', baths: 'baths', sqft: 'sqft', ask: 'ask', arv: 'arv',
     occ: 'occ', access: 'access', status: 'status', notes: 'notes',
+    description: 'description', photoUrl: 'photo_url', tags: 'tags',
     hideStreet: 'hide_street', new: 'is_new',
   };
   for (const [from, to] of Object.entries(map)) {
     if (from in d) out[to] = d[from];
   }
+  if ('status' in out) out.status = normalizeStatus(out.status);
   return out;
 }
 
@@ -58,6 +73,7 @@ export function profileFromApi(p) {
     email: p.email || '',
     featuredId: p.featured_id || null,
     onboarding: p.onboarding || {},
+    marketplaceOptIn: !!p.marketplace_opt_in,
   };
 }
 
@@ -71,6 +87,7 @@ export function profileToApi(p) {
   if ('email' in p) out.email = p.email;
   if ('featuredId' in p) out.featured_id = p.featuredId;
   if ('onboarding' in p) out.onboarding = p.onboarding;
+  if ('marketplaceOptIn' in p) out.marketplace_opt_in = !!p.marketplaceOptIn;
   return out;
 }
 
@@ -102,6 +119,62 @@ export function leadToApi(l) {
   };
 }
 
+// ─── buyers ───────────────────────────────────────────────────────────────
+export function buyerFromApi(b) {
+  if (!b) return null;
+  return {
+    id: b.id,
+    name: b.name || '',
+    email: b.email || '',
+    phone: b.phone || '',
+    buyerType: b.buyer_type || 'Cash Buyer',
+    status: b.status || 'Active',
+    markets: Array.isArray(b.markets) ? b.markets : [],
+    propertyTypes: Array.isArray(b.property_types) ? b.property_types : [],
+    minPrice: b.min_price ?? 0,
+    maxPrice: b.max_price ?? 0,
+    notes: b.notes || '',
+    source: b.source || 'manual',
+    createdAt: b.created_at ? new Date(b.created_at).getTime() : null,
+  };
+}
+
+export function buyerToApi(b) {
+  const out = {};
+  const map = {
+    name: 'name', email: 'email', phone: 'phone', buyerType: 'buyer_type',
+    status: 'status', markets: 'markets', propertyTypes: 'property_types',
+    minPrice: 'min_price', maxPrice: 'max_price', notes: 'notes', source: 'source',
+  };
+  for (const [from, to] of Object.entries(map)) if (from in b) out[to] = b[from];
+  return out;
+}
+
+// ─── offers ───────────────────────────────────────────────────────────────
+export function offerFromApi(o) {
+  if (!o) return null;
+  return {
+    id: o.id,
+    dealId: o.deal_id || null,
+    buyerId: o.buyer_id || null,
+    buyerName: o.buyer_name || '',
+    amount: o.amount ?? 0,
+    status: o.status || 'Pending',
+    notes: o.notes || '',
+    createdAt: o.created_at ? new Date(o.created_at).getTime() : null,
+  };
+}
+
+export function offerToApi(o) {
+  const out = {};
+  const map = {
+    dealId: 'deal_id', buyerId: 'buyer_id', buyerName: 'buyer_name',
+    amount: 'amount', status: 'status', notes: 'notes',
+  };
+  for (const [from, to] of Object.entries(map)) if (from in o) out[to] = o[from];
+  return out;
+}
+
 // ─── HTTP helpers ─────────────────────────────────────────────────────────
 export const DealLinkAPI = {
   async getProfile() {
@@ -121,28 +194,54 @@ export const DealLinkAPI = {
     return dealFromApi(data.deal);
   },
   async createDeals(deals) {
-    const payload = { deals: deals.map(dealToApi) };
-    const { data } = await api.post('/deallink/deals/bulk', payload);
+    const { data } = await api.post('/deallink/deals/bulk', { deals: deals.map(dealToApi) });
     return (data.deals || []).map(dealFromApi);
   },
   async updateDeal(id, patch) {
     const { data } = await api.patch(`/deallink/deals/${id}`, dealToApi(patch));
     return dealFromApi(data.deal);
   },
-  async deleteDeal(id) {
-    await api.delete(`/deallink/deals/${id}`);
-  },
+  async deleteDeal(id) { await api.delete(`/deallink/deals/${id}`); },
   async listLeads() {
     const { data } = await api.get('/deallink/leads');
     return (data.leads || []).map(leadFromApi);
   },
+  async listBuyers() {
+    const { data } = await api.get('/deallink/buyers');
+    return (data.buyers || []).map(buyerFromApi);
+  },
+  async createBuyer(b) {
+    const { data } = await api.post('/deallink/buyers', buyerToApi(b));
+    return buyerFromApi(data.buyer);
+  },
+  async updateBuyer(id, patch) {
+    const { data } = await api.patch(`/deallink/buyers/${id}`, buyerToApi(patch));
+    return buyerFromApi(data.buyer);
+  },
+  async deleteBuyer(id) { await api.delete(`/deallink/buyers/${id}`); },
+  async listOffers() {
+    const { data } = await api.get('/deallink/offers');
+    return (data.offers || []).map(offerFromApi);
+  },
+  async createOffer(o) {
+    const { data } = await api.post('/deallink/offers', offerToApi(o));
+    return offerFromApi(data.offer);
+  },
+  async updateOffer(id, patch) {
+    const { data } = await api.patch(`/deallink/offers/${id}`, offerToApi(patch));
+    return offerFromApi(data.offer);
+  },
+  async deleteOffer(id) { await api.delete(`/deallink/offers/${id}`); },
+  async listMarketplace() {
+    const { data } = await api.get('/deallink/marketplace');
+    return (data.deals || []).map((d) => ({
+      ...dealFromApi(d),
+      seller: d.seller || null,
+    }));
+  },
 };
 
 // ─── public (unauthenticated) ─────────────────────────────────────────────
-// These hit /api/deallink/public/* and use plain fetch so Supabase auth
-// headers are never attached (avoids leaking a session token to the
-// public read surface). Honors the same VITE_API_BASE_URL as axios so
-// cross-origin production deployments work.
 const PUBLIC_BASE = `${API_BASE}/deallink/public`;
 
 export const PublicAPI = {

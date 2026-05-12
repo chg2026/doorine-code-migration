@@ -2,29 +2,17 @@ import React, { createContext, useContext, useEffect, useReducer, useRef, useCal
 import { useAuth } from './context/AuthContext.jsx';
 import { DealLinkAPI } from './lib/deallink-api.js';
 
-// ─── STORE ────────────────────────────────────────────────────────────────
-// Replaces the original localStorage-backed reducer. The reducer is still
-// the source of truth for the UI, but every mutation now flows through
-// the Express API (`/api/deallink/*`) and is hydrated from Supabase.
-//
-// Pages keep dispatching the same action shapes they always have
-// (`add_deal`, `update_deal`, `update_profile`, `update_onboarding`,
-// `add_deals`, `remove_deal`, `sign_out`) — `dispatch` is wrapped so each
-// of those triggers an optimistic local update + the corresponding API
-// call. On API failure we toast and refetch the affected list to recover.
-
 const StoreContext = createContext(null);
 
 const EMPTY_PROFILE = {
   handle: '', name: '', initials: '', bio: '', city: '', email: '',
-  featuredId: null, onboarding: {},
+  featuredId: null, onboarding: {}, marketplaceOptIn: false,
 };
 
 function defaultState() {
   return {
     profile: { ...EMPTY_PROFILE },
-    deals: [],
-    leads: [],
+    deals: [], leads: [], buyers: [], offers: [],
     onboarding: { claimed: false, addedDeal: false, uploadedPhotos: false, shared: false },
     auth: { signedIn: false },
     loaded: false,
@@ -40,29 +28,27 @@ function reducer(state, action) {
         profile: action.profile || { ...EMPTY_PROFILE },
         deals: action.deals || [],
         leads: action.leads || [],
+        buyers: action.buyers || [],
+        offers: action.offers || [],
         onboarding: { ...state.onboarding, ...(action.profile?.onboarding || {}) },
         auth: { signedIn: !!action.signedIn },
         loaded: true,
         error: null,
       };
-    case 'set_auth':
-      return { ...state, auth: { signedIn: !!action.signedIn } };
+    case 'set_auth': return { ...state, auth: { signedIn: !!action.signedIn } };
     case 'set_profile':
       return {
         ...state,
         profile: { ...state.profile, ...action.profile },
         onboarding: { ...state.onboarding, ...(action.profile?.onboarding || {}) },
       };
-    case 'set_deals':
-      return { ...state, deals: action.deals };
-    case 'set_leads':
-      return { ...state, leads: action.leads };
-    case '_optimistic_add_deal':
-      return { ...state, deals: [action.deal, ...state.deals] };
-    case '_optimistic_add_deals':
-      return { ...state, deals: [...action.deals, ...state.deals] };
-    case '_optimistic_update_deal':
-      return { ...state, deals: state.deals.map((d) => d.id === action.id ? { ...d, ...action.patch } : d) };
+    case 'set_deals':   return { ...state, deals: action.deals };
+    case 'set_leads':   return { ...state, leads: action.leads };
+    case 'set_buyers':  return { ...state, buyers: action.buyers };
+    case 'set_offers':  return { ...state, offers: action.offers };
+    case '_optimistic_add_deal':   return { ...state, deals: [action.deal, ...state.deals] };
+    case '_optimistic_add_deals':  return { ...state, deals: [...action.deals, ...state.deals] };
+    case '_optimistic_update_deal':return { ...state, deals: state.deals.map((d) => d.id === action.id ? { ...d, ...action.patch } : d) };
     case '_optimistic_remove_deal':
       return {
         ...state,
@@ -75,14 +61,16 @@ function reducer(state, action) {
         profile: { ...state.profile, ...action.patch },
         onboarding: action.patch.onboarding ? { ...state.onboarding, ...action.patch.onboarding } : state.onboarding,
       };
-    case '_replace_deal':
-      return { ...state, deals: state.deals.map((d) => d.id === action.tempId ? action.deal : d) };
-    case 'reset':
-      return defaultState();
-    case 'set_error':
-      return { ...state, error: action.error };
-    default:
-      return state;
+    case '_replace_deal':  return { ...state, deals: state.deals.map((d) => d.id === action.tempId ? action.deal : d) };
+    case '_optimistic_add_buyer':   return { ...state, buyers: [action.buyer, ...state.buyers] };
+    case '_optimistic_update_buyer':return { ...state, buyers: state.buyers.map((b) => b.id === action.id ? { ...b, ...action.patch } : b) };
+    case '_optimistic_remove_buyer':return { ...state, buyers: state.buyers.filter((b) => b.id !== action.id) };
+    case '_optimistic_add_offer':   return { ...state, offers: [action.offer, ...state.offers] };
+    case '_optimistic_update_offer':return { ...state, offers: state.offers.map((o) => o.id === action.id ? { ...o, ...action.patch } : o) };
+    case '_optimistic_remove_offer':return { ...state, offers: state.offers.filter((o) => o.id !== action.id) };
+    case 'reset':       return defaultState();
+    case 'set_error':   return { ...state, error: action.error };
+    default:            return state;
   }
 }
 
@@ -95,9 +83,6 @@ export function StoreProvider({ children }) {
   const [reload, setReload] = useState(0);
   const errorRef = useRef(null);
 
-  // Stable primitives derived from auth — used as dep-array values below so
-  // the hydration effect doesn't re-run on every render caused by entitlements
-  // being a new array reference after each fetchMe() call.
   const authUserId = auth.user?.id ?? null;
   const deallinkAccess = auth.hasProductAccess('deallink');
 
@@ -107,65 +92,43 @@ export function StoreProvider({ children }) {
     rawDispatch({ type: 'set_error', error: msg });
   }, []);
 
-  // Hydrate when auth + entitlement are ready. If the user lacks the
-  // deallink entitlement, AccessDenied renders before this provider's
-  // children mount real admin UI, so we don't try to hit /api/deallink.
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       if (auth.loading) return;
-      if (!auth.user) {
-        rawDispatch({ type: 'reset' });
-        return;
-      }
+      if (!auth.user) { rawDispatch({ type: 'reset' }); return; }
       if (!auth.hasProductAccess('deallink')) {
-        // Mark loaded so AccessDenied has a known state to render against.
-        rawDispatch({ type: 'hydrate', signedIn: true, profile: null, deals: [], leads: [] });
+        rawDispatch({ type: 'hydrate', signedIn: true, profile: null, deals: [], leads: [], buyers: [], offers: [] });
         return;
       }
       try {
-        const [profile, deals, leads] = await Promise.all([
+        const [profile, deals, leads, buyers, offers] = await Promise.all([
           DealLinkAPI.getProfile(),
           DealLinkAPI.listDeals(),
           DealLinkAPI.listLeads(),
+          DealLinkAPI.listBuyers().catch(() => []),
+          DealLinkAPI.listOffers().catch(() => []),
         ]);
         if (cancelled) return;
-        rawDispatch({ type: 'hydrate', signedIn: true, profile, deals, leads });
+        rawDispatch({ type: 'hydrate', signedIn: true, profile, deals, leads, buyers, offers });
       } catch (e) {
         if (cancelled) return;
         handleError(e, 'Failed to load Deal Link data');
-        rawDispatch({ type: 'hydrate', signedIn: true, profile: null, deals: [], leads: [] });
+        rawDispatch({ type: 'hydrate', signedIn: true, profile: null, deals: [], leads: [], buyers: [], offers: [] });
       }
     }
-
     load();
     return () => { cancelled = true; };
   }, [auth.loading, authUserId, deallinkAccess, reload, handleError]);
 
-  const refetchDeals = useCallback(async () => {
-    try {
-      const deals = await DealLinkAPI.listDeals();
-      rawDispatch({ type: 'set_deals', deals });
-    } catch (e) { handleError(e); }
-  }, [handleError]);
+  const refetchDeals  = useCallback(async () => { try { const d = await DealLinkAPI.listDeals();  rawDispatch({ type: 'set_deals',  deals: d  }); } catch (e) { handleError(e); } }, [handleError]);
+  const refetchLeads  = useCallback(async () => { try { const d = await DealLinkAPI.listLeads();  rawDispatch({ type: 'set_leads',  leads: d  }); } catch (e) { handleError(e); } }, [handleError]);
+  const refetchBuyers = useCallback(async () => { try { const d = await DealLinkAPI.listBuyers(); rawDispatch({ type: 'set_buyers', buyers: d }); } catch (e) { handleError(e); } }, [handleError]);
+  const refetchOffers = useCallback(async () => { try { const d = await DealLinkAPI.listOffers(); rawDispatch({ type: 'set_offers', offers: d }); } catch (e) { handleError(e); } }, [handleError]);
 
-  const refetchLeads = useCallback(async () => {
-    try {
-      const leads = await DealLinkAPI.listLeads();
-      rawDispatch({ type: 'set_leads', leads });
-    } catch (e) { handleError(e); }
-  }, [handleError]);
-
-  // Wrapped dispatch — keeps the page-side action contract identical to
-  // the localStorage version. Each mutating action does an optimistic
-  // local apply, then fires the API call. On error we refetch.
   const dispatch = useCallback(async (action) => {
     switch (action.type) {
-      case 'sign_in':
-        // Real sign-in happens in the Login page via supabase.auth. This
-        // shim is kept so legacy dispatch sites still compile.
-        return;
+      case 'sign_in': return;
       case 'sign_out':
         try { await auth.signOut(); } catch (e) { handleError(e); }
         return;
@@ -175,10 +138,7 @@ export function StoreProvider({ children }) {
           const updated = { ...state.profile, ...action.patch };
           const p = await DealLinkAPI.putProfile(updated);
           rawDispatch({ type: 'set_profile', profile: p });
-        } catch (e) {
-          handleError(e, 'Failed to save profile');
-          setReload((n) => n + 1);
-        }
+        } catch (e) { handleError(e, 'Failed to save profile'); setReload((n) => n + 1); }
         return;
       }
       case 'update_onboarding': {
@@ -188,72 +148,87 @@ export function StoreProvider({ children }) {
           const updated = { ...state.profile, onboarding: nextOnboarding };
           const p = await DealLinkAPI.putProfile(updated);
           rawDispatch({ type: 'set_profile', profile: p });
-        } catch (e) {
-          handleError(e, 'Failed to update onboarding');
-        }
+        } catch (e) { handleError(e, 'Failed to update onboarding'); }
         return;
       }
       case 'add_deal': {
-        const temp = { id: tempId(), status: 'active', new: true, hideStreet: false, ...action.deal };
+        const temp = { id: tempId(), status: 'New', new: true, hideStreet: false, tags: [], ...action.deal };
         rawDispatch({ type: '_optimistic_add_deal', deal: temp });
         try {
           const created = await DealLinkAPI.createDeal(action.deal);
           rawDispatch({ type: '_replace_deal', tempId: temp.id, deal: created });
-        } catch (e) {
-          handleError(e, 'Failed to add deal');
-          await refetchDeals();
-        }
+        } catch (e) { handleError(e, 'Failed to add deal'); await refetchDeals(); }
         return;
       }
       case 'add_deals': {
-        const stamped = action.deals.map((d) => ({ id: tempId(), status: 'active', new: true, hideStreet: false, ...d }));
+        const stamped = action.deals.map((d) => ({ id: tempId(), status: 'New', new: true, hideStreet: false, tags: [], ...d }));
         rawDispatch({ type: '_optimistic_add_deals', deals: stamped });
-        try {
-          await DealLinkAPI.createDeals(action.deals);
-          await refetchDeals();
-        } catch (e) {
-          handleError(e, 'Bulk import failed');
-          await refetchDeals();
-        }
+        try { await DealLinkAPI.createDeals(action.deals); await refetchDeals(); }
+        catch (e) { handleError(e, 'Bulk import failed'); await refetchDeals(); }
         return;
       }
       case 'update_deal': {
         rawDispatch({ type: '_optimistic_update_deal', id: action.id, patch: action.patch });
-        // tempIds aren't on the server yet; let the create complete first.
         if (String(action.id).startsWith('tmp-')) return;
         try {
           const updated = await DealLinkAPI.updateDeal(action.id, action.patch);
           rawDispatch({ type: '_replace_deal', tempId: action.id, deal: updated });
-        } catch (e) {
-          handleError(e, 'Failed to save deal');
-          await refetchDeals();
-        }
+        } catch (e) { handleError(e, 'Failed to save deal'); await refetchDeals(); }
         return;
       }
       case 'remove_deal': {
         rawDispatch({ type: '_optimistic_remove_deal', id: action.id });
         if (String(action.id).startsWith('tmp-')) return;
-        try {
-          await DealLinkAPI.deleteDeal(action.id);
-        } catch (e) {
-          handleError(e, 'Failed to delete deal');
-          await refetchDeals();
-        }
+        try { await DealLinkAPI.deleteDeal(action.id); }
+        catch (e) { handleError(e, 'Failed to delete deal'); await refetchDeals(); }
         return;
       }
-      // NOTE: There is intentionally no `add_lead` action. Public lead
-      // capture goes through `PublicAPI.submitLead` from the public
-      // pages directly (PublicProfile, DealDetail) — those forms run
-      // without a store/StoreProvider context. Authenticated admin code
-      // never creates leads, only reads them via `state.leads`. If you
-      // need to add a lead from inside the admin app, call the API
-      // directly and refetch.
+      case 'add_buyer': {
+        const temp = { id: tempId(), status: 'Active', buyerType: 'Cash Buyer', markets: [], propertyTypes: [], minPrice: 0, maxPrice: 0, ...action.buyer };
+        rawDispatch({ type: '_optimistic_add_buyer', buyer: temp });
+        try { await DealLinkAPI.createBuyer(action.buyer); await refetchBuyers(); }
+        catch (e) { handleError(e, 'Failed to add buyer'); await refetchBuyers(); }
+        return;
+      }
+      case 'update_buyer': {
+        rawDispatch({ type: '_optimistic_update_buyer', id: action.id, patch: action.patch });
+        if (String(action.id).startsWith('tmp-')) return;
+        try { await DealLinkAPI.updateBuyer(action.id, action.patch); }
+        catch (e) { handleError(e, 'Failed to save buyer'); await refetchBuyers(); }
+        return;
+      }
+      case 'remove_buyer': {
+        rawDispatch({ type: '_optimistic_remove_buyer', id: action.id });
+        if (String(action.id).startsWith('tmp-')) return;
+        try { await DealLinkAPI.deleteBuyer(action.id); }
+        catch (e) { handleError(e, 'Failed to delete buyer'); await refetchBuyers(); }
+        return;
+      }
+      case 'add_offer': {
+        const temp = { id: tempId(), status: 'Pending', amount: 0, ...action.offer };
+        rawDispatch({ type: '_optimistic_add_offer', offer: temp });
+        try { await DealLinkAPI.createOffer(action.offer); await refetchOffers(); }
+        catch (e) { handleError(e, 'Failed to add offer'); await refetchOffers(); }
+        return;
+      }
+      case 'update_offer': {
+        rawDispatch({ type: '_optimistic_update_offer', id: action.id, patch: action.patch });
+        if (String(action.id).startsWith('tmp-')) return;
+        try { await DealLinkAPI.updateOffer(action.id, action.patch); }
+        catch (e) { handleError(e, 'Failed to save offer'); await refetchOffers(); }
+        return;
+      }
+      case 'remove_offer': {
+        rawDispatch({ type: '_optimistic_remove_offer', id: action.id });
+        if (String(action.id).startsWith('tmp-')) return;
+        try { await DealLinkAPI.deleteOffer(action.id); }
+        catch (e) { handleError(e, 'Failed to delete offer'); await refetchOffers(); }
+        return;
+      }
       default:
-        // Unknown actions fall through to the raw reducer (useful for
-        // future additions and tests).
         rawDispatch(action);
     }
-  }, [auth, state.profile, state.onboarding, handleError, refetchDeals, refetchLeads]);
+  }, [auth, state.profile, state.onboarding, handleError, refetchDeals, refetchLeads, refetchBuyers, refetchOffers]);
 
   return (
     <StoreContext.Provider value={{ state, dispatch, refresh: () => setReload((n) => n + 1) }}>
@@ -268,7 +243,6 @@ export function useStore() {
   return ctx;
 }
 
-// Toast hook — unchanged from the original prototype.
 export function useToast() {
   const [msg, setMsg] = React.useState(null);
   const timer = useRef(null);
@@ -277,6 +251,10 @@ export function useToast() {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setMsg(null), 2400);
   }, []);
-  const node = msg ? <div className="toast">{msg}</div> : null;
+  const node = msg ? (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-slate-700 text-white text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+      {msg}
+    </div>
+  ) : null;
   return { show, node };
 }

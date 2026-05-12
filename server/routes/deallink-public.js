@@ -80,7 +80,7 @@ router.get('/:handle', async (req, res) => {
     .from('deallink_deals')
     .select('*')
     .eq('account_id', profile.account_id)
-    .eq('status', 'active')
+    .in('status', ['New', 'Marketed', 'Under Contract'])
     .order('created_at', { ascending: false })
 
   if (dErr) return res.status(500).json({ error: dErr.message })
@@ -109,7 +109,7 @@ router.get('/:handle/:dealId', async (req, res) => {
     .select('*')
     .eq('account_id', profile.account_id)
     .eq('id', req.params.dealId)
-    .eq('status', 'active')
+    .in('status', ['New', 'Marketed', 'Under Contract'])
     .maybeSingle()
 
   if (dErr) return res.status(500).json({ error: dErr.message })
@@ -149,7 +149,8 @@ router.post('/:handle/leads', express.json(), async (req, res) => {
       .eq('id', dealId)
       .maybeSingle()
     if (dErr) return res.status(500).json({ error: dErr.message })
-    if (!deal || deal.account_id !== profile.account_id || deal.status !== 'active') {
+    const PUBLIC_STATUSES = new Set(['New', 'Marketed', 'Under Contract'])
+    if (!deal || deal.account_id !== profile.account_id || !PUBLIC_STATUSES.has(deal.status)) {
       return res.status(400).json({ error: 'Invalid deal_id for this profile.' })
     }
     dealId = deal.id
