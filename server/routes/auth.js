@@ -343,7 +343,9 @@ router.post('/phone/send-otp', async (req, res) => {
 // Returns { session, isNewUser: bool }. Runs the same 5-step account creation
 // as /signup for first-time phone users.
 router.post('/phone/verify-otp', async (req, res) => {
-  const { phone, code } = req.body
+  const { phone, code, product_code: rawProductCode } = req.body
+  const product_code = (rawProductCode || 'chg').trim().toLowerCase()
+
   if (!phone || !code) {
     return res.status(400).json({ error: 'Phone and code are required.' })
   }
@@ -377,14 +379,14 @@ router.post('/phone/verify-otp', async (req, res) => {
   let roleId = null
 
   try {
-    const { data: chgProduct, error: productError } = await supabaseAdmin
+    const { data: product, error: productError } = await supabaseAdmin
       .from('products')
       .select('id')
-      .eq('code', 'chg')
+      .eq('code', product_code)
       .single()
 
-    if (productError || !chgProduct?.id) {
-      throw new Error('CHG product row missing — cannot complete signup')
+    if (productError || !product?.id) {
+      throw new Error(`Product '${product_code}' not found — cannot complete signup`)
     }
 
     accountId = crypto.randomUUID()
@@ -397,18 +399,21 @@ router.post('/phone/verify-otp', async (req, res) => {
 
     const { error: roleError } = await supabaseAdmin
       .from('roles')
-      .insert({ id: roleId, name: 'Admin', account_id: accountId, is_system: false, product_id: chgProduct.id })
+      .insert({ id: roleId, name: 'Admin', account_id: accountId, is_system: false, product_id: product.id })
     if (roleError) throw roleError
 
-    const departments = ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks']
-    const { error: permError } = await supabaseAdmin
-      .from('role_permissions')
-      .insert(departments.map(dept => ({ role_id: roleId, department: dept, permission_level: 'edit', product_id: chgProduct.id })))
-    if (permError) throw permError
+    // Department permissions only apply to the CHG product.
+    if (product_code === 'chg') {
+      const departments = ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks']
+      const { error: permError } = await supabaseAdmin
+        .from('role_permissions')
+        .insert(departments.map(dept => ({ role_id: roleId, department: dept, permission_level: 'edit', product_id: product.id })))
+      if (permError) throw permError
+    }
 
     const { error: entitlementError } = await supabaseAdmin
       .from('account_products')
-      .insert({ account_id: accountId, product_id: chgProduct.id, plan: 'starter', status: 'active', started_at: new Date().toISOString() })
+      .insert({ account_id: accountId, product_id: product.id, plan: 'starter', status: 'active', started_at: new Date().toISOString() })
     if (entitlementError) throw entitlementError
 
     const { error: profileError } = await supabaseAdmin
