@@ -80,7 +80,6 @@ router.get('/:handle', async (req, res) => {
     .from('deallink_deals')
     .select('*')
     .eq('account_id', profile.account_id)
-    .eq('status', 'active')
     .order('created_at', { ascending: false })
 
   if (dErr) return res.status(500).json({ error: dErr.message })
