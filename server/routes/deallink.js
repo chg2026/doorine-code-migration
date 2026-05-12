@@ -25,6 +25,10 @@ function accountIdFor(req) {
   return req.account_filter || req.user?.account_id || null
 }
 
+function maskAddr(addr) {
+  return String(addr || '').replace(/^\d+\s+/, '— ')
+}
+
 // ─── PROFILE ──────────────────────────────────────────────────────────────
 // Single row per account. GET returns null if the user hasn't claimed a
 // handle yet — front-end then routes to /onboarding.
@@ -49,7 +53,7 @@ router.put('/profile', async (req, res) => {
   const accountId = accountIdFor(req)
   if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
 
-  const allowed = ['handle', 'name', 'initials', 'bio', 'city', 'email', 'featured_id', 'onboarding']
+  const allowed = ['handle', 'name', 'initials', 'bio', 'city', 'email', 'featured_id', 'onboarding', 'marketplace_opt_in']
   const patch = { account_id: accountId }
   for (const k of allowed) if (k in req.body) patch[k] = req.body[k]
 
@@ -96,38 +100,6 @@ router.get('/deals', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message })
   res.json({ deals: data || [] })
-
-  // GET /api/deallink/marketplace
-  // Returns deals from ANY account whose profile has marketplace_opt_in=true.
-  router.get('/marketplace', async (req, res) => {
-    const { data: optedProfiles, error: pErr } = await req.db
-      .from('deallink_profiles')
-      .select('account_id, handle, name, initials, city')
-      .eq('marketplace_opt_in', true)
-    if (pErr) return res.status(500).json({ error: pErr.message })
-    if (!optedProfiles?.length) return res.json({ deals: [] })
-
-    const accountIds = optedProfiles.map((p) => p.account_id)
-    const profileByAccount = Object.fromEntries(optedProfiles.map((p) => [p.account_id, p]))
-
-    const { data: deals, error: dErr } = await req.db
-      .from('deallink_deals')
-      .select('*')
-      .in('account_id', accountIds)
-      .in('status', ['New', 'Marketed'])
-      .order('created_at', { ascending: false })
-    if (dErr) return res.status(500).json({ error: dErr.message })
-
-    const out = (deals || []).map((d) => {
-      const seller = profileByAccount[d.account_id]
-      return {
-        ...d,
-        addr: d.hide_street ? String(d.addr || '').replace(/^\d+\s+/, '— ') : d.addr,
-        seller: seller ? { handle: seller.handle, name: seller.name, initials: seller.initials, city: seller.city } : null,
-      }
-    })
-    res.json({ deals: out })
-  })
 })
 
 router.post('/deals', async (req, res) => {
@@ -136,7 +108,7 @@ router.post('/deals', async (req, res) => {
   if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
 
   const row = { ...pickDeal(req.body), account_id: accountId }
-  if (!row.status) row.status = 'active'
+  if (!row.status) row.status = 'New'
 
   const { data, error } = await db.from('deallink_deals').insert(row).select().single()
   if (error) return res.status(500).json({ error: error.message })
@@ -204,6 +176,44 @@ router.get('/leads', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message })
   res.json({ leads: data || [] })
+})
+
+// ─── MARKETPLACE ─────────────────────────────────────────────────────────
+// Cross-wholesaler deal feed. Auth required + product entitlement, but
+// returns deals from ANY account whose profile has marketplace_opt_in=true.
+// We never expose account_id; profile handle/name only.
+
+router.get('/marketplace', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+
+  const { data: profiles, error: pErr } = await db
+    .from('deallink_profiles')
+    .select('account_id, handle, name, initials, city')
+    .eq('marketplace_opt_in', true)
+  if (pErr) return res.status(500).json({ error: pErr.message })
+
+  const byAccount = new Map((profiles || []).map((p) => [p.account_id, p]))
+  if (byAccount.size === 0) return res.json({ deals: [] })
+
+  const { data: deals, error: dErr } = await db
+    .from('deallink_deals')
+    .select('*')
+    .in('account_id', Array.from(byAccount.keys()))
+    .in('status', ['New', 'Marketed', 'Under Contract'])
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (dErr) return res.status(500).json({ error: dErr.message })
+
+  res.json({
+    deals: (deals || []).map((d) => {
+      const seller = byAccount.get(d.account_id) || {}
+      return {
+        ...d,
+        addr: d.hide_street ? maskAddr(d.addr) : d.addr,
+        seller: { handle: seller.handle, name: seller.name, initials: seller.initials, city: seller.city },
+      }
+    }),
+  })
 })
 
 module.exports = router
