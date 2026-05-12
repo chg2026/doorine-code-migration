@@ -116,24 +116,36 @@ async function loadAccountProductCodes(accountId: string | null): Promise<string
   if (!accountId) return [];
   try {
     const admin = getSupabaseAdminClient();
-    const { data, error } = await admin
+
+    const { data: apRows, error: apError } = await admin
       .from("account_products")
-      .select("products ( code, status )")
+      .select("product_id")
       .eq("account_id", accountId);
-    if (error) {
-      console.warn("[auth] account_products lookup failed:", error.message);
+    if (apError) {
+      console.warn("[auth] account_products lookup failed:", apError.message);
       return [];
     }
-    type ProductRow = { code: string | null; status: string | null };
-    type Row = { products: ProductRow | ProductRow[] | null };
-    const rows = (data ?? []) as Row[];
+    const productIds = Array.from(
+      new Set(
+        ((apRows ?? []) as Array<{ product_id: string | null }>)
+          .map((r) => r.product_id)
+          .filter((id): id is string => !!id),
+      ),
+    );
+    if (productIds.length === 0) return [];
+
+    const { data: prodRows, error: prodError } = await admin
+      .from("products")
+      .select("code, status")
+      .in("id", productIds);
+    if (prodError) {
+      console.warn("[auth] products lookup failed:", prodError.message);
+      return [];
+    }
     const codes = new Set<string>();
-    for (const row of rows) {
-      const products = Array.isArray(row.products) ? row.products : row.products ? [row.products] : [];
-      for (const p of products) {
-        if (p?.code && (p.status ?? "active") === "active") {
-          codes.add(p.code);
-        }
+    for (const p of (prodRows ?? []) as Array<{ code: string | null; status: string | null }>) {
+      if (p.code && (p.status ?? "active") === "active") {
+        codes.add(p.code);
       }
     }
     return Array.from(codes);
