@@ -1,0 +1,41 @@
+Create server/routes/team.js with invite management endpoints. Mount it in server/index.js at /api/team.
+
+Endpoint 1: POST /api/team/invite
+- Requires auth
+- Accepts { email, role } in request body (role is 'admin' or 'viewer')
+- Validates email format
+- Determines invite type: if invited email domain matches the account owner's email domain → type = 'member', otherwise type = 'guest'
+- Checks seat limits before creating invite:
+  - For type 'member': count existing members (accepted invites + the owner) against seat_limit from account_products. If plan is 'personal', reject with { error: 'upgrade_required', message: 'Team members require a Team plan.' }
+  - For type 'guest': count existing accepted guest invites against guest_limit. Reject if at limit with { error: 'guest_limit_reached' }
+- Check if email is already a member of this account — reject if so
+- Insert into invites table with 7-day expiry
+- Send invite email via Supabase (use supabaseAdmin.auth.admin.inviteUserByEmail or just return the invite token for now if email sending is complex)
+- Returns { invite: { id, email, type, role, token, expires_at } }
+
+Endpoint 2: GET /api/team/members
+- Requires auth
+- Returns all user_profiles for this account plus all pending invites
+- Returns { members: [...], pending_invites: [...] }
+
+Endpoint 3: DELETE /api/team/members/:userId
+- Requires auth + must be account admin
+- Cannot remove yourself
+- Updates user_profiles status to 'suspended' for that userId within the account
+- Returns { ok: true }
+
+Endpoint 4: DELETE /api/team/invites/:inviteId
+- Requires auth + must be account admin
+- Deletes the invite
+- Returns { ok: true }
+
+Endpoint 5: POST /api/team/accept-invite
+- Public (no auth required)
+- Accepts { token, password, full_name } for new users OR { token } for existing users
+- Validates token exists, not expired, not already accepted
+- If user with that email already exists in Supabase auth: link them to the account by updating their user_profiles.account_id
+- If new user: create Supabase auth user with email+password, create user_profiles row linked to the account, grant the product entitlement matching the account's existing products
+- Mark invite as accepted (set accepted_at = NOW())
+- Returns { session } so the frontend can log them in immediately
+
+Only edit files inside server/. Do not touch any other folder.

@@ -24,6 +24,7 @@ const { requireDepartment, requireProduct, scopeToAccount } = require('./middlew
 //   /api/users   — self-service profile; every authenticated user needs it regardless of product
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/billing', require('./routes/billing'))
+app.use('/api/team', require('./routes/team'))
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Gold Bridge API is running', version: '2.0.0', timestamp: new Date().toISOString() })
 })
