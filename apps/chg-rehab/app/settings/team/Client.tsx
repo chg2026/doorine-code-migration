@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-
-const API_BASE = "https://rei-code-dev.replit.app";
+import { goldBridgeFetch } from "@/lib/goldBridgeApi";
+import UpgradeModal from "@/components/UpgradeModal";
 
 type TeamRole = "Admin" | "Viewer";
 
@@ -43,42 +42,7 @@ type MeResponse = {
   billing?: Billing;
 };
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const supabase = getSupabaseBrowserClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const authHeaders: Record<string, string> = session?.access_token
-    ? { Authorization: `Bearer ${session.access_token}` }
-    : {};
-
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include",
-    ...init,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...authHeaders,
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const j = (await res.json()) as { error?: string; message?: string };
-      detail = j.error || j.message || "";
-    } catch {
-      try {
-        detail = await res.text();
-      } catch {
-        /* noop */
-      }
-    }
-    throw new Error(detail || `Request failed (${res.status})`);
-  }
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
-}
+const apiFetch = goldBridgeFetch;
 
 function Toast({ message }: { message: string | null }) {
   if (!message) return null;
@@ -174,11 +138,30 @@ export default function TeamSettingsClient({
   const [inviting, setInviting] = useState(false);
 
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [showUpgradedBanner, setShowUpgradedBanner] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("upgraded") === "true") {
+      setShowUpgradedBanner(true);
+      params.delete("upgraded");
+      const qs = params.toString();
+      const next = window.location.pathname + (qs ? `?${qs}` : "");
+      window.history.replaceState({}, "", next);
+    }
+  }, []);
 
   const isPersonalPlan = useMemo(() => {
     const plan = (billing.plan ?? "").toLowerCase();
     return plan === "personal" || plan === "free";
   }, [billing.plan]);
+
+  const showUpgradeCta = useMemo(() => {
+    const plan = (billing.plan ?? "").toLowerCase();
+    return plan === "personal" && (billing.seat_limit ?? 0) === 0;
+  }, [billing.plan, billing.seat_limit]);
 
   const showToast = useCallback((m: string) => {
     setToast(m);
@@ -284,6 +267,41 @@ export default function TeamSettingsClient({
         {userEmail ? ` · ${userEmail}` : ""} · {role}
         {billing.plan ? ` · ${billing.plan} plan` : ""}
       </div>
+
+      {showUpgradedBanner && (
+        <div
+          style={{
+            border: "1px solid #bbf7d0",
+            background: "#f0fdf4",
+            color: "#166534",
+            padding: "10px 12px",
+            borderRadius: 6,
+            fontSize: 13,
+            marginBottom: 16,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <span>You are now on the Team plan! Your team seats are ready.</span>
+          <button
+            onClick={() => setShowUpgradedBanner(false)}
+            aria-label="Dismiss"
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: 18,
+              lineHeight: 1,
+              color: "#166534",
+              cursor: "pointer",
+              padding: 4,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {error && (
         <div
@@ -434,7 +452,7 @@ export default function TeamSettingsClient({
               background: "var(--bg-soft, #fafafa)",
             }}
           >
-            {isPersonalPlan ? (
+            {showUpgradeCta || isPersonalPlan ? (
               <div
                 style={{
                   display: "flex",
@@ -445,20 +463,22 @@ export default function TeamSettingsClient({
                 }}
               >
                 <span>Team members require a Team plan.</span>
-                <a
-                  href="/admin?tab=billing"
+                <button
+                  type="button"
+                  onClick={() => setUpgradeOpen(true)}
                   style={{
                     padding: "6px 14px",
                     fontSize: 12,
                     fontWeight: 500,
                     borderRadius: 4,
+                    border: "1px solid #111827",
                     background: "#111827",
                     color: "#fff",
-                    textDecoration: "none",
+                    cursor: "pointer",
                   }}
                 >
-                  Upgrade
-                </a>
+                  Upgrade to Team
+                </button>
               </div>
             ) : (
               <form
@@ -615,6 +635,14 @@ export default function TeamSettingsClient({
       </div>
 
       <Toast message={toast} />
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        currentPlan={billing.plan}
+        successUrl="https://chg.neuroaios.ai/settings/team?upgraded=true"
+        cancelUrl="https://chg.neuroaios.ai/settings/team"
+      />
     </div>
   );
 }

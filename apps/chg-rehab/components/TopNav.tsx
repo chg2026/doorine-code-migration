@@ -18,6 +18,7 @@ const BASE_MODULES: { href: string; label: string }[] = [
   { href: "/contractor-portal", label: "Contractor Portal" },
   { href: "/investor-portal", label: "Investor Portal" },
   { href: "/settings/team", label: "Team" },
+  { href: "/billing", label: "Billing" },
   { href: "/admin", label: "Admin Settings" },
 ];
 
