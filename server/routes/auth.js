@@ -231,11 +231,61 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
 
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const profile = req.user.profile
+    const profile    = req.user.profile
+    const accountId  = req.user.account_id
+
     // Derive plan_tier from the CHG entitlement now that accounts.plan_tier
     // has been dropped. Keeps the response shape stable for client code that
     // reads profile.plan_tier (Profile.jsx etc.).
     const chgEntitlement = (req.user.entitlements || []).find(e => e.code === 'chg')
+
+    // Fetch billing data in parallel — three independent queries.
+    const [apResult, seatsResult, invitesResult] = await Promise.all([
+      // Billing limits from the first active account_products row.
+      supabaseAdmin
+        .from('account_products')
+        .select('plan, seat_limit, guest_limit')
+        .eq('account_id', accountId)
+        .eq('status', 'active')
+        .limit(1)
+        .maybeSingle(),
+
+      // Active seat count — user_profiles rows for this account.
+      supabaseAdmin
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('account_id', accountId)
+        .eq('status', 'active'),
+
+      // Accepted invite counts broken down by type.
+      supabaseAdmin
+        .from('invites')
+        .select('type', { count: 'exact' })
+        .eq('account_id', accountId)
+        .eq('status', 'accepted'),
+    ])
+
+    const ap = apResult.data || {}
+
+    // Tally guests_used and members_used from the accepted invites rows.
+    let guests_used  = 0
+    let members_used = 0
+    if (invitesResult.data) {
+      for (const row of invitesResult.data) {
+        if (row.type === 'guest')  guests_used++
+        else if (row.type === 'member') members_used++
+      }
+    }
+
+    const billing = {
+      plan:         ap.plan        ?? null,
+      seat_limit:   ap.seat_limit  ?? null,
+      guest_limit:  ap.guest_limit ?? null,
+      seats_used:   seatsResult.count  ?? 0,
+      guests_used,
+      members_used,
+    }
+
     const result = {
       profile: {
         id: profile.id,
@@ -257,6 +307,7 @@ router.get('/me', requireAuth, async (req, res) => {
       },
       permissions: req.user.permissions,
       entitlements: req.user.entitlements,
+      billing,
     }
 
     res.json(result)
