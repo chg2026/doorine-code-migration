@@ -6,7 +6,27 @@ require('dotenv').config()
 const app = express()
 const PORT = process.env.PORT || 8080
 
-app.use(cors())
+const ALLOWED_ORIGINS = [
+  'https://chg.neuroaios.ai',
+  'https://deallink.neuroaios.ai',
+  'https://investorportal.neuroaios.ai',
+  'https://contractorportal.neuroaios.ai',
+]
+const DEV_ORIGIN_RE = /^https:\/\/[a-zA-Z0-9-]+\.(replit\.dev|replit\.app)$/
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. server-to-server, curl, Stripe webhooks).
+    if (!origin) return callback(null, true)
+    if (ALLOWED_ORIGINS.includes(origin) || DEV_ORIGIN_RE.test(origin)) {
+      return callback(null, true)
+    }
+    callback(new Error(`CORS: origin not allowed — ${origin}`))
+  },
+  credentials:     true,
+  allowedHeaders:  ['Content-Type', 'Authorization'],
+  methods:         ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+}))
 
 // Stripe webhook requires the raw request body for signature verification.
 // Register express.raw() for ONLY that path before the global express.json()
