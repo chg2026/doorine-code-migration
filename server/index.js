@@ -7,6 +7,12 @@ const app = express()
 const PORT = process.env.PORT || 8080
 
 app.use(cors())
+
+// Stripe webhook requires the raw request body for signature verification.
+// Register express.raw() for ONLY that path before the global express.json()
+// middleware so the body stream isn't consumed and reparsed as JSON first.
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }))
+
 app.use(express.json())
 
 const { requireAuth } = require('./middleware/auth')
@@ -17,6 +23,7 @@ const { requireDepartment, requireProduct, scopeToAccount } = require('./middlew
 //   /api/admin   — super-admin console; manages entitlements themselves
 //   /api/users   — self-service profile; every authenticated user needs it regardless of product
 app.use('/api/auth', require('./routes/auth'))
+app.use('/api/billing', require('./routes/billing'))
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Gold Bridge API is running', version: '2.0.0', timestamp: new Date().toISOString() })
 })
