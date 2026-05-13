@@ -640,7 +640,7 @@ export default function TeamSettingsClient({
         open={upgradeOpen}
         onClose={() => setUpgradeOpen(false)}
         currentPlan={billing.plan}
-        successUrl="https://chg.neuroaios.ai/settings/team?upgraded=true"
+        successUrl="https://chg.neuroaios.ai/billing/success?session_id={CHECKOUT_SESSION_ID}"
         cancelUrl="https://chg.neuroaios.ai/settings/team"
       />
     </div>

@@ -272,7 +272,7 @@ export default function BillingClient({
         open={upgradeOpen}
         onClose={() => setUpgradeOpen(false)}
         currentPlan={billing.plan}
-        successUrl="https://chg.neuroaios.ai/billing?upgraded=true"
+        successUrl="https://chg.neuroaios.ai/billing/success?session_id={CHECKOUT_SESSION_ID}"
         cancelUrl="https://chg.neuroaios.ai/billing"
       />
     </div>
