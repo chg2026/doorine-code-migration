@@ -47,14 +47,30 @@ export const ACCENTS = ['#6C5DD3', '#C77B3A', '#3F7A55', '#D63A6E', '#1F8AA8', '
 export const DEFAULT_THEME = { tone: 'Mist', accent: '#6C5DD3', radius: 20, gradient: false };
 
 export function resolveTheme(profile) {
-  const toneName = TONES[profile?.backgroundType] ? profile.backgroundType : DEFAULT_THEME.tone;
-  const tone = TONES[toneName];
-  const accent = (profile?.backgroundValue && /^#[0-9a-f]{3,8}$/i.test(profile.backgroundValue))
-    ? profile.backgroundValue
-    : DEFAULT_THEME.accent;
+  // Prefer the canonical top-level fields (tone, accentColor, radius,
+  // gradientEnabled). Fall back to the legacy storage shape
+  // (backgroundType / backgroundValue / onboarding.theme) so older saved
+  // profiles keep rendering correctly.
   const themeBag = (profile?.onboarding && profile.onboarding.theme) || {};
-  const radius = Number.isFinite(themeBag.radius) ? Math.max(8, Math.min(36, themeBag.radius)) : DEFAULT_THEME.radius;
-  const gradient = !!themeBag.gradient;
+
+  const toneCandidate = profile?.tone || profile?.backgroundType;
+  const toneName = TONES[toneCandidate] ? toneCandidate : DEFAULT_THEME.tone;
+  const tone = TONES[toneName];
+
+  const accentCandidate = profile?.accentColor || profile?.backgroundValue;
+  const accent = (accentCandidate && /^#[0-9a-f]{3,8}$/i.test(accentCandidate))
+    ? accentCandidate
+    : DEFAULT_THEME.accent;
+
+  const radiusCandidate = Number.isFinite(profile?.radius) ? profile.radius : themeBag.radius;
+  const radius = Number.isFinite(radiusCandidate)
+    ? Math.max(8, Math.min(36, radiusCandidate))
+    : DEFAULT_THEME.radius;
+
+  const gradient = (profile && 'gradientEnabled' in profile)
+    ? !!profile.gradientEnabled
+    : !!themeBag.gradient;
+
   return { toneName, tone, accent, radius, gradient };
 }
 
