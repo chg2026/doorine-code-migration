@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Users, Kanban, FileText, BarChart3, Bell, ChevronRight,
   Menu, X, Zap, Globe, Handshake, UserCheck, Eye, LogOut, ExternalLink, Settings,
-  ListChecks, Upload, Calculator,
+  ListChecks, Upload, Calculator, CreditCard,
 } from 'lucide-react';
 import { useStore } from '../store.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -37,6 +37,9 @@ const navGroups = [
   ]},
   { label: 'Reports', items: [
     { label: 'Analytics', path: '/analytics', icon: BarChart3 },
+  ]},
+  { label: 'Account', items: [
+    { label: 'Billing', path: '/billing', icon: CreditCard },
   ]},
 ];
 

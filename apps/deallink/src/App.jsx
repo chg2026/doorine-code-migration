@@ -26,6 +26,8 @@ import Buyers from './pages/Buyers.jsx';
 import Offers from './pages/Offers.jsx';
 import Analytics from './pages/Analytics.jsx';
 import Marketplace from './pages/Marketplace.jsx';
+import Billing from './pages/Billing.jsx';
+import BillingSuccess from './pages/BillingSuccess.jsx';
 
 import DealBlast from './pages/enterprise/DealBlast.jsx';
 import GodMode from './pages/enterprise/GodMode.jsx';
@@ -80,6 +82,9 @@ export default function App() {
         <Route path="/jv-deals" element={<Admin><ProGate pageTitle="JV Deals"><JVDeals /></ProGate></Admin>} />
         <Route path="/buyer-rental" element={<Admin><ProGate pageTitle="Buyer Rental"><BuyerRental /></ProGate></Admin>} />
         <Route path="/handoff" element={<Admin><ProGate pageTitle="Handoff"><Handoff /></ProGate></Admin>} />
+
+        <Route path="/billing" element={<Admin><Billing /></Admin>} />
+        <Route path="/billing/success" element={<Admin><BillingSuccess /></Admin>} />
 
         <Route path="/p/:handle" element={<PublicProfile />} />
         <Route path="/p/:handle/:dealId" element={<DealDetail />} />
