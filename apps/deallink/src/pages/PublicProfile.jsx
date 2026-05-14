@@ -1,46 +1,25 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Twitter, Linkedin, Instagram, Globe } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Twitter, Instagram, Globe, X } from 'lucide-react';
 import { PublicAPI } from '../lib/deallink-api.js';
 import { initialsOf } from '../lib/utils.js';
+import {
+  NEU_FONT, TONES, neuOut, neuIn, neuBg, shade, hex, resolveTheme,
+} from '../lib/neu.js';
 
-const PALETTE = {
-  bg: '#161b2e',
-  accent: '#F5C518',
-  ink: '#c8cfe8',
-  mute: '#5a6180',
-  inkStrong: '#eef0fa',
-};
-const RAISED_SHADOW = '-5px -5px 12px rgba(255,255,255,0.06), 5px 5px 12px rgba(0,0,0,0.55)';
-const INSET_SHADOW = 'inset -3px -3px 8px rgba(255,255,255,0.06), inset 3px 3px 8px rgba(0,0,0,0.55)';
-const DEAL_INSET = 'inset -2px -2px 6px rgba(255,255,255,0.05), inset 2px 2px 6px rgba(0,0,0,0.55)';
+const SOCIAL_DEFS = [
+  { key: 'instagram', Icon: Instagram, label: 'Instagram' },
+  { key: 'twitter',   Icon: Twitter,   label: 'Twitter' },
+  { key: 'website',   Icon: Globe,     label: 'Website' },
+];
 
-const SOCIAL_ICONS = {
-  twitter: Twitter,
-  linkedin: Linkedin,
-  instagram: Instagram,
-  website: Globe,
-};
-
-function backgroundStyleFor(profile) {
-  const t = profile?.backgroundType || 'solid';
-  const v = profile?.backgroundValue || '';
-  if (t === 'gradient' && v) return { background: v };
-  if (t === 'image' && v) return { background: `center/cover no-repeat url(${v})` };
-  return { background: v || PALETTE.bg };
-}
-
-// Public, unauthenticated wholesaler profile page. Fetches from
-// /api/deallink/public/:handle so RLS + the server's hide_street masking
-// (in routes/deallink-public.js) are the source of truth.
 export default function PublicProfile() {
   const { handle } = useParams();
   const [data, setData] = React.useState({ profile: null, deals: [] });
   const [loading, setLoading] = React.useState(true);
   const [notFound, setNotFound] = React.useState(false);
-  const [filter, setFilter] = React.useState('all');
-  const [view, setView] = React.useState('cards');
-  const [joinOpen, setJoinOpen] = React.useState(false);
+  const [openDealId, setOpenDealId] = React.useState(null);
+  const [leadDealId, setLeadDealId] = React.useState(null);
   const [toast, setToast] = React.useState(null);
 
   function showToast(m) {
@@ -50,509 +29,512 @@ export default function PublicProfile() {
 
   React.useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setNotFound(false);
+    setLoading(true); setNotFound(false);
     PublicAPI.getProfile(handle).then((res) => {
       if (cancelled) return;
       if (!res) { setNotFound(true); setLoading(false); return; }
-      setData(res);
-      setLoading(false);
+      setData(res); setLoading(false);
     }).catch(() => { if (!cancelled) { setNotFound(true); setLoading(false); } });
     return () => { cancelled = true; };
   }, [handle]);
 
+  // Resolve theme from profile (or defaults during loading / 404)
+  const theme = resolveTheme(data.profile);
+  const { tone, accent, radius, gradient } = theme;
+
+  const pageStyle = {
+    minHeight: '100vh',
+    background: neuBg(tone.base, tone.dark, gradient),
+    fontFamily: NEU_FONT,
+    color: tone.ink,
+    padding: '24px 14px 60px',
+  };
+
   if (loading) {
     return (
-      <PageShell>
-        <div style={{ textAlign: 'center', padding: 60, color: PALETTE.mute, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, letterSpacing: 1 }}>
-          Loading…
-        </div>
-      </PageShell>
+      <div style={pageStyle}>
+        <Centered theme={theme} text="Loading…" />
+      </div>
     );
   }
 
   if (notFound || !data.profile) {
     return (
-      <PageShell>
-        <div style={{ textAlign: 'center', padding: 60 }}>
-          <Kicker>Not found</Kicker>
-          <div style={{ fontSize: 24, marginTop: 12, color: PALETTE.inkStrong, fontWeight: 600 }}>@{handle}</div>
-          <div style={{ marginTop: 8, color: PALETTE.mute, fontSize: 13 }}>This profile doesn't exist.</div>
-          <div style={{ marginTop: 20 }}>
-            <Link to="/" style={{ color: PALETTE.accent, fontSize: 13, textDecoration: 'none' }}>← Back home</Link>
-          </div>
-        </div>
-      </PageShell>
+      <div style={pageStyle}>
+        <Centered theme={theme} title={`@${handle}`} text="This profile doesn't exist." />
+      </div>
     );
   }
 
   const profile = data.profile;
-  const visible = data.deals; // server already filters out sold/dead
-  const displayInitials = profile.initials || initialsOf(profile.name || profile.handle || 'A');
-  const links = profile.socialLinks || {};
-  const socialEntries = Object.entries(links).filter(([k, v]) => SOCIAL_ICONS[k] && (v || '').trim());
-
+  const visible = data.deals;
   const featured = visible.find((d) => d.id === profile.featuredId) || null;
   const others = featured ? visible.filter((d) => d.id !== featured.id) : visible;
+  const displayInitials = profile.initials || initialsOf(profile.name || profile.handle || 'A');
+  const links = profile.socialLinks || {};
+  const socialEntries = SOCIAL_DEFS.filter((s) => (links[s.key] || '').trim());
 
-  const filtered = others.filter((d) => {
-    if (filter === 'all') return true;
-    if (filter === 'sfr') return d.type === 'SFR';
-    if (filter === 'mf') return d.type === 'MF' || d.type === 'DUP';
-    if (filter === 'under150') return d.ask < 150000;
-    if (filter === 'vacant') return d.occ === 'Vacant';
-    return true;
-  });
-
-  const uniqueMarkets = new Set(visible.map((d) => d.city).filter(Boolean)).size;
-  const avgAsk = visible.length
-    ? Math.round(visible.reduce((s, d) => s + (Number(d.ask) || 0), 0) / visible.length)
-    : 0;
-
-  const heroBg = backgroundStyleFor(profile);
+  const openDeal = openDealId ? visible.find((d) => d.id === openDealId) : null;
+  const leadDeal = leadDealId ? visible.find((d) => d.id === leadDealId) : null;
 
   return (
-    <PageShell heroBg={heroBg}>
-      {/* Hero — avatar, handle, name, bio, socials, stats */}
-      <section style={{
-        ...heroBg,
-        padding: '36px 22px 28px',
-        textAlign: 'center',
-        color: '#fff',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 10,
-      }}>
-        <div style={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          background: profile.avatarUrl ? `center/cover no-repeat url(${profile.avatarUrl})` : PALETTE.accent,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#1a1208',
-          fontWeight: 800,
-          fontSize: 24,
-          overflow: 'hidden',
-          boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
-        }}>
-          {!profile.avatarUrl && displayInitials}
-        </div>
-        <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: -0.3 }}>@{profile.handle}</div>
-        {profile.name && profile.name !== profile.handle && (
-          <div style={{ fontSize: 13, opacity: 0.78 }}>{profile.name}</div>
-        )}
-        {profile.bio && (
-          <div style={{ fontSize: 13, opacity: 0.85, lineHeight: 1.5, maxWidth: 320 }}>{profile.bio}</div>
-        )}
+    <div style={pageStyle}>
+      <div style={{ width: '100%', maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Identity */}
+        <section style={{ padding: '8px 22px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <Avatar tone={tone} size={84} src={profile.avatarUrl} initials={displayInitials} accent={accent} />
+          <div style={{ fontSize: 18, fontWeight: 700, color: tone.ink, letterSpacing: -0.2 }}>@{profile.handle}</div>
+          {profile.name && profile.name !== profile.handle && (
+            <div style={{ fontSize: 12, color: tone.mute, marginTop: -6 }}>{profile.name}</div>
+          )}
+          {profile.bio && (
+            <div style={{ fontSize: 12, color: tone.mute, textAlign: 'center', maxWidth: 240, lineHeight: 1.5 }}>
+              {profile.bio}
+            </div>
+          )}
 
-        {socialEntries.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {socialEntries.map(([key, url]) => {
-              const Icon = SOCIAL_ICONS[key];
-              return (
-                <a
-                  key={key}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  title={key}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.15)',
-                    backdropFilter: 'blur(6px)',
-                    color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textDecoration: 'none',
-                  }}
-                >
+          {/* Active deals pill (inset) */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            padding: '8px 16px', borderRadius: 999,
+            background: tone.base, boxShadow: neuIn(tone.base, tone.dark, 0.9, 8),
+            fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+            fontSize: 11, color: tone.ink, fontWeight: 600, letterSpacing: 0.4,
+            marginTop: 4,
+          }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: 999,
+              background: accent,
+              boxShadow: `0 0 10px ${accent}, 0 0 4px ${accent}`,
+            }} />
+            {visible.length} active deal{visible.length === 1 ? '' : 's'}
+          </div>
+
+          {/* Social dots */}
+          {socialEntries.length > 0 && (
+            <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+              {socialEntries.map(({ key, Icon, label }) => (
+                <a key={key} href={links[key]} target="_blank" rel="noreferrer noopener" title={label} style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.9, 10),
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  color: tone.ink, textDecoration: 'none',
+                }}>
                   <Icon size={15} />
                 </a>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </section>
 
-        {/* Stats row */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 8,
-          background: 'rgba(0,0,0,0.28)',
-          borderRadius: 14,
-          padding: '12px 10px',
-          marginTop: 8,
-          width: '100%',
-          maxWidth: 340,
-        }}>
-          <Stat label="Active" value={visible.length} />
-          <Stat label="Markets" value={uniqueMarkets || '—'} />
-          <Stat label="Avg Ask" value={avgAsk ? `$${(avgAsk / 1000).toFixed(0)}k` : '—'} />
-        </div>
-
-        <button
-          onClick={() => setJoinOpen(true)}
-          style={{
-            marginTop: 10,
-            background: PALETTE.accent,
-            color: '#1a1208',
-            border: 'none',
-            borderRadius: 12,
-            padding: '11px 22px',
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 0.4,
-            cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(245,197,24,0.25)',
-            fontFamily: 'inherit',
-          }}
-        >
-          Join buyer list
-        </button>
-      </section>
-
-      {/* Deals — neumorphic dark cards on slate */}
-      <section style={{ background: PALETTE.bg, padding: '24px 18px 32px' }}>
+        {/* Featured deal */}
         {featured && (
-          <Link
-            to={`/p/${profile.handle}/${featured.id}`}
-            style={{
-              display: 'block',
-              padding: '16px 18px',
-              borderRadius: 18,
-              background: PALETTE.bg,
-              boxShadow: RAISED_SHADOW,
-              textDecoration: 'none',
-              color: PALETTE.ink,
-              marginBottom: 18,
-              position: 'relative',
-            }}
-          >
-            <span style={{
-              position: 'absolute', top: 12, right: 12,
-              background: PALETTE.accent, color: '#1a1208',
-              padding: '3px 10px', borderRadius: 999,
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
-              letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700,
-            }}>Featured</span>
-            <div style={{ fontSize: 15, fontWeight: 600, color: PALETTE.inkStrong, paddingRight: 80 }}>
-              {featured.addr || 'Untitled deal'}
-            </div>
-            <div style={{ fontSize: 11, color: PALETTE.mute, marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
-              {[featured.city, featured.units && `${featured.units}-unit`, featured.sqft && `${Number(featured.sqft).toLocaleString()}sf`]
-                .filter(Boolean).join(' · ')}
-            </div>
-            <div style={{ display: 'flex', gap: 14, marginTop: 12, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, flexWrap: 'wrap' }}>
-              <span><span style={{ color: PALETTE.mute }}>Ask </span><b style={{ color: PALETTE.inkStrong }}>${Number(featured.ask || 0).toLocaleString()}</b></span>
-              <span><span style={{ color: PALETTE.mute }}>ARV </span><b style={{ color: PALETTE.inkStrong }}>${Number(featured.arv || 0).toLocaleString()}</b></span>
-              <span><span style={{ color: PALETTE.mute }}>Spread </span><b style={{ color: PALETTE.accent }}>${Number((featured.arv || 0) - (featured.ask || 0)).toLocaleString()}</b></span>
-            </div>
-          </Link>
+          <FeaturedCard
+            deal={featured}
+            theme={theme}
+            onOpen={() => setOpenDealId(featured.id)}
+          />
         )}
 
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
-          {[
-            ['all', `All ${others.length}`],
-            ['sfr', 'SFR'],
-            ['mf', 'MF / Duplex'],
-            ['under150', '< $150k'],
-            ['vacant', 'Vacant'],
-          ].map(([k, l]) => (
-            <Pill key={k} active={filter === k} onClick={() => setFilter(k)}>{l}</Pill>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-          <Kicker>Active Deals · {filtered.length}</Kicker>
-          <div style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}>
-            <button
-              onClick={() => setView('cards')}
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                color: view === 'cards' ? PALETTE.accent : PALETTE.mute,
-                fontWeight: view === 'cards' ? 700 : 500, fontFamily: 'inherit' }}
-            >Cards</button>
-            <span style={{ color: PALETTE.mute }}> / </span>
-            <button
-              onClick={() => setView('table')}
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                color: view === 'table' ? PALETTE.accent : PALETTE.mute,
-                fontWeight: view === 'table' ? 700 : 500, fontFamily: 'inherit' }}
-            >Table</button>
-          </div>
-        </div>
-
-        {filtered.length === 0 ? (
-          <div style={{
-            marginTop: 14,
-            padding: 28,
-            borderRadius: 16,
-            background: PALETTE.bg,
-            boxShadow: INSET_SHADOW,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 24, color: PALETTE.mute }}>∅</div>
-            <div style={{ fontSize: 15, marginTop: 8, color: PALETTE.inkStrong, fontWeight: 600 }}>No active deals</div>
-            <div style={{ fontSize: 12, marginTop: 6, color: PALETTE.mute }}>
-              Check back next Monday — or join the buyer list to be notified.
-            </div>
-          </div>
-        ) : view === 'cards' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-            {filtered.map((d) => (
-              <DealCard key={d.id} deal={d} handle={profile.handle} />
-            ))}
-          </div>
-        ) : (
-          <div style={{
-            marginTop: 12,
-            borderRadius: 16,
-            background: PALETTE.bg,
-            boxShadow: INSET_SHADOW,
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 90px',
-              padding: '10px 14px',
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 9,
-              color: PALETTE.mute,
-              letterSpacing: 1,
-              textTransform: 'uppercase',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              <span>Address</span><span style={{ textAlign: 'right' }}>Ask / ARV</span>
-            </div>
-            {filtered.map((d, i) => (
-              <Link
-                key={d.id}
-                to={`/p/${profile.handle}/${d.id}`}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 90px',
-                  padding: '12px 14px',
-                  alignItems: 'center',
-                  color: PALETTE.ink,
-                  textDecoration: 'none',
-                  borderBottom: i === filtered.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)',
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 12, fontWeight: 600, color: PALETTE.inkStrong,
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  }}>{d.addr || 'Untitled'}</div>
-                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: PALETTE.mute, marginTop: 2 }}>
-                    {[d.zip, d.beds && `${d.beds}/${d.baths}`].filter(Boolean).join(' · ')}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: PALETTE.inkStrong }}>${Number(d.ask || 0).toLocaleString()}</div>
-                  <div style={{ fontSize: 10, color: PALETTE.mute, marginTop: 2 }}>${Number(d.arv || 0).toLocaleString()}</div>
-                </div>
-              </Link>
+        {/* Deal rows */}
+        {others.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {others.map((d) => (
+              <DealRow key={d.id} deal={d} theme={theme} onOpen={() => setOpenDealId(d.id)} />
             ))}
           </div>
         )}
 
-        <div style={{
-          marginTop: 28,
-          textAlign: 'center',
-          fontSize: 11,
-          color: PALETTE.mute,
-          fontFamily: 'JetBrains Mono, monospace',
-          letterSpacing: 0.6,
-        }}>
-          Powered by{' '}
-          <Link to="/" style={{ color: PALETTE.ink, textDecoration: 'underline' }}>deallink.io</Link>
-        </div>
-      </section>
+        {visible.length === 0 && (
+          <div style={{
+            padding: 28, borderRadius: radius, background: tone.base,
+            boxShadow: neuIn(tone.base, tone.dark, 0.8, 12),
+            textAlign: 'center', color: tone.mute,
+          }}>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 22, color: tone.dim }}>∅</div>
+            <div style={{ fontSize: 14, marginTop: 8, color: tone.ink, fontWeight: 600 }}>No active deals</div>
+            <div style={{ fontSize: 12, marginTop: 6 }}>Check back next Monday.</div>
+          </div>
+        )}
 
-      {joinOpen && (
-        <JoinListModal
-          handle={profile.handle}
-          onClose={() => setJoinOpen(false)}
-          onSubmitted={() => { setJoinOpen(false); showToast("You're on the list"); }}
+        {/* Footer pill */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+          <div style={{
+            padding: '10px 18px', borderRadius: 999,
+            background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 10),
+            fontSize: 12, color: tone.mute, letterSpacing: 0.4,
+          }}>
+            Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle}</span> on DealLink
+          </div>
+        </div>
+      </div>
+
+      {openDeal && (
+        <DealDetailModal
+          deal={openDeal}
+          theme={theme}
+          onClose={() => setOpenDealId(null)}
+          onInterested={() => { setOpenDealId(null); setLeadDealId(openDeal.id); }}
         />
       )}
+      {leadDeal && (
+        <LeadCaptureModal
+          deal={leadDeal}
+          handle={profile.handle}
+          theme={theme}
+          onClose={() => setLeadDealId(null)}
+          onSubmitted={() => { setLeadDealId(null); showToast("Sent — you're on the list"); }}
+        />
+      )}
+
       {toast && (
         <div style={{
-          position: 'fixed',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: PALETTE.bg,
-          color: PALETTE.inkStrong,
-          padding: '10px 18px',
-          borderRadius: 12,
-          boxShadow: RAISED_SHADOW,
-          fontSize: 13,
-          zIndex: 100,
+          position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+          padding: '12px 20px', borderRadius: 14,
+          background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.9, 14),
+          color: tone.ink, fontSize: 13, fontWeight: 500, zIndex: 100,
         }}>{toast}</div>
       )}
-    </PageShell>
+    </div>
   );
 }
 
-function PageShell({ children, heroBg }) {
-  // The outer background uses the hero background so non-mobile viewports
-  // get a coordinated look. The inner frame stays slate for the deals area.
+/* ────────────────────────── building blocks ────────────────────────── */
+
+function Centered({ theme, title, text }) {
+  const { tone } = theme;
   return (
     <div style={{
-      minHeight: '100vh',
-      ...(heroBg || { background: PALETTE.bg }),
-      padding: '24px 16px 40px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif',
+      maxWidth: 360, margin: '120px auto 0', textAlign: 'center',
+      padding: 28, borderRadius: 24,
+      background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.9, 14),
     }}>
-      <div style={{
-        maxWidth: 460,
-        margin: '0 auto',
-        background: PALETTE.bg,
-        borderRadius: 28,
+      {title && <div style={{ fontSize: 20, fontWeight: 700, color: tone.ink, marginBottom: 8 }}>{title}</div>}
+      <div style={{ fontSize: 13, color: tone.mute }}>{text}</div>
+    </div>
+  );
+}
+
+function Avatar({ tone, size, src, initials, accent }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: src ? `center/cover no-repeat url(${src})` : tone.base,
+      boxShadow: neuIn(tone.base, tone.dark, 0.95, 12),
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: tone.ink, fontWeight: 800, fontSize: size * 0.32,
+      overflow: 'hidden', flexShrink: 0,
+      letterSpacing: -0.5,
+    }}>
+      {!src && (
+        <span style={{
+          color: tone.dark ? '#fff' : tone.ink,
+          textShadow: tone.dark ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
+        }}>{initials}</span>
+      )}
+    </div>
+  );
+}
+
+function FeaturedCard({ deal, theme, onOpen }) {
+  const { tone, accent, radius } = theme;
+  const [accR, accG, accB] = hex(accent);
+  const heroBg = `linear-gradient(155deg, ${shade(accent, 0.4)} 0%, rgba(${accR},${accG},${accB},0.25) 100%)`;
+  const spread = (Number(deal.arv) || 0) - (Number(deal.ask) || 0);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      style={{
+        textAlign: 'left',
+        background: tone.base,
+        borderRadius: radius,
+        border: 'none', padding: 0, cursor: 'pointer',
+        boxShadow: neuOut(tone.base, tone.dark, 0.95, 16),
         overflow: 'hidden',
-        boxShadow: RAISED_SHADOW,
-        color: PALETTE.ink,
-      }}>
+        fontFamily: 'inherit',
+        color: tone.ink,
+      }}
+    >
+      <div style={{ height: 110, background: heroBg, position: 'relative' }}>
+        <span style={{
+          position: 'absolute', left: 14, bottom: 12,
+          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)',
+          padding: '5px 12px', borderRadius: 999,
+          fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
+          letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700,
+          color: '#1a1208',
+        }}>Featured</span>
+      </div>
+      <div style={{ padding: '14px 18px 18px' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: tone.ink }}>{deal.addr || 'Untitled deal'}</div>
+        <div style={{ fontSize: 11, color: tone.mute, marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+          {[deal.city, deal.units && `${deal.units}-unit`, deal.sqft && `${Number(deal.sqft).toLocaleString()}sf`]
+            .filter(Boolean).join(' · ')}
+        </div>
+        <div style={{ display: 'flex', gap: 16, marginTop: 12, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, flexWrap: 'wrap' }}>
+          <span><span style={{ color: tone.mute }}>Ask </span><b style={{ color: tone.ink }}>${Number(deal.ask || 0).toLocaleString()}</b></span>
+          <span><span style={{ color: tone.mute }}>ARV </span><b style={{ color: tone.ink }}>${Number(deal.arv || 0).toLocaleString()}</b></span>
+          <span><span style={{ color: tone.mute }}>Spread </span><b style={{ color: accent }}>${spread.toLocaleString()}</b></span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function DealRow({ deal, theme, onOpen }) {
+  const { tone, radius } = theme;
+  const typeCode = (deal.type || '—').toUpperCase().slice(0, 4);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '12px 14px',
+        background: tone.base,
+        borderRadius: radius * 0.7,
+        border: 'none', cursor: 'pointer',
+        boxShadow: neuOut(tone.base, tone.dark, 0.85, 12),
+        textAlign: 'left',
+        fontFamily: 'inherit',
+        color: tone.ink,
+      }}
+    >
+      <div style={{
+        width: 40, height: 40, borderRadius: 10,
+        background: tone.base, boxShadow: neuIn(tone.base, tone.dark, 0.85, 8),
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700,
+        color: tone.ink, letterSpacing: 0.6, flexShrink: 0,
+      }}>{typeCode}</div>
+
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{
+            fontSize: 13, fontWeight: 700, color: tone.ink,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>{deal.addr || 'Untitled deal'}</div>
+          {deal.new && (
+            <span style={{
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 8,
+              padding: '2px 6px', borderRadius: 999,
+              background: tone.base, boxShadow: neuIn(tone.base, tone.dark, 0.7, 5),
+              color: tone.mute, letterSpacing: 0.6, flexShrink: 0,
+            }}>NEW</span>
+          )}
+        </div>
+        <div style={{ fontSize: 10, color: tone.mute, marginTop: 3, fontFamily: 'JetBrains Mono, monospace' }}>
+          {[deal.zip, deal.beds && `${deal.beds}/${deal.baths}`, deal.sqft && `${deal.sqft}sf`]
+            .filter(Boolean).join(' · ')}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: tone.ink }}>
+          ${Number(deal.ask || 0).toLocaleString()}
+        </div>
+        <div style={{ fontSize: 10, color: tone.mute, marginTop: 2 }}>
+          ARV ${Number(deal.arv || 0).toLocaleString()}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ────────────────────────── modals ────────────────────────── */
+
+function ModalShell({ theme, onClose, children, maxWidth = 380 }) {
+  const { tone } = theme;
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 90,
+        background: 'rgba(20,22,30,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth,
+          background: tone.base, borderRadius: 24,
+          boxShadow: `${neuOut(tone.base, tone.dark, 1, 18)}, 0 24px 60px rgba(0,0,0,0.35)`,
+          padding: 22, color: tone.ink, fontFamily: NEU_FONT,
+          maxHeight: '90vh', overflowY: 'auto',
+        }}
+      >
         {children}
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }) {
+function ModalClose({ theme, onClose }) {
+  const { tone } = theme;
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{value}</div>
-      <div style={{
-        fontSize: 9,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        opacity: 0.7,
-        fontFamily: 'JetBrains Mono, monospace',
-        marginTop: 2,
-      }}>{label}</div>
-    </div>
+    <button onClick={onClose} aria-label="Close" style={{
+      position: 'absolute', top: 14, right: 14,
+      width: 32, height: 32, borderRadius: '50%',
+      background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 8),
+      border: 'none', cursor: 'pointer',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: tone.mute,
+    }}>
+      <X size={14} />
+    </button>
   );
 }
 
-function Kicker({ children }) {
+function Kicker({ theme, children }) {
+  const { tone } = theme;
   return (
     <div style={{
-      fontSize: 10,
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      color: PALETTE.mute,
-      fontFamily: 'JetBrains Mono, monospace',
+      fontSize: 9, letterSpacing: 1.2, textTransform: 'uppercase',
+      color: tone.mute, fontFamily: 'JetBrains Mono, monospace', fontWeight: 600,
     }}>{children}</div>
   );
 }
 
-function Pill({ children, active, onClick }) {
+function DealDetailModal({ deal, theme, onClose, onInterested }) {
+  const { tone, accent, radius } = theme;
+  const spread = (Number(deal.arv) || 0) - (Number(deal.ask) || 0);
+  const specs = [
+    ['Type', deal.type || '—'],
+    ['Beds / Baths', deal.beds ? `${deal.beds} / ${deal.baths || '—'}` : '—'],
+    ['Sq Ft', deal.sqft ? Number(deal.sqft).toLocaleString() : '—'],
+    ['Year', deal.year || '—'],
+    ['Lot', deal.lot || '—'],
+    ['Occupancy', deal.occ || '—'],
+  ];
+
+  return (
+    <ModalShell theme={theme} onClose={onClose} maxWidth={400}>
+      <div style={{ position: 'relative' }}>
+        <ModalClose theme={theme} onClose={onClose} />
+        <Kicker theme={theme}>Deal · {deal.zip || deal.city || ''}</Kicker>
+        <div style={{ fontSize: 18, fontWeight: 700, color: tone.ink, marginTop: 8, paddingRight: 32 }}>
+          {deal.addr || 'Untitled deal'}
+        </div>
+        {deal.city && (
+          <div style={{ fontSize: 12, color: tone.mute, marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+            {deal.city}
+          </div>
+        )}
+
+        {/* Price tile */}
+        <div style={{
+          marginTop: 16, padding: '14px 16px',
+          background: tone.base, borderRadius: 16,
+          boxShadow: neuIn(tone.base, tone.dark, 0.9, 10),
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8,
+        }}>
+          <PriceCol theme={theme} label="Ask" value={`$${Number(deal.ask || 0).toLocaleString()}`} />
+          <PriceCol theme={theme} label="ARV" value={`$${Number(deal.arv || 0).toLocaleString()}`} />
+          <PriceCol theme={theme} label="Spread" value={`$${spread.toLocaleString()}`} accentColor={accent} />
+        </div>
+
+        {/* Specs grid */}
+        <div style={{
+          marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
+        }}>
+          {specs.map(([k, v]) => (
+            <div key={k} style={{
+              padding: '10px 12px', borderRadius: 12,
+              background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.7, 8),
+            }}>
+              <div style={{
+                fontSize: 8, letterSpacing: 1, textTransform: 'uppercase',
+                color: tone.mute, fontFamily: 'JetBrains Mono, monospace',
+              }}>{k}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: tone.ink, marginTop: 3 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+
+        {deal.description && (
+          <div style={{ fontSize: 12, color: tone.mute, marginTop: 14, lineHeight: 1.5 }}>
+            {deal.description}
+          </div>
+        )}
+
+        <AccentButton theme={theme} onClick={onInterested} style={{ marginTop: 18 }}>
+          I'm interested
+        </AccentButton>
+      </div>
+    </ModalShell>
+  );
+}
+
+function PriceCol({ theme, label, value, accentColor }) {
+  const { tone } = theme;
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{
+        fontSize: 8, letterSpacing: 1, textTransform: 'uppercase',
+        color: tone.mute, fontFamily: 'JetBrains Mono, monospace',
+      }}>{label}</div>
+      <div style={{
+        fontSize: 13, fontWeight: 700, marginTop: 4,
+        fontFamily: 'JetBrains Mono, monospace',
+        color: accentColor || tone.ink,
+      }}>{value}</div>
+    </div>
+  );
+}
+
+function AccentButton({ theme, onClick, disabled, children, style, type = 'button' }) {
+  const { tone, accent } = theme;
   return (
     <button
+      type={type}
       onClick={onClick}
+      disabled={disabled}
       style={{
-        flexShrink: 0,
-        background: PALETTE.bg,
-        color: active ? PALETTE.accent : PALETTE.ink,
-        border: 'none',
-        borderRadius: 999,
-        padding: '7px 14px',
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: 0.4,
-        cursor: 'pointer',
-        boxShadow: active ? INSET_SHADOW : RAISED_SHADOW,
-        fontFamily: 'inherit',
-        transition: 'box-shadow 120ms ease',
+        width: '100%', padding: '14px 20px',
+        background: accent, color: '#fff',
+        border: 'none', borderRadius: 14,
+        fontSize: 13, fontWeight: 700, letterSpacing: 0.4,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        boxShadow: `0 6px 18px ${shade(accent, -0.3).replace('rgba(', 'rgba(').replace(/,1\)$/, ',0.4)')}`,
+        opacity: disabled ? 0.6 : 1,
+        fontFamily: NEU_FONT,
+        ...style,
       }}
     >{children}</button>
   );
 }
 
-function DealCard({ deal, handle }) {
-  return (
-    <Link
-      to={`/p/${handle}/${deal.id}`}
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 10,
-        padding: '14px 16px',
-        borderRadius: 16,
-        background: PALETTE.bg,
-        boxShadow: DEAL_INSET,
-        textDecoration: 'none',
-        color: PALETTE.ink,
-      }}
-    >
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: PALETTE.inkStrong,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}>{deal.addr || 'Untitled deal'}</div>
-          {deal.new && (
-            <span style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 8,
-              color: PALETTE.accent,
-              background: 'rgba(245,197,24,0.15)',
-              padding: '2px 6px',
-              borderRadius: 999,
-              letterSpacing: 0.6,
-              flexShrink: 0,
-            }}>NEW</span>
-          )}
-        </div>
-        <div style={{
-          fontSize: 10,
-          color: PALETTE.mute,
-          marginTop: 4,
-          fontFamily: 'JetBrains Mono, monospace',
-        }}>
-          {[deal.zip || deal.city, deal.type, deal.beds && `${deal.beds}/${deal.baths}`, deal.sqft && `${deal.sqft}sf`]
-            .filter(Boolean).join(' · ')}
-        </div>
-      </div>
-      <div style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: PALETTE.inkStrong }}>
-          ${Number(deal.ask || 0).toLocaleString()}
-        </div>
-        <div style={{ fontSize: 10, color: PALETTE.mute, marginTop: 2 }}>
-          ARV ${Number(deal.arv || 0).toLocaleString()}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function JoinListModal({ handle, onClose, onSubmitted }) {
+function LeadCaptureModal({ deal, handle, theme, onClose, onSubmitted }) {
+  const { tone } = theme;
   const [first, setFirst] = React.useState('');
   const [last, setLast] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
+  const [buyerType, setBuyerType] = React.useState('Cash');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
 
   async function submit(e) {
     e.preventDefault();
-    if (!email.trim() || !first.trim()) return;
-    setSubmitting(true);
-    setError(null);
+    if (!email.trim() || !first.trim()) { setError('First name and email are required.'); return; }
+    setSubmitting(true); setError(null);
     try {
-      await PublicAPI.submitLead(handle, { first, last, email, phone, buyerType: 'Cash', kind: 'buyer-list' });
+      await PublicAPI.submitLead(handle, {
+        first, last, email, phone, buyerType,
+        kind: 'deal-interest',
+        dealId: deal?.id || null,
+      });
       onSubmitted();
     } catch (err) {
       setError(err?.message || 'Failed to submit.');
@@ -562,71 +544,62 @@ function JoinListModal({ handle, onClose, onSubmitted }) {
   }
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 90,
-        background: 'rgba(8,10,20,0.78)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 380,
-          background: PALETTE.bg,
-          borderRadius: 20,
-          boxShadow: RAISED_SHADOW,
-          padding: 24,
-          color: PALETTE.ink,
-        }}
-      >
-        <Kicker>Join buyer list</Kicker>
-        <div style={{ fontSize: 18, marginTop: 6, color: PALETTE.inkStrong, fontWeight: 600 }}>Get Monday's drops first.</div>
+    <ModalShell theme={theme} onClose={onClose} maxWidth={400}>
+      <div style={{ position: 'relative' }}>
+        <ModalClose theme={theme} onClose={onClose} />
+        <Kicker theme={theme}>Request info</Kicker>
+        <div style={{ fontSize: 16, fontWeight: 700, color: tone.ink, marginTop: 8, paddingRight: 32 }}>
+          {deal.addr || 'Untitled deal'}
+        </div>
+        <div style={{ fontSize: 12, color: tone.mute, marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+          Ask ${Number(deal.ask || 0).toLocaleString()}
+        </div>
+
         <form onSubmit={submit} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <ModalField label="First name"><ModalInput value={first} onChange={(e) => setFirst(e.target.value)} required /></ModalField>
-            <ModalField label="Last name"><ModalInput value={last} onChange={(e) => setLast(e.target.value)} /></ModalField>
+            <NeuField theme={theme} label="First name">
+              <NeuInput theme={theme} value={first} onChange={(e) => setFirst(e.target.value)} required />
+            </NeuField>
+            <NeuField theme={theme} label="Last name">
+              <NeuInput theme={theme} value={last} onChange={(e) => setLast(e.target.value)} />
+            </NeuField>
           </div>
-          <ModalField label="Email"><ModalInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></ModalField>
-          <ModalField label="Phone"><ModalInput value={phone} onChange={(e) => setPhone(e.target.value)} /></ModalField>
-          {error && <div style={{ fontSize: 12, color: '#f87171' }}>{error}</div>}
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{
-              marginTop: 4,
-              background: PALETTE.accent,
-              color: '#1a1208',
-              border: 'none',
-              borderRadius: 12,
-              padding: '12px 20px',
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: 0.4,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-              opacity: submitting ? 0.6 : 1,
-            }}
-          >
-            {submitting ? 'Subscribing…' : 'Subscribe'}
-          </button>
+          <NeuField theme={theme} label="Email">
+            <NeuInput theme={theme} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </NeuField>
+          <NeuField theme={theme} label="Phone">
+            <NeuInput theme={theme} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 123-4567" />
+          </NeuField>
+          <NeuField theme={theme} label="Buyer type">
+            <NeuSelect
+              theme={theme}
+              value={buyerType}
+              onChange={(e) => setBuyerType(e.target.value)}
+              options={['Cash', 'Hard Money', 'Conventional', 'Wholesaler', 'Owner-Occupant']}
+            />
+          </NeuField>
+
+          {error && <div style={{ fontSize: 12, color: '#d63a6e' }}>{error}</div>}
+
+          <AccentButton theme={theme} type="submit" disabled={submitting}>
+            {submitting ? 'Sending…' : 'Send request'}
+          </AccentButton>
+          <div style={{ fontSize: 11, color: tone.mute, textAlign: 'center', marginTop: 2 }}>
+            You'll also join the weekly buyer list.
+          </div>
         </form>
       </div>
-    </div>
+    </ModalShell>
   );
 }
 
-function ModalField({ label, children }) {
+function NeuField({ theme, label, children }) {
+  const { tone } = theme;
   return (
     <label style={{ display: 'block' }}>
       <div style={{
-        fontSize: 10,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        color: PALETTE.mute,
-        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 9, letterSpacing: 1, textTransform: 'uppercase',
+        color: tone.mute, fontFamily: 'JetBrains Mono, monospace', fontWeight: 600,
         marginBottom: 6,
       }}>{label}</div>
       {children}
@@ -634,26 +607,47 @@ function ModalField({ label, children }) {
   );
 }
 
-function ModalInput(props) {
+function NeuInput({ theme, ...props }) {
+  const { tone } = theme;
   return (
     <div style={{
+      height: 42, padding: '0 14px',
       borderRadius: 12,
-      boxShadow: INSET_SHADOW,
-      background: PALETTE.bg,
-      padding: '10px 14px',
+      background: tone.base,
+      boxShadow: neuIn(tone.base, tone.dark, 0.85, 8),
+      display: 'flex', alignItems: 'center',
     }}>
       <input
         {...props}
         style={{
-          width: '100%',
-          background: 'transparent',
-          border: 'none',
-          outline: 'none',
-          color: PALETTE.inkStrong,
-          fontSize: 14,
-          fontFamily: 'inherit',
+          width: '100%', background: 'transparent', border: 'none', outline: 'none',
+          color: tone.ink, fontSize: 13, fontFamily: NEU_FONT,
         }}
       />
+    </div>
+  );
+}
+
+function NeuSelect({ theme, options, ...props }) {
+  const { tone } = theme;
+  return (
+    <div style={{
+      height: 42, padding: '0 14px',
+      borderRadius: 12,
+      background: tone.base,
+      boxShadow: neuIn(tone.base, tone.dark, 0.85, 8),
+      display: 'flex', alignItems: 'center',
+    }}>
+      <select
+        {...props}
+        style={{
+          width: '100%', background: 'transparent', border: 'none', outline: 'none',
+          color: tone.ink, fontSize: 13, fontFamily: NEU_FONT,
+          appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer',
+        }}
+      >
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
     </div>
   );
 }

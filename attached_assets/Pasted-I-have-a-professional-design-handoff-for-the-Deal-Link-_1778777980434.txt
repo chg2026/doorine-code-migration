@@ -1,0 +1,94 @@
+I have a professional design handoff for the Deal Link public profile. Implement it exactly as described.
+
+STEP 1 — Create apps/deallink/src/lib/neu.js with this neumorphism system:
+
+```js
+const NEU_FONT = '-apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", system-ui, sans-serif';
+
+function hex(c){ c=c.replace('#',''); if(c.length===3) c=c.split('').map(x=>x+x).join(''); return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)]; }
+function rgbStr(r,g,b,a){ return `rgba(${r|0},${g|0},${b|0},${a==null?1:a})`; }
+function shade(c, amt){ const [r,g,b]=hex(c); const f=(v)=> amt>=0 ? v+(255-v)*amt : v*(1+amt); return rgbStr(f(r),f(g),f(b)); }
+function darkShade(c, a){ const [r,g,b]=hex(c); return rgbStr(r*0.35,g*0.35,b*0.45,a); }
+function lightShade(c, a){ const [r,g,b]=hex(c); return rgbStr(Math.min(255,r+50),Math.min(255,g+50),Math.min(255,b+55),a); }
+
+function neuOut(base, dark=false, intensity=1, size=14) {
+  const lo = dark ? `rgba(255,255,255,${0.04*intensity})` : lightShade(base, 0.9*intensity);
+  const dk = dark ? `rgba(0,0,0,${0.55*intensity})` : darkShade(base, 0.22*intensity);
+  return `${-size/2}px ${-size/2}px ${size}px ${lo}, ${size/2}px ${size/2}px ${size}px ${dk}`;
+}
+function neuIn(base, dark=false, intensity=1, size=10) {
+  const lo = dark ? `rgba(255,255,255,${0.05*intensity})` : lightShade(base, 1.0*intensity);
+  const dk = dark ? `rgba(0,0,0,${0.55*intensity})` : darkShade(base, 0.25*intensity);
+  return `inset ${-size/2}px ${-size/2}px ${size}px ${lo}, inset ${size/2}px ${size/2}px ${size}px ${dk}`;
+}
+function neuBg(base, dark=false, gradient=false) {
+  if (!gradient) return base;
+  if (dark) return `linear-gradient(155deg, ${shade(base, 0.06)} 0%, ${base} 55%, ${shade(base, -0.18)} 100%)`;
+  return `linear-gradient(155deg, ${shade(base, 0.22)} 0%, ${base} 55%, ${shade(base, -0.06)} 100%)`;
+}
+
+export const TONES = {
+  Mist:  { base:'#E6E9EF', ink:'#2A2F3A', mute:'#7B8294', dim:'#A4ABBC', dark:false },
+  Sand:  { base:'#EFE8DC', ink:'#3A2E20', mute:'#8A7A60', dim:'#B9AC92', dark:false },
+  Moss:  { base:'#DBE3DA', ink:'#1F2D24', mute:'#637568', dim:'#9AAA9B', dark:false },
+  Slate: { base:'#D9DEE6', ink:'#1F2530', mute:'#5F6779', dim:'#92A1B0', dark:false },
+  Ink:   { base:'#1E2230', ink:'#E8ECF5', mute:'#9FA9C0', dim:'#6A7290', dark:true  },
+};
+export const ACCENTS = ['#6C5DD3','#C77B3A','#3F7A55','#D63A6E','#1F8AA8','#1F2230'];
+export const DEFAULT_THEME = { tone:'Mist', accent:'#6C5DD3', radius:20, gradient:false };
+
+export { NEU_FONT, hex, rgbStr, shade, darkShade, lightShade, neuOut, neuIn, neuBg };
+```
+
+STEP 2 — Rewrite apps/deallink/src/pages/PublicProfile.jsx to match this design exactly:
+
+Layout (mobile-first, max-width 420px centered):
+- Background: neuBg(tone.base, tone.dark, gradient) applied to full page
+- Font: NEU_FONT throughout
+
+Identity block (centered, padding 22px sides):
+- 84px circular inset avatar (neuIn shadow) — shows avatar_url or initials
+- Handle (@handle) — 18px / 700 / tone.ink
+- Bio — 12px / tone.mute / centered / max 240px
+- Active deals pill — inset (neuIn), mono font "N active deals", left accent dot with glow
+- Social dots row — 36px circular neuOut buttons for Instagram/Twitter/Website
+
+Featured deal card (neuOut surface, overflow hidden):
+- 110px gradient header: linear-gradient(155deg, shade(accent,0.4), rgba(accent,0.25))
+- "Featured" pill bottom-left: white 85% + backdrop-blur
+- Body: address (14/700), city·units·sqft (11/mono/mute), Ask/ARV/Spread row (Spread in accent)
+
+Deal rows (neuOut surface, gap 10px):
+- Left: 40×40 inset square with property type code (SFR/MF/DUP) in mono
+- Middle: address (13/700) + ZIP·beds/baths·sqft (10/mono/mute) + NEW pill if new
+- Right: ask price (mono 700) + ARV (mono mute)
+- Tap → open Deal Detail popup
+
+Deal detail popup (on tap):
+- Backdrop: rgba(20,22,30,0.45) + blur(6px)
+- Modal: 24px radius, neuOut shadow + 0 24px 60px rgba(0,0,0,0.35)
+- Close ×, kicker, address, price tile (neuIn with Ask/ARV/Spread columns), specs grid (2-col neuOut tiles), "I'm interested" accent button
+- Tap "I'm interested" → close detail, open Lead Capture
+
+Lead capture popup:
+- Same chrome as detail
+- Address + price line, form: First/Last name (half-width), Email, Phone, Buyer type select — all 42px neuIn fields with 9px uppercase labels
+- "Send request" accent button → POST to Gold Bridge /api/deallink/leads
+- Footer: "You'll also join the weekly buyer list."
+
+Footer pill (neuOut, centered):
+- "Join @handle on DealLink"
+
+STEP 3 — Update apps/deallink/src/pages/AdminProfile.jsx to add a Customize section:
+
+Add below the existing fields:
+- Tone picker: 5 radio-style neuOut cards showing Mist/Sand/Moss/Slate/Ink with a mini preview
+- Accent color: 6 neuOut circular swatches (38px) using the ACCENTS array
+- Border radius slider: 8–36px range, step 2, shows live value
+- Gradient toggle: neumorphic toggle switch
+
+Save these as background_type (tone name), background_value (accent hex), and additional fields radius and gradient_enabled to the profile via the existing PUT /api/deallink/profile call.
+
+PublicProfile must read these saved values and apply the correct tone + accent + radius + gradient to render.
+
+Only edit files inside apps/deallink/. Do not touch any other folder.

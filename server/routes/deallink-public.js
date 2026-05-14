@@ -60,6 +60,11 @@ function publicProfile(p) {
     bio: p.bio,
     city: p.city,
     featured_id: p.featured_id,
+    avatar_url: p.avatar_url,
+    social_links: p.social_links,
+    background_type: p.background_type,
+    background_value: p.background_value,
+    onboarding: p.onboarding,
   }
 }
 
