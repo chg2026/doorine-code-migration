@@ -78,6 +78,10 @@ export function profileFromApi(p) {
     backgroundType: p.background_type || 'solid',
     backgroundValue: p.background_value || '#161b2e',
     socialLinks: p.social_links && typeof p.social_links === 'object' ? p.social_links : {},
+    tone: p.tone || '',
+    accentColor: p.accent_color || '',
+    radius: p.radius ?? null,
+    gradientEnabled: !!p.gradient_enabled,
   };
 }
 
@@ -96,6 +100,10 @@ export function profileToApi(p) {
   if ('backgroundType' in p) out.background_type = p.backgroundType;
   if ('backgroundValue' in p) out.background_value = p.backgroundValue;
   if ('socialLinks' in p) out.social_links = p.socialLinks || {};
+  if ('tone' in p) out.tone = p.tone;
+  if ('accentColor' in p) out.accent_color = p.accentColor;
+  if ('radius' in p) out.radius = p.radius;
+  if ('gradientEnabled' in p) out.gradient_enabled = !!p.gradientEnabled;
   return out;
 }
 

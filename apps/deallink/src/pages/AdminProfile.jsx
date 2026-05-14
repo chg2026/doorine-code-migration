@@ -82,6 +82,10 @@ export default function AdminProfile() {
         socialLinks: form.socialLinks || {},
         name: form.name || '',
         onboarding: nextOnboarding,
+        tone: theme.tone,
+        accentColor: theme.accent,
+        radius: theme.radius,
+        gradientEnabled: !!theme.gradient,
       });
       dispatch({ type: 'set_profile', profile: updated });
       setForm(updated);
