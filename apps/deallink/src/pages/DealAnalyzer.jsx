@@ -87,7 +87,9 @@ function Analyzer({ deal }) {
 
   const [rehabOverride, setRehabOverride] = useState(seed('rehabOverride', 8000));
   const [items, setItems] = useState(
-    Array.isArray(s.items) && s.items.length > 0
+    // Honor a saved empty array — only fall back to defaults when nothing
+    // has ever been saved.
+    Array.isArray(s.items)
       ? s.items
       : [
           { id: 'r1', category: 'Flooring', description: 'LVP throughout', cost: 4500 },
