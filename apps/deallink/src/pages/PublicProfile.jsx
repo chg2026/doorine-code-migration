@@ -45,10 +45,20 @@ export default function PublicProfile() {
 
   const pageStyle = {
     minHeight: '100vh',
-    background: neuBg(tone.base, tone.dark, gradient),
+    background: shade(tone.base, -0.06),
     fontFamily: NEU_FONT,
     color: tone.ink,
     padding: '24px 14px 60px',
+  };
+
+  const frameStyle = {
+    width: '100%',
+    maxWidth: 420,
+    margin: '0 auto',
+    borderRadius: 32,
+    boxShadow: '0 24px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.07)',
+    overflow: 'hidden',
+    background: neuBg(tone.base, tone.dark, gradient),
   };
 
   if (loading) {
@@ -72,7 +82,7 @@ export default function PublicProfile() {
   const featured = visible.find((d) => d.id === profile.featuredId) || null;
   const others = featured ? visible.filter((d) => d.id !== featured.id) : visible;
   const displayInitials = profile.initials || initialsOf(profile.name || profile.handle || 'A');
-  const links = profile.socialLinks || {};
+  const links = profile.social_links || profile.socialLinks || {};
   const socialEntries = SOCIAL_DEFS
     .filter((s) => (links[s.key] || '').trim())
     .slice(0, 3);
@@ -82,7 +92,8 @@ export default function PublicProfile() {
 
   return (
     <div style={pageStyle}>
-      <div style={{ width: '100%', maxWidth: 420, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={frameStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '24px 14px 32px' }}>
         {/* Identity */}
         <section style={{ padding: '8px 22px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <Avatar tone={tone} size={84} src={profile.avatarUrl} initials={displayInitials} accent={accent} />
@@ -186,6 +197,7 @@ export default function PublicProfile() {
           }}>
             Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle}</span> on DealLink
           </div>
+        </div>
         </div>
       </div>
 
