@@ -4,15 +4,13 @@
 //   GET  /api/deallink/public/:handle           → { profile, deals }
 //   GET  /api/deallink/public/:handle/:dealId   → { profile, deal }
 //   POST /api/deallink/public/:handle/leads     → { lead }
-//
-// Tenant isolation here lives entirely in this code (we never expose
-// account_id) plus the RLS policies in phase-5-deallink-tables.sql which
-// only let anon read non-sold deals and only insert leads.
 
 const express = require('express')
 const { supabaseAdmin } = require('../middleware/auth')
 
 const router = express.Router()
+
+const PUBLIC_STATUSES = ['New', 'Marketed', 'Under Contract']
 
 function dbOrFail(res) {
   if (!supabaseAdmin) {
@@ -26,7 +24,6 @@ function maskAddr(addr) {
   return String(addr || '').replace(/^\d+\s+/, '— ')
 }
 
-// Strip server-only fields and apply hide_street masking before returning.
 function publicDeal(d) {
   if (!d) return null
   return {
@@ -80,6 +77,7 @@ router.get('/:handle', async (req, res) => {
     .from('deallink_deals')
     .select('*')
     .eq('account_id', profile.account_id)
+    .in('status', PUBLIC_STATUSES)
     .order('created_at', { ascending: false })
 
   if (dErr) return res.status(500).json({ error: dErr.message })
@@ -108,7 +106,7 @@ router.get('/:handle/:dealId', async (req, res) => {
     .select('*')
     .eq('account_id', profile.account_id)
     .eq('id', req.params.dealId)
-    .eq('status', 'active')
+    .in('status', PUBLIC_STATUSES)
     .maybeSingle()
 
   if (dErr) return res.status(500).json({ error: dErr.message })
@@ -137,9 +135,8 @@ router.post('/:handle/leads', express.json(), async (req, res) => {
   const kind = body.kind === 'buyer-list' ? 'buyer-list' : 'deal-interest'
 
   // Validate deal_id (if supplied) belongs to this profile's account and
-  // is publicly visible. We use the service-role client which bypasses
-  // RLS, so without this check anonymous callers could attach a lead to
-  // any deal in any other account — IDOR.
+  // is publicly visible — service-role client bypasses RLS, so without this
+  // check anonymous callers could attach a lead to any deal in any account.
   let dealId = body.deal_id || null
   if (dealId) {
     const { data: deal, error: dErr } = await db
@@ -148,7 +145,8 @@ router.post('/:handle/leads', express.json(), async (req, res) => {
       .eq('id', dealId)
       .maybeSingle()
     if (dErr) return res.status(500).json({ error: dErr.message })
-    if (!deal || deal.account_id !== profile.account_id || deal.status !== 'active') {
+    const allowed = new Set(PUBLIC_STATUSES)
+    if (!deal || deal.account_id !== profile.account_id || !allowed.has(deal.status)) {
       return res.status(400).json({ error: 'Invalid deal_id for this profile.' })
     }
     dealId = deal.id
