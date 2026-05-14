@@ -57,6 +57,10 @@ function publicProfile(p) {
     bio: p.bio,
     city: p.city,
     featured_id: p.featured_id,
+    tone: p.tone,
+    accent_color: p.accent_color,
+    radius: p.radius,
+    gradient_enabled: p.gradient_enabled,
   }
 }
 
