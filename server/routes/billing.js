@@ -195,26 +195,38 @@ router.post('/webhook', async (req, res) => {
         console.log(`[billing/webhook] updating account_products for account_id=${account_id} plan=${plan}`)
 
         const { seat_limit, guest_limit } = planLimits(plan)
-        const updatePayload = {
-          plan,
-          seat_limit,
-          guest_limit,
-          stripe_subscription_id: session.subscription || null,
-          status: 'active',
-        }
-        console.log('[billing/webhook] update payload:', JSON.stringify(updatePayload))
 
-        const { data: updateData, error: updateError } = await supabaseAdmin
+        // Query 1 — account_products: plan + limits only (no stripe IDs).
+        const apPayload = { plan, seat_limit, guest_limit }
+        console.log('[billing/webhook] account_products payload:', JSON.stringify(apPayload))
+
+        const { data: apData, error: apError } = await supabaseAdmin
           .from('account_products')
-          .update(updatePayload)
+          .update(apPayload)
           .eq('account_id', account_id)
           .eq('status', 'active')
           .select()
 
-        console.log('[billing/webhook] update result — data:', JSON.stringify(updateData), 'error:', updateError?.message ?? null)
+        console.log('[billing/webhook] account_products result — data:', JSON.stringify(apData), 'error:', apError?.message ?? null)
+        if (apError) throw apError
 
-        if (updateError) throw updateError
-        console.log(`[billing/webhook] checkout.session.completed done: account=${account_id} product=${product_code} plan=${plan} rows_updated=${updateData?.length ?? 0}`)
+        // Query 2 — accounts: stripe subscription + customer IDs.
+        const acctPayload = {
+          stripe_subscription_id: session.subscription || null,
+          stripe_customer_id:     session.customer     || null,
+        }
+        console.log('[billing/webhook] accounts payload:', JSON.stringify(acctPayload))
+
+        const { data: acctData, error: acctError } = await supabaseAdmin
+          .from('accounts')
+          .update(acctPayload)
+          .eq('id', account_id)
+          .select()
+
+        console.log('[billing/webhook] accounts result — data:', JSON.stringify(acctData), 'error:', acctError?.message ?? null)
+        if (acctError) throw acctError
+
+        console.log(`[billing/webhook] checkout.session.completed done: account=${account_id} product=${product_code} plan=${plan} ap_rows=${apData?.length ?? 0} acct_rows=${acctData?.length ?? 0}`)
       } else {
         console.warn('[billing/webhook] checkout.session.completed missing metadata fields — skipping update:', JSON.stringify(metadata))
       }
