@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check } from 'lucide-react';
+import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge } from '../components/ui.jsx';
@@ -90,6 +90,13 @@ export default function DealEditor({ mode }) {
           <h1 className="text-2xl font-bold text-white mt-2">{mode === 'new' ? 'New deal' : (form.addr || 'Edit deal')}</h1>
         </div>
         <div className="flex gap-2">
+          {mode === 'edit' && existing && (
+            <Link to={`/deal-analyzer/${existing.id}`}>
+              <Button variant="secondary" title="Open the Deal Analyzer for this property">
+                <Calculator className="w-4 h-4" /> {existing.analyzerState ? 'Re-analyze' : 'Analyze'}
+              </Button>
+            </Link>
+          )}
           {mode === 'edit' && existing && (
             <Button
               variant="secondary"

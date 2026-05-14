@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Building2, Bed, Bath, Ruler, Eye, MoreVertical, Upload } from 'lucide-react';
+import { Plus, Search, Building2, Bed, Bath, Ruler, Eye, MoreVertical, Upload, Calculator } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, Button, Input, StatusBadge, PageHeader, EmptyState } from '../components/ui.jsx';
@@ -101,6 +101,9 @@ export default function AdminDashboard() {
                       {menu === d.id && (
                         <div className="absolute right-2 top-12 z-20 bg-slate-800 border border-slate-700 rounded-lg min-w-[180px] py-1 shadow-xl text-xs" onMouseLeave={() => setMenu(null)}>
                           <Link to={`/admin/deal/${d.id}`} className="block px-3 py-2 text-slate-300 hover:bg-slate-700">Edit</Link>
+                          <Link to={`/deal-analyzer/${d.id}`} className="px-3 py-2 text-slate-300 hover:bg-slate-700 flex items-center gap-2">
+                            <Calculator className="w-3.5 h-3.5 text-amber-400" /> Analyze {d.analyzerState ? '↻' : ''}
+                          </Link>
                           {state.profile.handle && <Link to={`/p/${state.profile.handle}/${d.id}`} target="_blank" className="block px-3 py-2 text-slate-300 hover:bg-slate-700">View public ↗</Link>}
                           <button onClick={() => { dispatch({ type: 'update_profile', patch: { featuredId: d.id } }); setMenu(null); show('Featured updated'); }} className="block w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-700">Set as featured</button>
                           <div className="border-t border-slate-700 my-1" />

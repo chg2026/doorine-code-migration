@@ -64,6 +64,7 @@ export default function App() {
 
         <Route path="/pipeline" element={<Admin><Pipeline /></Admin>} />
         <Route path="/deal-analyzer" element={<Admin><DealAnalyzer /></Admin>} />
+        <Route path="/deal-analyzer/:dealId" element={<Admin><DealAnalyzer /></Admin>} />
         <Route path="/buyers" element={<Admin><ProGate pageTitle="Buyers" pageSubtitle="Your buyer network" title="Buyer CRM is a paid feature" body="Upgrade to Personal or Team to build a deduped buyer list, import from leads, and match buyers to deals.">
           <Buyers />
         </ProGate></Admin>} />

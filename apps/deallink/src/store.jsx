@@ -177,12 +177,16 @@ export function StoreProvider({ children }) {
       }
       case 'update_deal': {
         rawDispatch({ type: '_optimistic_update_deal', id: action.id, patch: action.patch });
-        if (String(action.id).startsWith('tmp-')) return;
+        if (String(action.id).startsWith('tmp-')) return { ok: true };
         try {
           const updated = await DealLinkAPI.updateDeal(action.id, action.patch);
           rawDispatch({ type: '_replace_deal', tempId: action.id, deal: updated });
-        } catch (e) { handleError(e, 'Failed to save deal'); await refetchDeals(); }
-        return;
+          return { ok: true, deal: updated };
+        } catch (e) {
+          handleError(e, 'Failed to save deal');
+          await refetchDeals();
+          return { ok: false, error: e?.response?.data?.error || e?.message || 'Failed to save deal' };
+        }
       }
       case 'remove_deal': {
         rawDispatch({ type: '_optimistic_remove_deal', id: action.id });
