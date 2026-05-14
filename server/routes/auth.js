@@ -68,7 +68,7 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
     const { email, password, full_name, company_name, product_code: rawProductCode } = req.body
     const product_code = (rawProductCode || 'chg').trim().toLowerCase()
 
-    if (!email || !password || !company_name) {
+    if (!email || !password || (!company_name && product_code !== 'deallink')) {
       return res.status(400).json({ error: 'Email, password, and company name are required.' })
     }
     if (!EMAIL_RE.test(email)) {
@@ -77,13 +77,14 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters.' })
     }
-    if (company_name.length > 100) {
+    if (company_name && company_name.length > 100) {
       return res.status(400).json({ error: 'Company name must be 100 characters or fewer.' })
     }
 
-    const normalizedEmail = email.toLowerCase().trim()
-    const sanitizedName = (full_name || '').slice(0, 100).trim()
-    const sanitizedCompany = company_name.slice(0, 100).trim()
+    const normalizedEmail  = email.toLowerCase().trim()
+    const sanitizedName    = (full_name || '').slice(0, 100).trim()
+    const resolvedCompany  = company_name || (product_code === 'deallink' ? sanitizedName : '')
+    const sanitizedCompany = resolvedCompany.slice(0, 100).trim()
 
     // Email duplicate check — runs before any rows are created so the cleanup
     // block never has to fire for this case.
