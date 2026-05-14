@@ -173,6 +173,115 @@ router.delete('/deals/:id', async (req, res) => {
   res.json({ ok: true })
 })
 
+// ─── INVESTMENT MEMORANDUM (IM) — Module 1 (wholesaler-side) ─────────────
+// Generates a public slug for a deal and lets the wholesaler toggle which
+// fields appear on the buyer-facing IM page. Buyer auth, SMS gate, and the
+// buyer-safe IM read endpoint are separate modules.
+
+const IM_TOGGLE_FIELDS = new Set([
+  'im_show_arv', 'im_show_asking', 'im_show_repair',
+  'im_show_mao', 'im_show_contact', 'im_show_street_number',
+])
+
+function slugifyDeal(deal) {
+  const parts = [deal.addr || '', deal.city || '']
+    .join(' ')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')   // strip accents
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return parts || 'deal'
+}
+
+// POST /api/deallink/deals/:id/im/share
+// Generates and persists im_slug if not yet set; returns the slug.
+// Idempotent — calling twice returns the same slug.
+router.post('/deals/:id/im/share', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+  const accountId = accountIdFor(req)
+  if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
+
+  const { data: deal, error: dErr } = await db
+    .from('deallink_deals')
+    .select('id, addr, city, im_slug')
+    .eq('id', req.params.id)
+    .eq('account_id', accountId)
+    .maybeSingle()
+  if (dErr) return res.status(500).json({ error: dErr.message })
+  if (!deal) return res.status(404).json({ error: 'Deal not found.' })
+
+  if (deal.im_slug) return res.json({ slug: deal.im_slug })
+
+  // Resolve uniqueness by appending -2, -3, … on collision. Cap retries.
+  const base = slugifyDeal(deal)
+  for (let i = 0; i < 25; i++) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`
+    const { data: clash, error: cErr } = await db
+      .from('deallink_deals')
+      .select('id')
+      .eq('im_slug', candidate)
+      .maybeSingle()
+    if (cErr) return res.status(500).json({ error: cErr.message })
+    if (clash) continue
+
+    const { data: updated, error: uErr } = await db
+      .from('deallink_deals')
+      .update({ im_slug: candidate })
+      .eq('id', deal.id)
+      .eq('account_id', accountId)
+      .is('im_slug', null)            // race-safe: only set if still null
+      .select('im_slug')
+      .maybeSingle()
+    if (uErr) {
+      // Unique-violation race — another concurrent share won; refetch.
+      if (uErr.code === '23505') continue
+      return res.status(500).json({ error: uErr.message })
+    }
+    if (!updated) {
+      // Another request claimed a slug for this deal between our SELECT
+      // and UPDATE — refetch and return whatever's there.
+      const { data: fresh } = await db
+        .from('deallink_deals')
+        .select('im_slug')
+        .eq('id', deal.id)
+        .eq('account_id', accountId)
+        .maybeSingle()
+      if (fresh?.im_slug) return res.json({ slug: fresh.im_slug })
+      continue
+    }
+    return res.json({ slug: updated.im_slug })
+  }
+  return res.status(500).json({ error: 'Failed to generate a unique slug.' })
+})
+
+// PATCH /api/deallink/deals/:id/im/toggles
+// Body: any subset of im_show_arv|asking|repair|mao|contact|street_number.
+router.patch('/deals/:id/im/toggles', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+  const accountId = accountIdFor(req)
+  if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
+
+  const patch = {}
+  for (const k of Object.keys(req.body || {})) {
+    if (IM_TOGGLE_FIELDS.has(k)) patch[k] = !!req.body[k]
+  }
+  if (Object.keys(patch).length === 0) {
+    return res.status(400).json({ error: 'No valid IM toggle fields supplied.' })
+  }
+
+  const { data, error } = await db
+    .from('deallink_deals')
+    .update(patch)
+    .eq('id', req.params.id)
+    .eq('account_id', accountId)
+    .select('id, im_slug, im_show_arv, im_show_asking, im_show_repair, im_show_mao, im_show_contact, im_show_street_number')
+    .maybeSingle()
+  if (error) return res.status(500).json({ error: error.message })
+  if (!data) return res.status(404).json({ error: 'Deal not found.' })
+  res.json({ deal: data })
+})
+
 // ─── LEADS ────────────────────────────────────────────────────────────────
 
 router.get('/leads', async (req, res) => {

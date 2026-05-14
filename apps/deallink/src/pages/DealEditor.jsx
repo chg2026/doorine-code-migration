@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge } from '../components/ui.jsx';
-import { DEAL_STATUSES } from '../lib/deallink-api.js';
+import { DEAL_STATUSES, DealLinkAPI } from '../lib/deallink-api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { UpgradeBanner } from '../components/UpgradePrompt.jsx';
 
@@ -175,6 +175,10 @@ export default function DealEditor({ mode }) {
                 <Field label="Photo URL"><Input value={form.photoUrl} onChange={(e) => patch({ photoUrl: e.target.value })} placeholder="https://…" /></Field>
               </div>
             </section>
+
+            {mode === 'edit' && existing && (
+              <IMSharePanel deal={existing} onChange={(patch) => dispatch({ type: 'update_deal', id: existing.id, patch })} show={show} />
+            )}
           </CardBody>
         </Card>
 
@@ -197,5 +201,143 @@ export default function DealEditor({ mode }) {
       </div>
       {node}
     </Layout>
+  );
+}
+
+// ─── Investment Memorandum share panel ───────────────────────────────────
+// Lets the wholesaler generate a public /deal/<slug> link and choose which
+// fields appear on the buyer-facing IM page. Persists toggles immediately
+// (one PATCH per change) and pushes the new state back into the store so
+// the rest of the UI stays in sync.
+const IM_TOGGLES = [
+  { key: 'imShowAsking',       label: 'Asking price' },
+  { key: 'imShowArv',          label: 'ARV' },
+  { key: 'imShowRepair',       label: 'Repair / deal analysis' },
+  { key: 'imShowMao',          label: 'MAO (max allowable offer)', sensitive: true },
+  { key: 'imShowContact',      label: 'Wholesaler contact' },
+  { key: 'imShowStreetNumber', label: 'Street number on hero' },
+];
+
+function IMSharePanel({ deal, onChange, show }) {
+  const [slug, setSlug] = React.useState(deal.imSlug || null);
+  const [generating, setGenerating] = React.useState(false);
+  const [saving, setSaving] = React.useState(null);
+  const [copied, setCopied] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => { setSlug(deal.imSlug || null); }, [deal.imSlug]);
+
+  const shareUrl = slug && typeof window !== 'undefined'
+    ? `${window.location.origin}/deal/${slug}`
+    : '';
+
+  async function generate() {
+    setGenerating(true); setError(null);
+    try {
+      const s = await DealLinkAPI.shareIM(deal.id);
+      setSlug(s);
+      onChange({ imSlug: s });
+      show('Share link ready');
+    } catch (err) {
+      setError(err?.response?.data?.error || err?.message || 'Failed to generate share link');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function copy() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setError('Could not copy — select and copy manually.');
+    }
+  }
+
+  async function toggle(key, value) {
+    setSaving(key); setError(null);
+    onChange({ [key]: value });   // optimistic
+    try {
+      await DealLinkAPI.updateIMToggles(deal.id, { [key]: value });
+    } catch (err) {
+      onChange({ [key]: !value }); // revert
+      setError(err?.response?.data?.error || err?.message || 'Failed to save toggle');
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  return (
+    <section>
+      <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
+        <Share2 className="w-4 h-4 text-amber-400" /> Investment Memorandum
+      </h3>
+      <p className="text-xs text-slate-400 mb-3">
+        Generate a shareable buyer-facing link for this deal. Buyers verify by SMS, then see the IM with only the fields you allow below.
+      </p>
+
+      {!slug && (
+        <Button onClick={generate} disabled={generating}>
+          <Share2 className="w-4 h-4" /> {generating ? 'Generating…' : 'Generate share link'}
+        </Button>
+      )}
+
+      {slug && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Input value={shareUrl} readOnly onFocus={(e) => e.target.select()} className="font-mono text-xs" />
+            <Button variant="secondary" onClick={copy} title="Copy URL">
+              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            </Button>
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-400/40"
+              title="Open preview"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+          <p className="text-[11px] text-slate-500 font-mono">slug: {slug}</p>
+        </div>
+      )}
+
+      <div className="mt-5">
+        <div className="text-xs uppercase tracking-wider text-slate-500 mb-2">Visibility on the IM page</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {IM_TOGGLES.map((t) => {
+            const value = !!deal[t.key];
+            const isSaving = saving === t.key;
+            return (
+              <label
+                key={t.key}
+                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md border ${
+                  value ? 'border-amber-400/30 bg-amber-400/5' : 'border-slate-700 bg-slate-800/40'
+                } ${isSaving ? 'opacity-60' : ''}`}
+              >
+                <span className="text-sm text-slate-200">
+                  {t.label}
+                  {t.sensitive && <span className="ml-1.5 text-[10px] uppercase tracking-wider text-amber-400">sensitive</span>}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={value}
+                  disabled={isSaving}
+                  onChange={(e) => toggle(t.key, e.target.checked)}
+                  className="w-4 h-4 accent-amber-400"
+                />
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {error && (
+        <div className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded-lg">{error}</div>
+      )}
+    </section>
   );
 }

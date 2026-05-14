@@ -41,6 +41,14 @@ export function dealFromApi(d) {
     hideStreet: !!d.hide_street,
     new: !!d.is_new,
     createdAt: d.created_at,
+    // ─── IM (Investment Memorandum) — Module 1 ──────────────────────────
+    imSlug: d.im_slug || null,
+    imShowArv:          d.im_show_arv          == null ? true  : !!d.im_show_arv,
+    imShowAsking:       d.im_show_asking       == null ? true  : !!d.im_show_asking,
+    imShowRepair:       d.im_show_repair       == null ? true  : !!d.im_show_repair,
+    imShowMao:          d.im_show_mao          == null ? false : !!d.im_show_mao,
+    imShowContact:      d.im_show_contact      == null ? true  : !!d.im_show_contact,
+    imShowStreetNumber: d.im_show_street_number == null ? true : !!d.im_show_street_number,
   };
 }
 
@@ -222,6 +230,22 @@ export const DealLinkAPI = {
     return dealFromApi(data.deal);
   },
   async deleteDeal(id) { await api.delete(`/deallink/deals/${id}`); },
+  async shareIM(id) {
+    const { data } = await api.post(`/deallink/deals/${id}/im/share`);
+    return data.slug;
+  },
+  async updateIMToggles(id, toggles) {
+    // toggles: { imShowArv?, imShowAsking?, imShowRepair?, imShowMao?, imShowContact?, imShowStreetNumber? }
+    const map = {
+      imShowArv: 'im_show_arv', imShowAsking: 'im_show_asking',
+      imShowRepair: 'im_show_repair', imShowMao: 'im_show_mao',
+      imShowContact: 'im_show_contact', imShowStreetNumber: 'im_show_street_number',
+    };
+    const body = {};
+    for (const [k, v] of Object.entries(toggles)) if (k in map) body[map[k]] = !!v;
+    const { data } = await api.patch(`/deallink/deals/${id}/im/toggles`, body);
+    return data.deal;
+  },
   async listLeads() {
     const { data } = await api.get('/deallink/leads');
     return (data.leads || []).map(leadFromApi);
