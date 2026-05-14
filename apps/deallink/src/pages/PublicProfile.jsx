@@ -105,16 +105,80 @@ export default function PublicProfile() {
     return true;
   });
 
+  const bg = backgroundStyleFor(profile);
+  const hasBg = !!(profile.backgroundValue && profile.backgroundType);
+  const darkHero = hasBg && isDarkBackground(profile);
+  const heroTextColor = darkHero ? '#fff' : 'var(--ink)';
+  const heroMutedColor = darkHero ? 'rgba(255,255,255,0.78)' : 'var(--mute)';
+  const socialLinks = profile.socialLinks || {};
+  const socialEntries = Object.entries(socialLinks)
+    .filter(([k, v]) => SOCIAL_ICONS[k] && (v || '').trim());
+
   return (
-    <div className="public-page">
+    <div className="public-page" style={hasBg ? { ...bg } : undefined}>
       <div className="public-frame">
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 4px 18px' }}>
-          <Avatar size={72} initials={profile.initials} />
-          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: -0.3 }}>@{profile.handle}</div>
-          <div style={{ fontSize: 13, color: 'var(--mute)', lineHeight: 1.5, maxWidth: 320 }}>{profile.bio}</div>
+        <div style={{
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 8,
+          padding: hasBg ? '32px 16px 22px' : '0 4px 18px',
+          margin: hasBg ? '-1px -1px 18px' : 0,
+          color: heroTextColor,
+          ...bg,
+        }}>
+          {profile.avatarUrl ? (
+            <span style={{
+              width: 72,
+              height: 72,
+              borderRadius: 16,
+              background: `center/cover no-repeat url(${profile.avatarUrl})`,
+              display: 'inline-block',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
+            }} />
+          ) : (
+            <Avatar size={72} initials={profile.initials} />
+          )}
+          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: -0.3, color: heroTextColor }}>@{profile.handle}</div>
+          {profile.name && profile.name !== profile.handle && (
+            <div style={{ fontSize: 13, fontWeight: 500, color: heroMutedColor }}>{profile.name}</div>
+          )}
+          {profile.bio && (
+            <div style={{ fontSize: 13, color: heroMutedColor, lineHeight: 1.5, maxWidth: 320 }}>{profile.bio}</div>
+          )}
+          {socialEntries.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {socialEntries.map(([key, url]) => {
+                const Icon = SOCIAL_ICONS[key];
+                return (
+                  <a
+                    key={key}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    title={key}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 999,
+                      background: darkHero ? 'rgba(255,255,255,0.16)' : 'rgba(15,23,42,0.08)',
+                      color: heroTextColor,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <Icon size={15} />
+                  </a>
+                );
+              })}
+            </div>
+          )}
           <div style={{ marginTop: 6 }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 18, fontWeight: 600 }}>{visible.length}</div>
-            <div className="kicker" style={{ marginTop: 2, letterSpacing: 0.8 }}>Active Deals</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 18, fontWeight: 600, color: heroTextColor }}>{visible.length}</div>
+            <div className="kicker" style={{ marginTop: 2, letterSpacing: 0.8, color: heroMutedColor }}>Active Deals</div>
           </div>
           <button className="btn sm" style={{ marginTop: 8 }} onClick={() => setJoinOpen(true)}>Join buyer list</button>
         </div>

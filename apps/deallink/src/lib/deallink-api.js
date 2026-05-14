@@ -194,7 +194,7 @@ export const DealLinkAPI = {
     return profileFromApi(data.profile);
   },
   async patchProfile(patch) {
-    const { data } = await api.patch('/deallink/profile', profileToApi(patch));
+    const { data } = await api.put('/deallink/profile', profileToApi(patch));
     return profileFromApi(data.profile);
   },
   async listDeals() {

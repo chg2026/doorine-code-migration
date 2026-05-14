@@ -269,6 +269,7 @@ export default function AdminProfile() {
     setSaving(true);
     try {
       const updated = await DealLinkAPI.patchProfile({
+        handle: state.profile.handle || form.handle || '',
         avatarUrl: form.avatarUrl || '',
         bio: form.bio || '',
         backgroundType: form.backgroundType || 'solid',
