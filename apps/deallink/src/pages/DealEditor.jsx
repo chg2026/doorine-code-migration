@@ -193,6 +193,21 @@ export default function DealEditor({ mode }) {
             </section>
 
             {mode === 'edit' && existing && (
+              <section>
+                <h3 className="text-white font-semibold text-sm mb-3">Deal analysis</h3>
+                <Link
+                  to={`/deal-analyzer/${existing.id}`}
+                  className="inline-flex items-center px-3 py-2 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-sm hover:border-amber-400 hover:text-amber-200"
+                >
+                  deal analysis
+                </Link>
+                <p className="text-xs text-slate-500 mt-2">
+                  Opens the analyzer prefilled with this property's address, ask, and ARV.
+                </p>
+              </section>
+            )}
+
+            {mode === 'edit' && existing && (
               <IMSharePanel deal={existing} onChange={(patch) => dispatch({ type: 'update_deal', id: existing.id, patch })} show={show} />
             )}
           </CardBody>
