@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator } from 'lucide-react';
+import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, Info } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge } from '../components/ui.jsx';
@@ -27,6 +27,7 @@ export default function DealEditor({ mode }) {
   const existing = mode === 'edit' ? state.deals.find((d) => d.id === id) : null;
   const [form, setForm] = React.useState(existing || EMPTY);
   const [error, setError] = React.useState(null);
+  const [tab, setTab] = React.useState('overview');
 
   const dealCount = state.deals.length;
   const otherHiddenCount = state.deals.filter((d) => d.hideStreet && (!existing || d.id !== existing.id)).length;
@@ -119,10 +120,39 @@ export default function DealEditor({ mode }) {
         <UpgradeBanner message={`You've hit the Free plan's ${FREE_DEAL_LIMIT}-deal limit. Upgrade to Personal or Team to add more.`} />
       )}
 
+      {mode === 'edit' && existing && (
+        <div className="border-b border-slate-800 mb-5 flex items-center gap-6">
+          {[
+            { k: 'overview', label: 'Overview' },
+            { k: 'analysis', label: 'Deal analysis' },
+          ].map((t) => {
+            const active = tab === t.k;
+            return (
+              <button
+                key={t.k}
+                onClick={() => setTab(t.k)}
+                className={`relative pb-3 text-sm font-medium transition-colors ${
+                  active ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {t.label}
+                <span
+                  className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full ${
+                    active ? 'bg-amber-400' : 'bg-transparent'
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
         <Card>
           <CardBody className="space-y-6">
             {error && <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-lg">{error}</div>}
+
+            {(mode !== 'edit' || tab === 'overview') && (<>
 
             <section>
               <h3 className="text-white font-semibold text-sm mb-3">Address</h3>
@@ -193,6 +223,12 @@ export default function DealEditor({ mode }) {
             </section>
 
             {mode === 'edit' && existing && (
+              <IMSharePanel deal={existing} onChange={(patch) => dispatch({ type: 'update_deal', id: existing.id, patch })} show={show} />
+            )}
+
+            </>)}
+
+            {mode === 'edit' && existing && tab === 'analysis' && (
               <DealAnalysisSection
                 deal={existing}
                 onClear={async () => {
@@ -211,29 +247,30 @@ export default function DealEditor({ mode }) {
                 }}
               />
             )}
-
-            {mode === 'edit' && existing && (
-              <IMSharePanel deal={existing} onChange={(patch) => dispatch({ type: 'update_deal', id: existing.id, patch })} show={show} />
-            )}
           </CardBody>
         </Card>
 
-        <Card className="lg:sticky lg:top-4">
-          <CardHeader><CardTitle>Live preview</CardTitle></CardHeader>
-          <CardBody>
-            <div className="rounded-lg overflow-hidden border border-slate-700">
-              <div className="h-32 bg-slate-800 flex items-center justify-center">
-                {form.photoUrl ? <img src={form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-slate-600" />}
+        <div className="space-y-4 lg:sticky lg:top-4">
+          {mode === 'edit' && existing && (
+            <DealAnalysisCallout deal={existing} />
+          )}
+          <Card>
+            <CardHeader><CardTitle>Live preview</CardTitle></CardHeader>
+            <CardBody>
+              <div className="rounded-lg overflow-hidden border border-slate-700">
+                <div className="h-32 bg-slate-800 flex items-center justify-center">
+                  {form.photoUrl ? <img src={form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-slate-600" />}
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-between"><p className="text-white text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
+                  <p className="text-slate-400 text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
+                  <p className="text-white font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-slate-400 font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
+                </div>
               </div>
-              <div className="p-3">
-                <div className="flex items-center justify-between"><p className="text-white text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
-                <p className="text-slate-400 text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
-                <p className="text-white font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-slate-400 font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-500 mt-3">This is what buyers see on your public profile.</p>
-          </CardBody>
-        </Card>
+              <p className="text-xs text-slate-500 mt-3">This is what buyers see on your public profile.</p>
+            </CardBody>
+          </Card>
+        </div>
       </div>
       {node}
     </Layout>
@@ -335,6 +372,43 @@ function DealAnalysisSection({ deal, onClear }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// Right-rail callout card. When the analyzer has been saved, shows the
+// run date with a link back to the analyzer; otherwise nudges the user
+// to run their first analysis.
+function DealAnalysisCallout({ deal }) {
+  const ts = deal.analyzerStateUpdatedAt;
+  const runDate = ts
+    ? new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
+
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Deal analysis</p>
+      {runDate ? (
+        <div className="rounded-lg border-l-2 border-amber-400 bg-amber-400/[0.06] p-3 flex items-start gap-2">
+          <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Analysis was run on <span className="font-semibold text-amber-300">{runDate}</span>. Edit it anytime in the{' '}
+            <Link to={`/deal-analyzer/${deal.id}`} className="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+              Deal Analyzer
+            </Link>.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 flex items-start gap-2">
+          <Calculator className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-400 leading-relaxed">
+            No analysis saved yet.{' '}
+            <Link to={`/deal-analyzer/${deal.id}`} className="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+              Run one in the Deal Analyzer
+            </Link>.
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
