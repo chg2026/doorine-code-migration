@@ -74,6 +74,10 @@ export function profileFromApi(p) {
     featuredId: p.featured_id || null,
     onboarding: p.onboarding || {},
     marketplaceOptIn: !!p.marketplace_opt_in,
+    avatarUrl: p.avatar_url || '',
+    backgroundType: p.background_type || 'solid',
+    backgroundValue: p.background_value || '#161b2e',
+    socialLinks: p.social_links && typeof p.social_links === 'object' ? p.social_links : {},
   };
 }
 
@@ -88,6 +92,10 @@ export function profileToApi(p) {
   if ('featuredId' in p) out.featured_id = p.featuredId;
   if ('onboarding' in p) out.onboarding = p.onboarding;
   if ('marketplaceOptIn' in p) out.marketplace_opt_in = !!p.marketplaceOptIn;
+  if ('avatarUrl' in p) out.avatar_url = p.avatarUrl;
+  if ('backgroundType' in p) out.background_type = p.backgroundType;
+  if ('backgroundValue' in p) out.background_value = p.backgroundValue;
+  if ('socialLinks' in p) out.social_links = p.socialLinks || {};
   return out;
 }
 
@@ -183,6 +191,10 @@ export const DealLinkAPI = {
   },
   async putProfile(patch) {
     const { data } = await api.put('/deallink/profile', profileToApi(patch));
+    return profileFromApi(data.profile);
+  },
+  async patchProfile(patch) {
+    const { data } = await api.patch('/deallink/profile', profileToApi(patch));
     return profileFromApi(data.profile);
   },
   async listDeals() {

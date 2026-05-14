@@ -120,6 +120,10 @@ externalPort = 80
 localPort = 8080
 externalPort = 8080
 
+[[ports]]
+localPort = 23636
+externalPort = 4200
+
 [deployment]
 deploymentTarget = "static"
 build = ["sh", "-c", "npm install && npm run build --workspace=apps/deallink"]

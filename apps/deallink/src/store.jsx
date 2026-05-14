@@ -7,6 +7,8 @@ const StoreContext = createContext(null);
 const EMPTY_PROFILE = {
   handle: '', name: '', initials: '', bio: '', city: '', email: '',
   featuredId: null, onboarding: {}, marketplaceOptIn: false,
+  avatarUrl: '', backgroundType: 'solid', backgroundValue: '#161b2e',
+  socialLinks: {},
 };
 
 function defaultState() {
