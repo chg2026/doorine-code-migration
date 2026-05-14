@@ -156,7 +156,7 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
       .insert({
         account_id: accountId,
         product_id: product.id,
-        plan: 'starter',
+        plan: product_code === 'deallink' ? 'free' : 'starter',
         status: 'active',
         started_at: new Date().toISOString(),
       })
