@@ -106,15 +106,12 @@ export function DealAnalyzer() {
       <DealLinkSidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         <DealLinkTopbar />
-        <PipelineChrome />
 
-      <div className="px-8 pb-12">
+      <div className="px-8 pb-12 pt-6">
         {/* Page header */}
         <div className="flex items-start justify-between gap-4 pt-2">
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-500 uppercase tracking-wider mb-2">
-              <span>Pipeline</span>
-              <ChevronRight className="w-3 h-3" />
               <span className="text-amber-400">Deal Analyzer</span>
             </div>
             <h1 className="text-2xl font-semibold text-white flex items-center gap-3">
@@ -276,10 +273,13 @@ const NAV_GROUPS: { label: string | null; items: { label: string; icon: any; act
   { label: null, items: [{ label: "Dashboard", icon: LayoutDashboard }] },
   { label: "Deals", items: [
     { label: "Properties", icon: Building2 },
-    { label: "Pipeline", icon: Kanban, active: true },
+    { label: "Pipeline", icon: Kanban },
     { label: "Offers", icon: FileText },
     { label: "Marketplace", icon: Globe },
     { label: "Import CSV", icon: Upload },
+  ]},
+  { label: "Deal Analyzer", items: [
+    { label: "Deal Analyzer", icon: Calculator, active: true },
   ]},
   { label: "Buyers", items: [
     { label: "Buyers List", icon: Users },
