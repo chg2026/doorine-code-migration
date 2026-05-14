@@ -53,7 +53,7 @@ router.put('/profile', async (req, res) => {
   const accountId = accountIdFor(req)
   if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
 
-  const allowed = ['handle', 'name', 'initials', 'bio', 'city', 'email', 'featured_id', 'onboarding', 'marketplace_opt_in']
+  const allowed = ['handle', 'name', 'initials', 'bio', 'city', 'email', 'featured_id', 'onboarding', 'marketplace_opt_in', 'avatar_url', 'background_type', 'background_value', 'social_links', 'radius', 'gradient_enabled', 'tone', 'accent_color']
   const patch = { account_id: accountId }
   for (const k of allowed) if (k in req.body) patch[k] = req.body[k]
 
