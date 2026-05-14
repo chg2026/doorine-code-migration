@@ -1,5 +1,5 @@
 import React from 'react';
-import { Twitter, Linkedin, Instagram, Globe } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { DealLinkAPI } from '../lib/deallink-api.js';
@@ -22,10 +22,9 @@ const RAISED_SHADOW = '-5px -5px 12px rgba(255,255,255,0.06), 5px 5px 12px rgba(
 const INSET_SHADOW = 'inset -3px -3px 8px rgba(255,255,255,0.06), inset 3px 3px 8px rgba(0,0,0,0.55)';
 
 const SOCIALS = [
-  { key: 'twitter',   label: 'Twitter / X',  icon: Twitter,   placeholder: 'https://x.com/yourhandle' },
-  { key: 'linkedin',  label: 'LinkedIn',      icon: Linkedin,  placeholder: 'https://linkedin.com/in/you' },
-  { key: 'instagram', label: 'Instagram',     icon: Instagram, placeholder: 'https://instagram.com/you' },
-  { key: 'website',   label: 'Website',       icon: Globe,     placeholder: 'https://your-site.com' },
+  { key: 'instagram', label: 'Instagram', icon: Instagram,     placeholder: 'https://instagram.com/you' },
+  { key: 'facebook',  label: 'Facebook',  icon: Facebook,      placeholder: 'https://facebook.com/you' },
+  { key: 'whatsapp',  label: 'WhatsApp',  icon: MessageCircle, placeholder: 'https://wa.me/15555555555' },
 ];
 
 function readTheme(profile) {
@@ -45,11 +44,16 @@ export default function AdminProfile() {
   const [form, setForm] = React.useState(state.profile);
   const [theme, setTheme] = React.useState(() => readTheme(state.profile));
   const [saving, setSaving] = React.useState(false);
+  const initialized = React.useRef(false);
 
+  // Hydrate the form ONCE from the store the first time the profile is
+  // available. Subsequent store changes (e.g. our own dispatch after save,
+  // or background refreshes) must not stomp the in-progress form values.
   React.useEffect(() => {
-    if (state.loaded) {
+    if (state.loaded && !initialized.current && state.profile) {
       setForm(state.profile);
       setTheme(readTheme(state.profile));
+      initialized.current = true;
     }
   }, [state.loaded, state.profile]);
 

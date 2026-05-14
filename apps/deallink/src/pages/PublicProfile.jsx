@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Twitter, Instagram, Globe, X } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle, X } from 'lucide-react';
 import { PublicAPI } from '../lib/deallink-api.js';
 import { initialsOf } from '../lib/utils.js';
 import {
@@ -8,9 +8,9 @@ import {
 } from '../lib/neu.js';
 
 const SOCIAL_DEFS = [
-  { key: 'instagram', Icon: Instagram, label: 'Instagram' },
-  { key: 'twitter',   Icon: Twitter,   label: 'Twitter' },
-  { key: 'website',   Icon: Globe,     label: 'Website' },
+  { key: 'instagram', Icon: Instagram,     label: 'Instagram' },
+  { key: 'facebook',  Icon: Facebook,      label: 'Facebook' },
+  { key: 'whatsapp',  Icon: MessageCircle, label: 'WhatsApp' },
 ];
 
 export default function PublicProfile() {
@@ -20,6 +20,7 @@ export default function PublicProfile() {
   const [notFound, setNotFound] = React.useState(false);
   const [openDealId, setOpenDealId] = React.useState(null);
   const [leadDealId, setLeadDealId] = React.useState(null);
+  const [joinOpen, setJoinOpen] = React.useState(false);
   const [toast, setToast] = React.useState(null);
 
   function showToast(m) {
@@ -72,7 +73,9 @@ export default function PublicProfile() {
   const others = featured ? visible.filter((d) => d.id !== featured.id) : visible;
   const displayInitials = profile.initials || initialsOf(profile.name || profile.handle || 'A');
   const links = profile.socialLinks || {};
-  const socialEntries = SOCIAL_DEFS.filter((s) => (links[s.key] || '').trim());
+  const socialEntries = SOCIAL_DEFS
+    .filter((s) => (links[s.key] || '').trim())
+    .slice(0, 3);
 
   const openDeal = openDealId ? visible.find((d) => d.id === openDealId) : null;
   const leadDeal = leadDealId ? visible.find((d) => d.id === leadDealId) : null;
@@ -157,8 +160,25 @@ export default function PublicProfile() {
           </div>
         )}
 
-        {/* Footer pill */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+        {/* Footer pills */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => setJoinOpen(true)}
+            style={{
+              padding: '10px 18px', borderRadius: 999,
+              background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 10),
+              fontSize: 12, color: tone.ink, fontWeight: 600, letterSpacing: 0.4,
+              border: 'none', cursor: 'pointer', fontFamily: NEU_FONT,
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <span style={{
+              width: 7, height: 7, borderRadius: 999, background: accent,
+              boxShadow: `0 0 8px ${accent}`,
+            }} />
+            Join buyer list
+          </button>
           <div style={{
             padding: '10px 18px', borderRadius: 999,
             background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 10),
@@ -184,6 +204,15 @@ export default function PublicProfile() {
           theme={theme}
           onClose={() => setLeadDealId(null)}
           onSubmitted={() => { setLeadDealId(null); showToast("Sent — you're on the list"); }}
+        />
+      )}
+      {joinOpen && (
+        <LeadCaptureModal
+          deal={null}
+          handle={profile.handle}
+          theme={theme}
+          onClose={() => setJoinOpen(false)}
+          onSubmitted={() => { setJoinOpen(false); showToast("You're on the buyer list"); }}
         />
       )}
 
@@ -525,6 +554,8 @@ function LeadCaptureModal({ deal, handle, theme, onClose, onSubmitted }) {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
 
+  const isJoin = !deal;
+
   async function submit(e) {
     e.preventDefault();
     if (!email.trim() || !first.trim()) { setError('First name and email are required.'); return; }
@@ -532,7 +563,7 @@ function LeadCaptureModal({ deal, handle, theme, onClose, onSubmitted }) {
     try {
       await PublicAPI.submitLead(handle, {
         first, last, email, phone, buyerType,
-        kind: 'deal-interest',
+        kind: isJoin ? 'buyer-list' : 'deal-interest',
         dealId: deal?.id || null,
       });
       onSubmitted();
@@ -547,13 +578,20 @@ function LeadCaptureModal({ deal, handle, theme, onClose, onSubmitted }) {
     <ModalShell theme={theme} onClose={onClose} maxWidth={400}>
       <div style={{ position: 'relative' }}>
         <ModalClose theme={theme} onClose={onClose} />
-        <Kicker theme={theme}>Request info</Kicker>
+        <Kicker theme={theme}>{isJoin ? 'Buyer list' : 'Request info'}</Kicker>
         <div style={{ fontSize: 16, fontWeight: 700, color: tone.ink, marginTop: 8, paddingRight: 32 }}>
-          {deal.addr || 'Untitled deal'}
+          {isJoin ? `Join @${handle}'s buyer list` : (deal.addr || 'Untitled deal')}
         </div>
-        <div style={{ fontSize: 12, color: tone.mute, marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
-          Ask ${Number(deal.ask || 0).toLocaleString()}
-        </div>
+        {!isJoin && (
+          <div style={{ fontSize: 12, color: tone.mute, marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+            Ask ${Number(deal.ask || 0).toLocaleString()}
+          </div>
+        )}
+        {isJoin && (
+          <div style={{ fontSize: 12, color: tone.mute, marginTop: 4 }}>
+            Get new off-market deals every Monday.
+          </div>
+        )}
 
         <form onSubmit={submit} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
