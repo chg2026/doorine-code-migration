@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Users, Kanban, FileText, BarChart3, Bell, ChevronRight,
   Menu, X, Zap, Globe, Handshake, UserCheck, Eye, LogOut, ExternalLink, Settings,
-  ListChecks, Upload,
+  ListChecks, Upload, Calculator,
 } from 'lucide-react';
 import { useStore } from '../store.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -19,6 +19,9 @@ const navGroups = [
     { label: 'Offers', path: '/offers', icon: FileText },
     { label: 'Marketplace', path: '/marketplace', icon: Globe },
     { label: 'Import CSV', path: '/admin/import', icon: Upload },
+  ]},
+  { label: 'Deal Analyzer', items: [
+    { label: 'Deal Analyzer', path: '/deal-analyzer', icon: Calculator },
   ]},
   { label: 'Buyers', items: [
     { label: 'Buyers List', path: '/buyers', icon: Users },

@@ -20,6 +20,7 @@ import AdminProfile from './pages/AdminProfile.jsx';
 import DealEditor from './pages/DealEditor.jsx';
 import CsvImport from './pages/CsvImport.jsx';
 import Pipeline from './pages/Pipeline.jsx';
+import DealAnalyzer from './pages/DealAnalyzer.jsx';
 import Buyers from './pages/Buyers.jsx';
 import Offers from './pages/Offers.jsx';
 import Analytics from './pages/Analytics.jsx';
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="/admin/import" element={<Admin><CsvImport /></Admin>} />
 
         <Route path="/pipeline" element={<Admin><Pipeline /></Admin>} />
+        <Route path="/deal-analyzer" element={<Admin><DealAnalyzer /></Admin>} />
         <Route path="/buyers" element={<Admin><ProGate pageTitle="Buyers" pageSubtitle="Your buyer network" title="Buyer CRM is a paid feature" body="Upgrade to Personal or Team to build a deduped buyer list, import from leads, and match buyers to deals.">
           <Buyers />
         </ProGate></Admin>} />
