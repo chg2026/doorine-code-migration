@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
   Home, Wrench, ArrowLeft, Plus, Trash2, AlertCircle,
-  CheckCircle2, Save, Repeat, Layers, Briefcase,
+  CheckCircle2, Save, Repeat, Layers, Briefcase, Building2, Search, Repeat2,
 } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
+import { useStore } from '../store.jsx';
+import { DEAL_STATUSES } from '../lib/deallink-api.js';
 
 const fmt = (n) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -26,11 +29,39 @@ const SUBTABS = [
 ];
 
 export default function DealAnalyzer() {
+  const { dealId } = useParams();
+  const { state } = useStore();
+
+  // No property selected yet → show the picker.
+  if (!dealId) return <PropertySelector deals={state.deals} loaded={state.loaded} />;
+
+  // Wait for the store to hydrate before deciding the deal is missing.
+  if (!state.loaded) {
+    return <Layout><div className="py-32 text-center text-xs text-slate-500 font-mono">Loading…</div></Layout>;
+  }
+
+  const deal = state.deals.find((d) => d.id === dealId);
+  if (!deal) {
+    return (
+      <Layout>
+        <div className="py-24 text-center">
+          <p className="text-slate-300 mb-3">That property isn't in your list.</p>
+          <Link to="/deal-analyzer" className="text-amber-400 text-sm hover:underline">Pick a property to analyze →</Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Remount on dealId change so all useState initializers re-run with the new property's data.
+  return <Analyzer key={deal.id} deal={deal} />;
+}
+
+function Analyzer({ deal }) {
   const [strategy, setStrategy] = useState('brrrr');
   const [subtab, setSubtab] = useState('rehab');
 
-  const [purchasePrice, setPurchasePrice] = useState(295000);
-  const [arv, setArv] = useState(0);
+  const [purchasePrice, setPurchasePrice] = useState(Number(deal.ask) || 0);
+  const [arv, setArv] = useState(Number(deal.arv) || 0);
   const [downPct, setDownPct] = useState(20);
   const [rate, setRate] = useState(8.25);
   const [term, setTerm] = useState(30);
@@ -51,7 +82,7 @@ export default function DealAnalyzer() {
     { id: 'r2', category: 'Interior Paint', description: 'Interior paint', cost: 3500 },
   ]);
 
-  const [refiArv, setRefiArv] = useState(0);
+  const [refiArv, setRefiArv] = useState(Number(deal.arv) || 0);
   const [refiLTV, setRefiLTV] = useState(75);
   const [refiRate, setRefiRate] = useState(7.5);
 
@@ -126,17 +157,36 @@ export default function DealAnalyzer() {
   return (
     <Layout>
       <div className="-m-4 md:-m-6 p-4 md:p-6">
-        <div className="flex items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-3">
-            <button className="text-slate-500 hover:text-slate-200">
+        <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link to="/deal-analyzer" className="text-slate-500 hover:text-slate-200" title="Pick a different property">
               <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-2xl font-semibold text-white">123 Maple Street</h1>
-            <AlertCircle className="w-4 h-4 text-rose-400" />
+            </Link>
+            {deal.photoUrl ? (
+              <img src={deal.photoUrl} alt="" className="w-12 h-12 rounded-lg object-cover border border-slate-800 flex-shrink-0" />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-800 flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-5 h-5 text-slate-500" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-2xl font-semibold text-white truncate">{deal.addr || 'Untitled property'}</h1>
+              <p className="text-xs text-slate-500 truncate">
+                {[deal.city, deal.state || deal.zip].filter(Boolean).join(', ')}
+                {deal.type ? ` · ${deal.type}` : ''}
+                {deal.beds ? ` · ${deal.beds}bd` : ''}{deal.baths ? `/${deal.baths}ba` : ''}
+                {deal.sqft ? ` · ${Number(deal.sqft).toLocaleString()} sqft` : ''}
+              </p>
+            </div>
           </div>
-          <button className="px-4 py-2 text-sm rounded-md bg-amber-500 text-slate-950 font-medium hover:bg-amber-400 flex items-center gap-2 shadow-sm">
-            <Save className="w-4 h-4" /> Save Deal
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/deal-analyzer" className="px-3 py-2 text-xs rounded-md border border-slate-700 text-slate-300 hover:text-white hover:border-slate-600 flex items-center gap-1.5">
+              <Repeat2 className="w-3.5 h-3.5" /> Switch property
+            </Link>
+            <button className="px-4 py-2 text-sm rounded-md bg-amber-500 text-slate-950 font-medium hover:bg-amber-400 flex items-center gap-2 shadow-sm">
+              <Save className="w-4 h-4" /> Save Deal
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -560,5 +610,122 @@ function Row({ label, value, accent, tone }) {
       <span className="text-slate-400">{label}</span>
       <span className={`${accent ? 'text-amber-300' : 'text-slate-200'} ${toneCls}`}>{value}</span>
     </div>
+  );
+}
+
+// ─── Property Selector ────────────────────────────────────────────────────
+// Shown when the user navigates to /deal-analyzer with no property
+// selected. Lists every deal from the Properties tab so the user can
+// pick which one to analyze. Selecting a card routes to
+// /deal-analyzer/:dealId, where the analyzer prefills from the deal.
+
+function PropertySelector({ deals, loaded }) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('All');
+
+  const filtered = deals.filter((d) => {
+    if (filter !== 'All' && d.status !== filter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!`${d.addr || ''} ${d.zip || ''} ${d.city || ''} ${d.state || ''}`.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+  const counts = deals.reduce((a, d) => { a[d.status] = (a[d.status] || 0) + 1; return a; }, {});
+
+  return (
+    <Layout>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Deal Analyzer</h1>
+        <p className="text-sm text-slate-400 mt-1">Choose a property to analyze</p>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-5">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by address, city, ZIP..."
+            className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 flex-wrap mb-5">
+        {['All', ...DEAL_STATUSES].map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+              filter === s
+                ? 'bg-amber-400 text-slate-900'
+                : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'
+            }`}
+          >
+            {s} {s !== 'All' ? counts[s] || 0 : deals.length}
+          </button>
+        ))}
+      </div>
+
+      {!loaded ? (
+        <div className="py-24 text-center text-xs text-slate-500 font-mono">Loading properties…</div>
+      ) : filtered.length === 0 ? (
+        <div className="py-16 text-center">
+          <p className="text-slate-300 mb-2">{deals.length === 0 ? 'No properties yet.' : 'No matches.'}</p>
+          <p className="text-xs text-slate-500">
+            {deals.length === 0
+              ? <>Add a deal in <Link to="/admin" className="text-amber-400 hover:underline">Properties</Link> to get started.</>
+              : 'Try a different filter or search.'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((d) => {
+            const spread = (d.arv > 0 && d.ask > 0) ? Math.round(((d.arv - d.ask) / d.arv) * 100) : null;
+            return (
+              <Link
+                key={d.id}
+                to={`/deal-analyzer/${d.id}`}
+                className="block rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-900/70 hover:border-slate-700 transition-colors px-4 py-4"
+              >
+                <div className="flex items-center gap-4">
+                  {d.photoUrl ? (
+                    <img src={d.photoUrl} alt="" className="w-14 h-14 rounded-lg object-cover border border-slate-800 flex-shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-slate-800 border border-slate-800 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-slate-500" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-sm font-semibold truncate">{d.addr || '—'}</p>
+                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                      {[d.city, d.state || d.zip].filter(Boolean).join(', ')}
+                      {d.type ? ` · ${d.type}` : ''}
+                      {d.beds ? ` · ${d.beds}bd` : ''}{d.baths ? ` / ${d.baths}ba` : ''}
+                      {d.sqft ? ` / ${Number(d.sqft).toLocaleString()} sqft` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-white text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
+                    {d.arv > 0 && (
+                      <p className="text-emerald-400 text-xs mt-0.5">ARV: ${Number(d.arv).toLocaleString()}</p>
+                    )}
+                    {spread != null && spread !== 0 && (
+                      <p className="text-slate-500 text-[10px] mt-0.5">{spread}% spread</p>
+                    )}
+                    {d.status && (
+                      <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] border border-emerald-500/30">
+                        {d.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </Layout>
   );
 }
