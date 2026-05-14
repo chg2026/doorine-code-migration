@@ -27,12 +27,15 @@ function maskAddr(addr) {
 }
 
 // Strip server-only fields and apply hide_street masking before returning.
+// IMPORTANT: `notes` is PRIVATE per the DealEditor UI contract — never
+// expose it on the public endpoint. `description` is the public blurb.
 function publicDeal(d) {
   if (!d) return null
   return {
     id: d.id,
     addr: d.hide_street ? maskAddr(d.addr) : d.addr,
     city: d.city,
+    state: d.state,
     zip: d.zip,
     type: d.type,
     units: d.units,
@@ -44,7 +47,9 @@ function publicDeal(d) {
     occ: d.occ,
     access: d.access,
     status: d.status,
-    notes: d.notes,
+    description: d.description,
+    photo_url: d.photo_url,
+    tags: Array.isArray(d.tags) ? d.tags : [],
     hide_street: d.hide_street,
     is_new: d.is_new,
     created_at: d.created_at,
