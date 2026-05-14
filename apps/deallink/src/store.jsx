@@ -102,15 +102,21 @@ export function StoreProvider({ children }) {
         return;
       }
       try {
-        const [profile, deals, leads, buyers, offers] = await Promise.all([
+        const [profile, deals, leads, buyersRes, offersRes] = await Promise.all([
           DealLinkAPI.getProfile(),
           DealLinkAPI.listDeals(),
           DealLinkAPI.listLeads(),
-          DealLinkAPI.listBuyers().catch(() => []),
-          DealLinkAPI.listOffers().catch(() => []),
+          DealLinkAPI.listBuyers().then((d) => ({ ok: true, data: d })).catch((err) => ({ ok: false, err })),
+          DealLinkAPI.listOffers().then((d) => ({ ok: true, data: d })).catch((err) => ({ ok: false, err })),
         ]);
         if (cancelled) return;
-        rawDispatch({ type: 'hydrate', signedIn: true, profile, deals, leads, buyers, offers });
+        if (!buyersRes.ok) handleError(buyersRes.err, 'Failed to load buyers');
+        if (!offersRes.ok) handleError(offersRes.err, 'Failed to load offers');
+        rawDispatch({
+          type: 'hydrate', signedIn: true, profile, deals, leads,
+          buyers: buyersRes.ok ? buyersRes.data : [],
+          offers: offersRes.ok ? offersRes.data : [],
+        });
       } catch (e) {
         if (cancelled) return;
         handleError(e, 'Failed to load Deal Link data');

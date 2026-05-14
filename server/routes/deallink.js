@@ -278,7 +278,19 @@ router.patch('/offers/:id', async (req, res) => {
   const db = dbOrFail(res); if (!db) return
   const accountId = accountIdFor(req)
   if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
-  const { data, error } = await db.from('deallink_offers').update(pickOffer(req.body))
+  const patch = pickOffer(req.body)
+  if (patch.deal_id) {
+    const { data: deal } = await db.from('deallink_deals').select('id, account_id')
+      .eq('id', patch.deal_id).maybeSingle()
+    if (!deal || deal.account_id !== accountId) return res.status(400).json({ error: 'Invalid deal_id.' })
+  }
+  if (patch.buyer_id) {
+    const { data: buyer } = await db.from('deallink_buyers').select('id, account_id, name')
+      .eq('id', patch.buyer_id).maybeSingle()
+    if (!buyer || buyer.account_id !== accountId) return res.status(400).json({ error: 'Invalid buyer_id.' })
+    if (!patch.buyer_name) patch.buyer_name = buyer.name
+  }
+  const { data, error } = await db.from('deallink_offers').update(patch)
     .eq('id', req.params.id).eq('account_id', accountId).select().single()
   if (error) return res.status(500).json({ error: error.message })
   if (!data) return res.status(404).json({ error: 'Offer not found.' })
