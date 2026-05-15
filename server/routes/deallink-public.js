@@ -44,6 +44,7 @@ function publicDeal(d) {
     notes: d.notes,
     hide_street: d.hide_street,
     is_new: d.is_new,
+    photos: d.photos || [],
     created_at: d.created_at,
   }
 }
