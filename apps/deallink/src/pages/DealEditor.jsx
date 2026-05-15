@@ -1324,7 +1324,7 @@ function ShareIMButton({ deal, onSave, show }) {
         type="button"
         onClick={handleClick}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 rounded-md bg-yellow-400 hover:bg-yellow-300 border-2 border-black px-3 py-1.5 text-sm font-semibold text-black shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         title={slug ? shareUrl : 'Generate a public buyer link for this IM'}
       >
         <Share2 className="w-4 h-4" />
