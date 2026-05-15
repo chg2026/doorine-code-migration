@@ -150,9 +150,12 @@ router.get('/:dealId', async (req, res) => {
 router.post('/:dealId/send-otp', async (req, res) => {
   const db = dbOrFail(res); if (!db) return
   const { dealId } = req.params
-  const { name, phone } = req.body
-
-  if (!phone || !PHONE_RE.test(phone)) {
+  const { name, phone: rawPhone } = req.body
+  const digits = (rawPhone || '').replace(/\D/g, '')
+  const phone = digits.length === 10 ? '+1' + digits
+    : digits.length === 11 && digits.startsWith('1') ? '+' + digits
+    : (rawPhone || '')
+  if (!PHONE_RE.test(phone)) {
     return res.status(400).json({ error: 'Valid US phone number required (+1XXXXXXXXXX).' })
   }
   if (!name || !String(name).trim()) {
