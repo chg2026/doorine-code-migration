@@ -304,72 +304,242 @@ function relTime(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
-function DealAnalysisSection({ deal, onClear }) {
-  const summary = deal.analyzerState && deal.analyzerState.summary;
+const STRATEGY_LABELS = {
+  rental: 'Rental',
+  brrrr: 'BRRRR',
+  flip: 'Fix & Flip',
+  multi: 'Multifamily',
+  commercial: 'Commercial',
+};
 
-  if (!summary) {
+// Recompute the headline metrics from the saved analyzerState inputs.
+// Mirrors the math in DealAnalyzer's `m` memo so the report reflects the
+// exact same numbers the user saw on save (without storing every derived
+// value).
+function deriveMetrics(s) {
+  const purchasePrice = Number(s.purchasePrice) || 0;
+  const arv           = Number(s.arv) || 0;
+  const downPct       = Number(s.downPct) || 0;
+  const rate          = Number(s.rate) || 0;
+  const term          = Number(s.term) || 30;
+  const closingPct    = Number(s.closingPct) || 0;
+  const taxesYr       = Number(s.taxesYr) || 0;
+  const insYr         = Number(s.insYr) || 0;
+  const monthlyRent   = Number(s.monthlyRent) || 0;
+  const vacancyPct    = Number(s.vacancyPct) || 0;
+  const mgmtPct       = Number(s.mgmtPct) || 0;
+  const maintPct      = Number(s.maintPct) || 0;
+  const capexPct      = Number(s.capexPct) || 0;
+  const holdingMo     = Number(s.holdingMo) || 0;
+  const items         = Array.isArray(s.items) ? s.items : [];
+
+  const rehab = Number(s.rehabOverride) || items.reduce((sum, i) => sum + (Number(i.cost) || 0), 0);
+  const closingBuy = purchasePrice * (closingPct / 100);
+  const holdingTotal = (taxesYr / 12 + insYr / 12) * holdingMo;
+  const loan = purchasePrice * (1 - downPct / 100);
+  const r = rate / 100 / 12;
+  const n = term * 12;
+  const piti = r > 0 ? (loan * r) / (1 - Math.pow(1 + r, -n)) : (n > 0 ? loan / n : 0);
+  const totalCash = purchasePrice * (downPct / 100) + rehab + closingBuy;
+
+  const grossYr = monthlyRent * 12;
+  const opex = grossYr * (vacancyPct / 100) + grossYr * (mgmtPct / 100)
+             + grossYr * (maintPct / 100) + grossYr * (capexPct / 100)
+             + taxesYr + insYr;
+  const noi = grossYr - opex;
+  const cashFlowYr = noi - piti * 12;
+  const monthlyCashFlow = cashFlowYr / 12;
+  const coc = totalCash > 0 ? (cashFlowYr / totalCash) * 100 : 0;
+  const cap = purchasePrice > 0 ? (noi / purchasePrice) * 100 : 0;
+
+  const sellingCosts = arv * 0.08;
+  const flipNetProfit = arv - purchasePrice - rehab - closingBuy - holdingTotal - sellingCosts - piti * holdingMo;
+  const flipInvestment = totalCash + holdingTotal + piti * holdingMo;
+  const flipROI = flipInvestment > 0 ? (flipNetProfit / flipInvestment) * 100 : 0;
+  const flipAnnROI = (flipROI * 12) / Math.max(holdingMo, 1);
+  const mao = arv * 0.7 - rehab;
+
+  return {
+    purchasePrice, arv, rehab, closingBuy, holdingTotal, loan, piti, totalCash,
+    noi, monthlyCashFlow, coc, cap,
+    flipNetProfit, flipInvestment, flipROI, flipAnnROI, mao,
+    items,
+  };
+}
+
+function DealAnalysisSection({ deal, onClear }) {
+  const state = deal.analyzerState;
+
+  if (!state) {
     return (
       <section>
         <h3 className="text-white font-semibold text-sm mb-3">Deal analysis</h3>
-        <Link
-          to={`/deal-analyzer/${deal.id}`}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-sm hover:border-amber-400 hover:text-amber-200"
-        >
-          <Calculator className="w-3.5 h-3.5" /> deal analysis
-        </Link>
-        <p className="text-xs text-slate-500 mt-2">
-          Opens the analyzer prefilled with this property's address, ask, and ARV.
-        </p>
+        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+          <p className="text-sm text-slate-400 mb-3">
+            No analysis saved yet.
+          </p>
+          <Link
+            to={`/deal-analyzer/${deal.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-sm hover:border-amber-400 hover:text-amber-200"
+          >
+            <Calculator className="w-3.5 h-3.5" /> Run one in the Deal Analyzer
+          </Link>
+          <p className="text-xs text-slate-500 mt-2">
+            Opens the analyzer prefilled with this property's address, ask, and ARV.
+          </p>
+        </div>
       </section>
     );
   }
 
-  const cfTone = summary.monthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300';
-  const roiTone = summary.roi >= 0 ? 'text-emerald-300' : 'text-rose-300';
-  const maoTone = summary.mao >= 0 ? 'text-emerald-300' : 'text-rose-300';
+  const strategy = state.strategy || (state.summary && state.summary.strategy) || 'rental';
+  const strategyLabel = STRATEGY_LABELS[strategy] || (state.summary && state.summary.strategyLabel) || strategy;
+  const isFlip = strategy === 'flip';
+
+  const savedAtIso = state.savedAt || deal.analyzerStateUpdatedAt;
+  const savedDate = savedAtIso
+    ? new Date(savedAtIso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
+
+  const m = deriveMetrics(state);
+  const addressLine = [deal.addr, [deal.city, deal.state || deal.zip].filter(Boolean).join(', ')]
+    .filter(Boolean).join(' · ');
+
+  // Tone helpers
+  const tonePos = (n) => (n >= 0 ? 'text-emerald-300' : 'text-rose-300');
+
+  // Key metrics differ by strategy.
+  const keyMetrics = isFlip
+    ? [
+        { label: 'Net Profit',        value: fmtSignedUsd(m.flipNetProfit), tone: tonePos(m.flipNetProfit) },
+        { label: 'Total ROI',         value: fmtPct(m.flipROI),             tone: tonePos(m.flipROI) },
+        { label: 'Annualized ROI',    value: fmtPct(m.flipAnnROI),          tone: tonePos(m.flipAnnROI) },
+        { label: 'Total Investment',  value: fmtUsd(m.flipInvestment),      tone: 'text-white' },
+      ]
+    : [
+        { label: 'Monthly Cash Flow',     value: fmtSignedUsd(m.monthlyCashFlow), tone: tonePos(m.monthlyCashFlow) },
+        { label: 'Cash-on-Cash Return',   value: fmtPct(m.coc),                   tone: tonePos(m.coc) },
+        { label: 'Cap Rate',              value: fmtPct(m.cap),                   tone: tonePos(m.cap) },
+        { label: 'Annual NOI',            value: fmtSignedUsd(m.noi),             tone: tonePos(m.noi) },
+      ];
+
+  // Investment Summary line items.
+  const investmentRows = [
+    { label: 'Purchase Price',     value: fmtUsd(m.purchasePrice) },
+    { label: 'Rehab Costs',        value: fmtUsd(m.rehab) },
+    { label: 'Closing Costs',      value: fmtUsd(m.closingBuy) },
+    { label: 'Total Cash Invested', value: fmtUsd(m.totalCash), strong: true },
+    { label: 'Loan Amount',        value: fmtUsd(m.loan) },
+    { label: 'Monthly Mortgage',   value: fmtUsd(m.piti) },
+    ...(isFlip ? [
+      { label: 'ARV',                       value: fmtUsd(m.arv) },
+      { label: 'Max Allowable Offer (70% Rule)', value: fmtSignedUsd(m.mao), tone: tonePos(m.mao) },
+      { label: 'Holding Costs',             value: fmtUsd(m.holdingTotal) },
+    ] : []),
+  ];
+
+  const rehabItems = m.items.filter((i) => i && (i.category || i.description || Number(i.cost)));
+  const rehabTotal = rehabItems.reduce((sum, i) => sum + (Number(i.cost) || 0), 0);
 
   return (
-    <section>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-amber-400" /> Deal analysis
-        </h3>
-        <span className="text-[11px] text-slate-500">
-          {summary.strategyLabel || summary.strategy}
-          {deal.analyzerStateUpdatedAt ? ` · saved ${relTime(deal.analyzerStateUpdatedAt)}` : ''}
-        </span>
-      </div>
-      <div className="rounded-lg border border-amber-400/30 bg-amber-400/[0.04] p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-          <SummaryStat label="Purchase" value={fmtUsd(summary.purchasePrice)} />
-          <SummaryStat label="ARV"      value={fmtUsd(summary.arv)} />
-          <SummaryStat label="MAO (70%)" value={fmtSignedUsd(summary.mao)} tone={maoTone} />
-          <SummaryStat
-            label={summary.strategy === 'flip' ? 'Net profit / mo' : 'Monthly cash flow'}
-            value={summary.strategy === 'flip' ? '—' : fmtSignedUsd(summary.monthlyCashFlow)}
-            tone={summary.strategy === 'flip' ? 'text-slate-300' : cfTone}
-          />
-          <SummaryStat
-            label={summary.strategy === 'flip' ? 'Flip ROI' : 'Cash-on-Cash'}
-            value={fmtPct(summary.roi)}
-            tone={roiTone}
-          />
-          <SummaryStat label="Rehab" value={fmtUsd(summary.rehab || 0)} />
-        </div>
-        <div className="flex items-center gap-3 pt-3 border-t border-amber-400/15">
+    <section className="space-y-5">
+      {/* ─── Header ──────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-400/[0.06] to-slate-900/40 p-5">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Calculator className="w-4 h-4 text-amber-400" />
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 font-semibold">
+                {strategyLabel} Analysis
+              </span>
+            </div>
+            <h3 className="text-white font-semibold text-base truncate">
+              {addressLine || 'Untitled property'}
+            </h3>
+            {savedDate && (
+              <p className="text-xs text-slate-400 mt-1">Saved on {savedDate}</p>
+            )}
+          </div>
           <Link
             to={`/deal-analyzer/${deal.id}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-xs hover:border-amber-400 hover:text-amber-200"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-amber-400 text-slate-900 text-xs font-semibold hover:bg-amber-300 flex-shrink-0"
           >
-            <Calculator className="w-3.5 h-3.5" /> Open analysis
+            <Calculator className="w-3.5 h-3.5" /> Re-run analysis
           </Link>
-          <button
-            onClick={onClear}
-            className="text-[11px] text-slate-500 hover:text-rose-300"
-          >
-            Clear
-          </button>
         </div>
+      </div>
+
+      {/* ─── Key Metrics (2x2) ───────────────────────────────────── */}
+      <div>
+        <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Key Metrics</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {keyMetrics.map((k) => (
+            <div key={k.label} className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">{k.label}</p>
+              <p className={`text-xl font-semibold mt-1 ${k.tone}`}>{k.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Investment Summary ──────────────────────────────────── */}
+      <div>
+        <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Investment Summary</h4>
+        <div className="rounded-lg border border-slate-800 bg-slate-900/40 divide-y divide-slate-800">
+          {investmentRows.map((row) => (
+            <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
+              <span className={`text-sm ${row.strong ? 'text-white font-semibold' : 'text-slate-300'}`}>
+                {row.label}
+              </span>
+              <span className={`text-sm font-mono ${row.tone || (row.strong ? 'text-amber-300 font-semibold' : 'text-white')}`}>
+                {row.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Rehab Breakdown ─────────────────────────────────────── */}
+      {rehabItems.length > 0 && (
+        <div>
+          <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Rehab Breakdown</h4>
+          <div className="rounded-lg border border-slate-800 bg-slate-900/40 overflow-hidden">
+            <div className="grid grid-cols-12 px-4 py-2 bg-slate-900/60 border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+              <div className="col-span-4">Category</div>
+              <div className="col-span-6">Description</div>
+              <div className="col-span-2 text-right">Cost</div>
+            </div>
+            <div className="divide-y divide-slate-800">
+              {rehabItems.map((i, idx) => (
+                <div key={i.id || idx} className="grid grid-cols-12 px-4 py-2.5 text-sm">
+                  <div className="col-span-4 text-slate-300">{i.category || '—'}</div>
+                  <div className="col-span-6 text-slate-400">{i.description || '—'}</div>
+                  <div className="col-span-2 text-right font-mono text-white">{fmtUsd(Number(i.cost) || 0)}</div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-12 px-4 py-2.5 bg-slate-900/60 border-t border-slate-800">
+              <div className="col-span-10 text-sm text-white font-semibold">Total</div>
+              <div className="col-span-2 text-right text-sm font-mono text-amber-300 font-semibold">{fmtUsd(rehabTotal)}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Footer actions ──────────────────────────────────────── */}
+      <div className="flex items-center gap-3 pt-1">
+        <Link
+          to={`/deal-analyzer/${deal.id}`}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-xs hover:border-amber-400 hover:text-amber-200"
+        >
+          <Calculator className="w-3.5 h-3.5" /> Re-run analysis
+        </Link>
+        <button
+          onClick={onClear}
+          className="text-[11px] text-slate-500 hover:text-rose-300"
+        >
+          Clear saved analysis
+        </button>
       </div>
     </section>
   );
