@@ -43,6 +43,9 @@ const chgProduct = requireProduct('chg')
 // router so requireAuth doesn't hijack the unauthenticated profile lookup.
 const deallinkProduct = requireProduct('deallink')
 app.use('/api/deallink/public', require('./routes/deallink-public'))
+// Documents sub-router mounts on a more specific path; declared before the
+// generic /api/deallink mount so the documents endpoints match first.
+app.use('/api/deallink/deals/:dealId/documents', requireAuth, deallinkProduct, scopeToAccount, require('./routes/deallink-documents'))
 app.use('/api/deallink', requireAuth, deallinkProduct, scopeToAccount, require('./routes/deallink'))
 
 app.use('/api/dashboard', requireAuth, chgProduct, require('./routes/dashboard'))

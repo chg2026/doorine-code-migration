@@ -170,6 +170,28 @@ router.delete('/deals/:id', async (req, res) => {
     .eq('account_id', accountId)
   if (nErr) return res.status(500).json({ error: nErr.message })
 
+  // Clean up any documents in Supabase Storage before the row delete.
+  // The deallink_documents → deallink_deals FK is ON DELETE CASCADE so the
+  // metadata rows go automatically — but storage objects don't, and would
+  // be orphaned in the bucket forever otherwise. Best-effort: log and
+  // continue if storage removal fails so the deal can still be deleted.
+  const { data: docs, error: docErr } = await db
+    .from('deallink_documents')
+    .select('storage_path')
+    .eq('deal_id', req.params.id)
+    .eq('account_id', accountId)
+  if (docErr) return res.status(500).json({ error: docErr.message })
+  const paths = (docs || []).map((d) => d.storage_path).filter(Boolean)
+  if (paths.length) {
+    const { error: rmErr } = await db.storage.from('deallink-documents').remove(paths)
+    if (rmErr) {
+      // eslint-disable-next-line no-console
+      console.error('[deallink] failed to remove storage objects on deal delete', {
+        dealId: req.params.id, accountId, count: paths.length, err: rmErr.message,
+      })
+    }
+  }
+
   const { error } = await db
     .from('deallink_deals')
     .delete()

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, Info, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, Info, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge } from '../components/ui.jsx';
-import { DEAL_STATUSES, DealLinkAPI } from '../lib/deallink-api.js';
+import { DEAL_STATUSES, DealLinkAPI, DOCUMENT_CATEGORIES } from '../lib/deallink-api.js';
+import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { UpgradeBanner } from '../components/UpgradePrompt.jsx';
 
@@ -125,6 +126,7 @@ export default function DealEditor({ mode }) {
           {[
             { k: 'overview', label: 'Overview' },
             { k: 'analysis', label: 'Deal analysis' },
+            { k: 'documents', label: 'Documents' },
           ].map((t) => {
             const active = tab === t.k;
             return (
@@ -227,6 +229,10 @@ export default function DealEditor({ mode }) {
             )}
 
             </>)}
+
+            {mode === 'edit' && existing && tab === 'documents' && (
+              <DealDocumentsSection deal={existing} show={show} />
+            )}
 
             {mode === 'edit' && existing && tab === 'analysis' && (
               <DealAnalysisSection
@@ -840,6 +846,239 @@ function IMSharePanel({ deal, onChange, show }) {
 
       {error && (
         <div className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded-lg">{error}</div>
+      )}
+    </section>
+  );
+}
+
+// ─── Deal Documents section ──────────────────────────────────────────────
+// Shown inside the property editor on the Documents tab. Lists every file
+// attached to the deal, supports upload (via Supabase signed-URL flow) and
+// delete. The IM "show on memorandum" toggle is intentionally NOT here —
+// that's the next task.
+
+const CATEGORY_STYLES = {
+  Contract:   { cls: 'bg-amber-400/20 text-amber-300 border-amber-400/40',     Icon: FileBadge },
+  Inspection: { cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30',           Icon: FileCheck2 },
+  Photos:     { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', Icon: FileImage },
+  Title:      { cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30',  Icon: Scroll },
+  Other:      { cls: 'bg-slate-500/20 text-slate-300 border-slate-500/40',     Icon: FileText },
+};
+
+function fmtBytes(n) {
+  const v = Number(n) || 0;
+  if (v < 1024) return `${v} B`;
+  if (v < 1024 * 1024) return `${(v / 1024).toFixed(1)} KB`;
+  if (v < 1024 * 1024 * 1024) return `${(v / 1024 / 1024).toFixed(1)} MB`;
+  return `${(v / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+
+function fmtDocDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function DealDocumentsSection({ deal, show }) {
+  const [docs, setDocs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(null);
+  const [uploadOpen, setUploadOpen] = React.useState(false);
+  const [file, setFile] = React.useState(null);
+  const [name, setName] = React.useState('');
+  const [category, setCategory] = React.useState('Other');
+  const [busy, setBusy] = React.useState(false);
+  const [busyId, setBusyId] = React.useState(null);
+  const fileRef = React.useRef(null);
+
+  const reload = React.useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const list = await DealLinkAPI.listDocuments(deal.id);
+      setDocs(list);
+    } catch (e) {
+      setLoadError(e?.response?.data?.error || e?.message || 'Failed to load documents');
+    } finally {
+      setLoading(false);
+    }
+  }, [deal.id]);
+
+  React.useEffect(() => { reload(); }, [reload]);
+
+  function pickFile(f) {
+    setFile(f || null);
+    if (f && !name) setName(f.name);
+  }
+
+  function resetForm() {
+    setFile(null);
+    setName('');
+    setCategory('Other');
+    setUploadOpen(false);
+    if (fileRef.current) fileRef.current.value = '';
+  }
+
+  async function upload() {
+    if (!file) { show('Choose a file first'); return; }
+    const finalName = (name || file.name).trim();
+    if (!finalName) { show('Document name is required'); return; }
+    setBusy(true);
+    try {
+      const signed = await DealLinkAPI.createSignedUpload(deal.id, file.name);
+      const { error: upErr } = await supabase.storage
+        .from(signed.bucket)
+        .uploadToSignedUrl(signed.storagePath, signed.token, file, {
+          contentType: file.type || 'application/octet-stream',
+          upsert: false,
+        });
+      if (upErr) throw upErr;
+      const created = await DealLinkAPI.commitDocument(deal.id, {
+        name: finalName,
+        category,
+        storagePath: signed.storagePath,
+        fileSizeBytes: file.size,
+        mimeType: file.type || '',
+      });
+      setDocs((prev) => [created, ...prev]);
+      show('Document uploaded');
+      resetForm();
+    } catch (e) {
+      show(e?.response?.data?.error || e?.message || 'Upload failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function download(doc) {
+    setBusyId(doc.id);
+    try {
+      const url = await DealLinkAPI.downloadDocument(deal.id, doc.id);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      show(e?.response?.data?.error || e?.message || 'Could not open document');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function remove(doc) {
+    if (!confirm(`Delete "${doc.name}"? This cannot be undone.`)) return;
+    setBusyId(doc.id);
+    try {
+      await DealLinkAPI.deleteDocument(deal.id, doc.id);
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      show('Document deleted');
+    } catch (e) {
+      show(e?.response?.data?.error || e?.message || 'Delete failed');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+          <FileText className="w-4 h-4 text-amber-400" /> Documents
+          <span className="text-[11px] text-slate-500 font-normal">({docs.length})</span>
+        </h3>
+        {!uploadOpen && (
+          <button
+            onClick={() => setUploadOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400 text-slate-900 text-xs font-semibold hover:bg-amber-300"
+          >
+            <Upload className="w-3.5 h-3.5" /> Upload document
+          </button>
+        )}
+      </div>
+
+      {uploadOpen && (
+        <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+            <Field label="File">
+              <input
+                ref={fileRef}
+                type="file"
+                onChange={(e) => pickFile(e.target.files?.[0])}
+                className="block w-full text-sm text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-slate-800 file:text-slate-200 file:text-xs file:font-semibold hover:file:bg-slate-700"
+              />
+            </Field>
+            <Field label="Category">
+              <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                {DOCUMENT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </Select>
+            </Field>
+          </div>
+          <Field label="Display name">
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Purchase contract — signed" />
+          </Field>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button variant="secondary" onClick={resetForm} disabled={busy}>Cancel</Button>
+            <Button onClick={upload} disabled={busy || !file}>
+              {busy ? 'Uploading…' : <><Upload className="w-4 h-4" /> Upload</>}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-lg">{loadError}</div>
+      )}
+
+      {loading ? (
+        <div className="text-xs text-slate-500 font-mono py-6 text-center">Loading documents…</div>
+      ) : docs.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 p-8 text-center">
+          <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+          <p className="text-sm text-slate-400">No documents yet.</p>
+          <p className="text-xs text-slate-500 mt-1">Upload contracts, inspections, photos, or title docs to keep them with this deal.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {docs.map((d) => {
+            const style = CATEGORY_STYLES[d.category] || CATEGORY_STYLES.Other;
+            const Icon = style.Icon;
+            return (
+              <div
+                key={d.id}
+                className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 hover:border-slate-700"
+              >
+                <div className={`flex items-center justify-center w-9 h-9 rounded-md border ${style.cls}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-white font-medium truncate">{d.name}</p>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${style.cls} font-semibold uppercase tracking-wide`}>
+                      {d.category}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-mono mt-0.5">
+                    {fmtBytes(d.fileSizeBytes)} · {fmtDocDate(d.createdAt)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => download(d)}
+                  disabled={busyId === d.id}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-50"
+                  title="Download"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download
+                </button>
+                <button
+                  onClick={() => remove(d)}
+                  disabled={busyId === d.id}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                  title="Delete"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
       )}
     </section>
   );

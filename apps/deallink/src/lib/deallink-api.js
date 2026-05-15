@@ -203,6 +203,23 @@ export function offerToApi(o) {
   return out;
 }
 
+// ─── documents ────────────────────────────────────────────────────────────
+export const DOCUMENT_CATEGORIES = ['Contract', 'Inspection', 'Photos', 'Title', 'Other'];
+
+export function documentFromApi(d) {
+  if (!d) return null;
+  return {
+    id: d.id,
+    dealId: d.deal_id,
+    name: d.name || '',
+    category: d.category || 'Other',
+    storagePath: d.storage_path || '',
+    fileSizeBytes: Number(d.file_size_bytes) || 0,
+    mimeType: d.mime_type || '',
+    createdAt: d.created_at || null,
+  };
+}
+
 // ─── HTTP helpers ─────────────────────────────────────────────────────────
 export const DealLinkAPI = {
   async getProfile() {
@@ -280,6 +297,33 @@ export const DealLinkAPI = {
     return offerFromApi(data.offer);
   },
   async deleteOffer(id) { await api.delete(`/deallink/offers/${id}`); },
+  // ── documents ──────────────────────────────────────────────────────────
+  async listDocuments(dealId) {
+    const { data } = await api.get(`/deallink/deals/${dealId}/documents`);
+    return (data.documents || []).map(documentFromApi);
+  },
+  async createSignedUpload(dealId, filename) {
+    const { data } = await api.post(`/deallink/deals/${dealId}/documents/signed-upload`, { filename });
+    return data; // { storagePath, token, signedUrl, bucket, expiresIn }
+  },
+  async commitDocument(dealId, payload) {
+    const body = {
+      name:            payload.name,
+      category:        payload.category,
+      storage_path:    payload.storagePath,
+      file_size_bytes: payload.fileSizeBytes,
+      mime_type:       payload.mimeType,
+    };
+    const { data } = await api.post(`/deallink/deals/${dealId}/documents`, body);
+    return documentFromApi(data.document);
+  },
+  async downloadDocument(dealId, docId) {
+    const { data } = await api.get(`/deallink/deals/${dealId}/documents/${docId}/download`);
+    return data.signedUrl;
+  },
+  async deleteDocument(dealId, docId) {
+    await api.delete(`/deallink/deals/${dealId}/documents/${docId}`);
+  },
   async listMarketplace() {
     const { data } = await api.get('/deallink/marketplace');
     return (data.deals || []).map((d) => ({
