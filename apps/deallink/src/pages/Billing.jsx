@@ -79,7 +79,7 @@ export default function Billing() {
         body: JSON.stringify({
           product_code: 'deallink',
           plan: planCode,
-          success_url: SUCCESS_URL,
+          success_url: `${SUCCESS_URL}?plan=${planCode}`,
           cancel_url: CANCEL_URL,
         }),
       });

@@ -1,11 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
+const PLAN_LABELS = {
+  personal: 'Personal',
+  team: 'Team',
+};
+
 export default function BillingSuccess() {
   const { refresh } = useAuth();
+  const [params] = useSearchParams();
+  const planParam = (params.get('plan') || '').toLowerCase();
+  const planLabel = PLAN_LABELS[planParam] || 'paid';
 
   // Refresh /auth/me so the rest of the app sees the new plan immediately.
   React.useEffect(() => { if (refresh) refresh(); }, [refresh]);
@@ -17,9 +25,11 @@ export default function BillingSuccess() {
           <div className="w-14 h-14 mx-auto rounded-full bg-amber-400 flex items-center justify-center mb-4">
             <CheckCircle2 className="w-8 h-8 text-slate-900" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">You're now on the Personal plan!</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            You're now on the {planLabel} plan!
+          </h1>
           <p className="text-slate-400 text-sm mb-6">
-            Thanks for upgrading. All Personal features are now unlocked on your account.
+            Thanks for upgrading. All {planLabel} features are now unlocked on your account.
           </p>
           <Link
             to="/admin"
