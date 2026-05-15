@@ -62,6 +62,7 @@ const chgProduct = requireProduct('chg')
 // router so requireAuth doesn't hijack the unauthenticated profile lookup.
 const deallinkProduct = requireProduct('deallink')
 app.use('/api/deallink/public', require('./routes/deallink-public'))
+app.use('/api/deallink/im', require('./routes/deallink-im'))
 app.use('/api/deallink', requireAuth, deallinkProduct, scopeToAccount, require('./routes/deallink'))
 
 app.use('/api/dashboard', requireAuth, chgProduct, require('./routes/dashboard'))

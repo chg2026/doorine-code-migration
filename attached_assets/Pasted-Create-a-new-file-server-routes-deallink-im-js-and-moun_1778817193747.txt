@@ -1,0 +1,44 @@
+Create a new file server/routes/deallink-im.js and mount it in server/index.js at /api/deallink/im.
+
+This file handles the Investment Memorandum (IM) sharing flow. All endpoints are PUBLIC (no requireAuth) unless noted.
+
+Endpoint 1: GET /api/deallink/im/:dealId
+- Fetch deal from deallink_deals by id using supabaseAdmin
+- Fetch the deal profile (wholesaler info) from deallink_profiles via account_id
+- Return a gated response:
+  { gated: true, preview: { addr, city, zip, type, ask, arv, beds, baths, sqft, status } }
+- This is what the buyer sees BEFORE registering (address + price only)
+
+Endpoint 2: POST /api/deallink/im/:dealId/send-otp
+- Body: { name, phone }
+- Validate phone format (+1XXXXXXXXXX)
+- Store name+phone temporarily in a deallink_im_sessions table (create this via supabaseAdmin upsert):
+  { deal_id, phone, name, otp_sent_at: NOW() }
+- Send OTP via Supabase: supabaseAdmin.auth.admin.generateLink({ type: 'magiclink', phone }) OR use Twilio to send SMS OTP (use existing Twilio credentials from env: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID)
+- Send SMS: "Your DealLink verification code is: XXXXXX"
+- Store the OTP code in the session record
+- Returns { ok: true }
+
+Endpoint 3: POST /api/deallink/im/:dealId/verify-otp  
+- Body: { phone, code }
+- Look up session record for this deal_id + phone
+- Verify code matches and was sent within 10 minutes
+- Fetch deal with full data including im_config
+- Create or find buyer in deallink_buyers by phone:
+  - If new buyer: insert { name, phone, source_deal_id: dealId, im_registered_at: NOW(), account_id: deal.account_id, source: 'im-link' }
+  - If existing buyer: update source_deal_id and im_registered_at
+- If deal.account_products.plan is 'free': set expires_at = NOW() + 24 hours on the buyer record
+- Return the full deal data filtered by im_config:
+  { buyer_id, deal: { ...full deal fields, photos: (if im_config.show_photos), analyzerState: (if im_config.show_analyzer), rehabItems: (if im_config.show_rehab) }, wholesaler: { name, handle, phone } }
+
+Endpoint 4: POST /api/deallink/im/:dealId/offer (requires buyer_id in body)
+- Body: { buyer_id, amount, notes, buyer_type }
+- Insert into deallink_offers: { deal_id: dealId, buyer_id, account_id: deal.account_id, amount, notes, status: 'Pending' }
+- Check wholesaler plan from account_products:
+  - If free plan: set buyer expires_at = NOW() + 24 hours (already set, just confirm)
+  - If paid plan: set expires_at = NULL (permanent)
+- Return { ok: true, offer_id }
+
+Also create the deallink_im_sessions table via supabaseAdmin if it doesn't exist (use CREATE TABLE IF NOT EXISTS in a startup check or just document it needs to be run in Supabase).
+
+Only edit files inside server/. Do not touch any other folder.
