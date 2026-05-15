@@ -8,6 +8,7 @@ import { DEAL_STATUSES, DealLinkAPI, DOCUMENT_CATEGORIES } from '../lib/deallink
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { UpgradeBanner } from '../components/UpgradePrompt.jsx';
+import PhotoUploader from '../components/PhotoUploader.jsx';
 
 const FREE_DEAL_LIMIT = 10;
 const FREE_HIDE_STREET_LIMIT = 1;
@@ -15,7 +16,7 @@ const FREE_HIDE_STREET_LIMIT = 1;
 const EMPTY = {
   addr: '', city: '', state: '', zip: '', type: 'SFR', units: 1, beds: 3, baths: 2, sqft: 1200,
   ask: 0, arv: 0, occ: 'Vacant', access: 'Lockbox', status: 'New', notes: '',
-  description: '', photoUrl: '', tags: [], hideStreet: false,
+  description: '', photoUrl: '', photos: [], tags: [], hideStreet: false,
 };
 
 export default function DealEditor({ mode }) {
@@ -196,17 +197,32 @@ export default function DealEditor({ mode }) {
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Tags & photo</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Tags (comma-sep)">
-                  <Input
-                    value={(form.tags || []).join(', ')}
-                    onChange={(e) => patch({ tags: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
-                    placeholder="vacant, cash-only, rehab"
-                  />
-                </Field>
-                <Field label="Photo URL"><Input value={form.photoUrl} onChange={(e) => patch({ photoUrl: e.target.value })} placeholder="https://…" /></Field>
-              </div>
+              <h3 className="text-white font-semibold text-sm mb-3">Tags</h3>
+              <Field label="Tags (comma-sep)">
+                <Input
+                  value={(form.tags || []).join(', ')}
+                  onChange={(e) => patch({ tags: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
+                  placeholder="vacant, cash-only, rehab"
+                />
+              </Field>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold text-sm mb-3">Photos</h3>
+              <p className="text-xs text-slate-500 mb-3">
+                Upload up to 12 photos. Drag to reorder — the first photo is your cover image
+                (shown as the thumbnail on your public profile and on the buyer-facing IM).
+              </p>
+              <PhotoUploader
+                dealId={existing?.id || 'pending'}
+                value={form.photos}
+                onChange={(photos) => {
+                  // Keep the legacy photoUrl in sync with the cover so the
+                  // public profile + IM preview light up immediately for
+                  // existing call-sites that still read photoUrl.
+                  patch({ photos, photoUrl: photos[0] || '' });
+                }}
+              />
             </section>
 
             </>)}
@@ -258,7 +274,7 @@ export default function DealEditor({ mode }) {
             <CardBody>
               <div className="rounded-lg overflow-hidden border border-slate-700">
                 <div className="h-32 bg-slate-800 flex items-center justify-center">
-                  {form.photoUrl ? <img src={form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-slate-600" />}
+                  {(form.photos?.[0] || form.photoUrl) ? <img src={form.photos?.[0] || form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-slate-600" />}
                 </div>
                 <div className="p-3">
                   <div className="flex items-center justify-between"><p className="text-white text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
@@ -1403,31 +1419,49 @@ function IMLivePreview({ deal }) {
         </header>
 
         {/* ─── Photos ─────────────────────────────────────────────────── */}
-        {cfg.sections.photos && (
-          <section>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="aspect-video rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center overflow-hidden"
-                >
-                  {i === 0 && deal.photoUrl ? (
-                    <img src={deal.photoUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs text-slate-600">
-                      {i === 0 ? 'Main photo' : i === 1 ? 'Photo 2' : '+0 photos'}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-            {!deal.photoUrl && (
-              <p className="text-[11px] text-slate-500 mt-2">
-                Add a photo URL on the Overview tab to populate the gallery.
-              </p>
-            )}
-          </section>
-        )}
+        {cfg.sections.photos && (() => {
+          const gallery = (Array.isArray(deal.photos) && deal.photos.length
+            ? deal.photos
+            : (deal.photoUrl ? [deal.photoUrl] : []));
+          const visible = gallery.slice(0, 3);
+          const overflow = Math.max(0, gallery.length - visible.length);
+          return (
+            <section>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[0, 1, 2].map((i) => {
+                  const url = visible[i];
+                  // Use the +N tile in the third slot when there are more
+                  // than 3 photos so buyers know more exist.
+                  const isOverflowTile = i === 2 && overflow > 0;
+                  return (
+                    <div
+                      key={i}
+                      className="aspect-video rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center overflow-hidden relative"
+                    >
+                      {url ? (
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xs text-slate-600">
+                          {i === 0 ? 'Main photo' : `Photo ${i + 1}`}
+                        </span>
+                      )}
+                      {isOverflowTile && (
+                        <span className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-semibold">
+                          +{overflow + 1} photos
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {gallery.length === 0 && (
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Upload photos on the Overview tab to populate the gallery.
+                </p>
+              )}
+            </section>
+          );
+        })()}
 
         {/* ─── Description ────────────────────────────────────────────── */}
         {cfg.sections.description && deal.description && (
