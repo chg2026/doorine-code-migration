@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Sparkles, CreditCard, AlertCircle } from 'lucide-react';
+import { Check, Sparkles, CreditCard, AlertCircle, Users, Settings } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabase.js';
@@ -26,6 +26,8 @@ const PLANS = {
     cadence: 'per month',
     features: [
       'Unlimited deals',
+      '0 team members',
+      '2 guests (view-only)',
       'Buyers CRM with lead inbox',
       'Pipeline + Offers tracking',
       'Cross-wholesaler Marketplace',
@@ -39,66 +41,89 @@ const PLANS = {
     cadence: 'per month',
     features: [
       'Everything in Personal',
-      'Multiple seats + guest viewers',
-      'Enterprise modules (Deal Blast, God Mode, Artemis)',
+      '5 team members (same domain)',
+      '5 guests (view-only)',
+      'Unlimited deals',
+      'All Enterprise modules (Deal Blast, God Mode, Artemis)',
       'JV Deals + Buyer Rental',
       'Handoff workflow',
     ],
   },
 };
 
+async function authHeaders() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('You must be signed in.');
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export default function Billing() {
   const { plan, loading: authLoading, refresh } = useAuth();
-  const [busy, setBusy] = React.useState(false);
+  const [busyPlan, setBusyPlan] = React.useState(null); // 'personal' | 'team' | 'portal' | null
   const [error, setError] = React.useState(null);
 
-  // The user spec asked for an explicit GET to /api/auth/me on this page;
-  // useAuth already loads it via the shared axios client, so we just
-  // re-fetch on mount to make sure the displayed plan is fresh after a
-  // checkout return.
   React.useEffect(() => { if (refresh) refresh(); }, [refresh]);
 
-  async function upgrade() {
-    if (busy) return;
-    setBusy(true); setError(null);
+  async function startCheckout(planCode) {
+    if (busyPlan) return;
+    setBusyPlan(planCode); setError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) throw new Error('You must be signed in to upgrade.');
-
+      const headers = await authHeaders();
       const res = await fetch(`${API_BASE}/api/billing/checkout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           product_code: 'deallink',
-          plan: 'personal',
+          plan: planCode,
           success_url: SUCCESS_URL,
           cancel_url: CANCEL_URL,
         }),
       });
-
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error || `Checkout failed (${res.status})`);
-
       const url = body?.url || body?.checkout_url || body?.redirect_url;
       if (!url) throw new Error('Checkout response did not include a redirect URL.');
       window.location.href = url;
     } catch (e) {
       setError(e?.message || 'Could not start checkout.');
-      setBusy(false);
+      setBusyPlan(null);
     }
   }
 
-  const currentPlan = (plan && PLANS[plan]) || PLANS.free;
+  async function openPortal() {
+    if (busyPlan) return;
+    setBusyPlan('portal'); setError(null);
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${API_BASE}/api/billing/portal`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ return_url: CANCEL_URL }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || `Portal request failed (${res.status})`);
+      const url = body?.url || body?.portal_url || body?.redirect_url;
+      if (!url) throw new Error('Portal response did not include a redirect URL.');
+      window.location.href = url;
+    } catch (e) {
+      setError(e?.message || 'Could not open billing portal.');
+      setBusyPlan(null);
+    }
+  }
+
   const currentKey = (plan && PLANS[plan]) ? plan : 'free';
-  const isFree = currentKey === 'free';
+  const currentPlan = PLANS[currentKey];
+  const showPersonal = currentKey === 'free';
+  const showTeam = currentKey === 'free' || currentKey === 'personal';
+  const isTeam = currentKey === 'team';
 
   return (
     <Layout>
-      <div className="max-w-5xl">
+      <div className="max-w-6xl">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white">Billing</h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -137,64 +162,124 @@ export default function Billing() {
           </ul>
         </div>
 
-        {/* ─── Upgrade card ────────────────────────────────────────── */}
-        {isFree && (
-          <div className="rounded-xl border border-amber-400/40 bg-gradient-to-br from-amber-400/[0.06] to-slate-900/40 p-6">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-slate-900" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white">Upgrade to Personal</h3>
-                <p className="text-sm text-slate-400 mt-0.5">
-                  Unlock unlimited deals, the Buyers CRM, the Marketplace, and IM sharing.
-                </p>
-              </div>
-              <p className="text-right">
-                <span className="text-2xl font-bold text-white">{PLANS.personal.price}</span>
-                <span className="block text-[11px] text-slate-500">{PLANS.personal.cadence}</span>
-              </p>
-            </div>
-
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-5">
-              {PLANS.personal.features.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
-                  <Check className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            {error && (
-              <div className="mb-4 flex items-start gap-2 text-sm text-red-300 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded-lg">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button
-              onClick={upgrade}
-              disabled={busy}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold text-sm hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-            >
-              <CreditCard className="w-4 h-4" />
-              {busy ? 'Starting checkout…' : 'Upgrade to Personal'}
-            </button>
-            <p className="text-[11px] text-slate-500 mt-3">
-              You'll be redirected to a secure checkout page. Cancel anytime.
-            </p>
+        {error && (
+          <div className="mb-4 flex items-start gap-2 text-sm text-red-300 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded-lg">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{error}</span>
           </div>
         )}
 
-        {!isFree && (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-            <p className="text-sm text-slate-300">
-              You're on the <span className="text-amber-300 font-semibold">{currentPlan.label}</span> plan. To
-              change or cancel your subscription, contact support.
-            </p>
+        {/* ─── Upgrade cards ────────────────────────────────────────── */}
+        {(showPersonal || showTeam) && (
+          <div className={`grid gap-5 ${showPersonal && showTeam ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
+            {showPersonal && (
+              <PlanCard
+                planKey="personal"
+                icon={Sparkles}
+                accent="amber"
+                onUpgrade={() => startCheckout('personal')}
+                busy={busyPlan === 'personal'}
+                disabled={!!busyPlan && busyPlan !== 'personal'}
+              />
+            )}
+            {showTeam && (
+              <PlanCard
+                planKey="team"
+                icon={Users}
+                accent="amber"
+                highlight
+                onUpgrade={() => startCheckout('team')}
+                busy={busyPlan === 'team'}
+                disabled={!!busyPlan && busyPlan !== 'team'}
+              />
+            )}
+          </div>
+        )}
+
+        {/* ─── Team-plan management ─────────────────────────────────── */}
+        {isTeam && (
+          <div className="rounded-xl border border-amber-400/40 bg-gradient-to-br from-amber-400/[0.06] to-slate-900/40 p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 text-slate-900" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white">You're on the Team plan</h3>
+                <p className="text-sm text-slate-400 mt-0.5">
+                  Update payment details, invoices, or cancel from the secure customer portal.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={openPortal}
+              disabled={!!busyPlan}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold text-sm hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              {busyPlan === 'portal' ? 'Opening portal…' : 'Manage subscription'}
+            </button>
           </div>
         )}
       </div>
     </Layout>
+  );
+}
+
+function PlanCard({ planKey, icon: Icon, highlight, onUpgrade, busy, disabled }) {
+  const p = PLANS[planKey];
+  return (
+    <div
+      className={`rounded-xl p-6 flex flex-col ${
+        highlight
+          ? 'border border-amber-400/50 bg-gradient-to-br from-amber-400/[0.08] to-slate-900/40'
+          : 'border border-slate-800 bg-slate-900/40'
+      }`}
+    >
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-5 h-5 text-slate-900" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            {p.label}
+            {highlight && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 font-medium">
+                MOST POWER
+              </span>
+            )}
+          </h3>
+          <p className="text-sm text-slate-400 mt-0.5">
+            {planKey === 'personal'
+              ? 'For solo wholesalers ready to scale.'
+              : 'For teams collaborating across deals.'}
+          </p>
+        </div>
+        <p className="text-right">
+          <span className="text-2xl font-bold text-white">{p.price}</span>
+          <span className="block text-[11px] text-slate-500">{p.cadence}</span>
+        </p>
+      </div>
+
+      <ul className="grid grid-cols-1 gap-2 mb-5 flex-1">
+        {p.features.map((f) => (
+          <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
+            <Check className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={onUpgrade}
+        disabled={busy || disabled}
+        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold text-sm hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+      >
+        <CreditCard className="w-4 h-4" />
+        {busy ? 'Starting checkout…' : `Upgrade to ${p.label}`}
+      </button>
+      <p className="text-[11px] text-slate-500 mt-3 text-center">
+        Secure checkout. Cancel anytime.
+      </p>
+    </div>
   );
 }
