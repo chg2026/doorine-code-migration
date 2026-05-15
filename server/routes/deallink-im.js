@@ -293,7 +293,7 @@ router.post('/:dealId/verify-otp', async (req, res) => {
       created_at:  deal.created_at,
     }
 
-    if (imConfig.show_photos)   dealOut.photos        = deal.photos        || []
+    dealOut.photos = deal.photos || []
     if (imConfig.show_analyzer) dealOut.analyzerState = deal.analyzer_state || null
     if (imConfig.show_rehab)    dealOut.rehabItems    = deal.rehab_items    || []
 
