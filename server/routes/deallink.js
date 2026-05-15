@@ -79,6 +79,7 @@ router.put('/profile', async (req, res) => {
 const DEAL_FIELDS = [
   'addr', 'city', 'zip', 'type', 'units', 'beds', 'baths', 'sqft',
   'ask', 'arv', 'occ', 'access', 'status', 'notes', 'hide_street', 'is_new',
+  'analyzer_state', 'analyzer_state_updated_at',
 ]
 
 function pickDeal(body) {
