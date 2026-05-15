@@ -1278,20 +1278,310 @@ function DealIMSection({ deal, onSave, show }) {
       </div>
 
       {sub === 'builder' && <IMMemoBuilder deal={deal} onSave={onSave} show={show} />}
-      {sub === 'preview' && <IMLivePreviewPlaceholder />}
+      {sub === 'preview' && <IMLivePreview deal={deal} />}
     </section>
   );
 }
 
-function IMLivePreviewPlaceholder() {
+// ─── IM Live Preview ─────────────────────────────────────────────────────
+// Renders the Investment Memorandum exactly as buyers will see it on the
+// public page, using the section/field/privacy toggles from imConfig and
+// the analysis selected in the Memo builder. Renders inline inside the
+// editor so wholesalers can flip between Memo builder and Live preview
+// without leaving the page.
+function IMLivePreview({ deal }) {
+  const { state } = useStore();
+  const profile = state?.profile || {};
+  const cfg = React.useMemo(() => mergeImConfig(deal.imConfig), [deal.imConfig]);
+  const analyses = React.useMemo(() => dealAnalysesArray(deal), [deal.analyzerState]);
+
+  const selectedAnalysis = React.useMemo(() => {
+    if (!cfg.selectedAnalysisId) return null;
+    return analyses.find((a) => a && a.id === cfg.selectedAnalysisId) || null;
+  }, [analyses, cfg.selectedAnalysisId]);
+
+  const metrics = React.useMemo(
+    () => (selectedAnalysis ? deriveMetrics(selectedAnalysis) : null),
+    [selectedAnalysis],
+  );
+
+  const ask    = Number(deal.ask) || 0;
+  const arv    = Number(deal.arv) || 0;
+  const spread = arv - ask;
+  const repair = metrics?.rehab || 0;
+  const mao    = metrics?.mao || 0;
+
+  // Address rendering — respects the Memo builder privacy toggle.
+  const addrLine = cfg.privacy.showStreetNumber
+    ? (deal.addr || '—')
+    : (deal.addr ? deal.addr.replace(/^\d+\s+/, '— ') : '—');
+
+  const cityLine = [deal.city, deal.state, deal.zip].filter(Boolean).join(', ');
+  const specsLine = `${deal.type || 'SFR'} · ${deal.beds || 0}bd / ${deal.baths || 0}ba · ${(Number(deal.sqft) || 0).toLocaleString()} sqft`;
+
+  // Deal checks — computed live from the selected analysis (or from the
+  // raw deal numbers when no analysis is selected).
+  const onePctRule  = ask > 0 && metrics ? ((Number(selectedAnalysis?.monthlyRent) || 0) / ask) * 100 : null;
+  const cashOnCash  = metrics ? metrics.coc : null;
+  const capRateNum  = metrics ? metrics.cap : null;
+  const arvSpreadPct = ask > 0 ? (spread / ask) * 100 : 0;
+
   return (
-    <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 px-6 py-12 text-center">
-      <Eye className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-      <p className="text-slate-300 text-sm font-medium">Live preview coming next</p>
-      <p className="text-xs text-slate-500 mt-1.5 max-w-md mx-auto">
-        This will render the Investment Memorandum exactly as a buyer sees it,
-        using the sections you've turned on in the Memo builder.
-      </p>
+    <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
+      {/* Buyer-view banner so the wholesaler knows this is a preview. */}
+      <div className="bg-amber-400/10 border-b border-amber-400/20 px-4 py-2 flex items-center gap-2 text-xs text-amber-300">
+        <Eye className="w-3.5 h-3.5" />
+        Buyer view — this is exactly what investors see.
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* ─── Hero ───────────────────────────────────────────────────── */}
+        <header className="space-y-1.5">
+          <h2 className="text-2xl font-bold text-white">
+            {addrLine} <span className="text-amber-400">— Investment Opportunity</span>
+          </h2>
+          <p className="text-sm text-slate-400">
+            {cityLine || 'Location pending'} · {specsLine}
+          </p>
+        </header>
+
+        {/* ─── Photos ─────────────────────────────────────────────────── */}
+        {cfg.sections.photos && (
+          <section>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="aspect-video rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center overflow-hidden"
+                >
+                  {i === 0 && deal.photoUrl ? (
+                    <img src={deal.photoUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-slate-600">
+                      {i === 0 ? 'Main photo' : i === 1 ? 'Photo 2' : '+0 photos'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            {!deal.photoUrl && (
+              <p className="text-[11px] text-slate-500 mt-2">
+                Add a photo URL on the Overview tab to populate the gallery.
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* ─── Description ────────────────────────────────────────────── */}
+        {cfg.sections.description && deal.description && (
+          <section className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3">
+            <p className="text-sm text-slate-200 leading-relaxed">{deal.description}</p>
+          </section>
+        )}
+
+        {/* ─── Key metrics ────────────────────────────────────────────── */}
+        {cfg.sections.dealNumbers && (
+          <section>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Key metrics</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {cfg.fields.showAsking && (
+                <MetricTile label="Asking price" value={fmtUsd(ask)} tone="text-white" />
+              )}
+              {cfg.fields.showArv && (
+                <MetricTile
+                  label="ARV"
+                  value={fmtUsd(arv)}
+                  hint={ask > 0 ? `${arvSpreadPct.toFixed(0)}% spread` : null}
+                  tone="text-white"
+                />
+              )}
+              {capRateNum != null && (
+                <MetricTile label="Cap rate" value={fmtPct(capRateNum)} tone="text-amber-400" />
+              )}
+              {metrics && (
+                <MetricTile label="Annual NOI" value={fmtUsd(metrics.noi)} tone="text-emerald-400" />
+              )}
+              {cfg.fields.showRepair && repair > 0 && (
+                <MetricTile label="Repair cost" value={fmtUsd(repair)} tone="text-white" />
+              )}
+              {cfg.fields.showMao && mao > 0 && (
+                <MetricTile label="MAO" value={fmtUsd(mao)} tone="text-amber-400" />
+              )}
+            </div>
+            {!metrics && (cfg.fields.showRepair || cfg.fields.showMao) && (
+              <p className="text-[11px] text-slate-500 mt-2">
+                Select a saved analysis on the Memo builder tab to populate cap rate, NOI, repair, and MAO.
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* ─── Property details + deal checks side by side ────────────── */}
+        {(cfg.sections.propertyOverview || cfg.sections.dealChecks) && (
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {cfg.sections.propertyOverview && (
+              <DetailTable
+                title="Property details"
+                rows={[
+                  ['Type',           deal.type || 'SFR'],
+                  ['Beds / baths',   `${deal.beds || 0} bd · ${deal.baths || 0} ba`],
+                  ['Square footage', `${(Number(deal.sqft) || 0).toLocaleString()} sqft`],
+                  ['Status',         deal.status || 'New'],
+                  ['Total investment', metrics ? fmtUsd(metrics.totalCash) : '—'],
+                ]}
+              />
+            )}
+            {cfg.sections.dealChecks && (
+              <DetailTable
+                title="Deal checks"
+                rows={[
+                  [
+                    '1% rule',
+                    onePctRule != null ? `${onePctRule.toFixed(1)}%` : '—',
+                    onePctRule != null && onePctRule >= 1 ? 'good' : (onePctRule != null ? 'bad' : 'muted'),
+                  ],
+                  [
+                    'Cash-on-cash',
+                    cashOnCash != null ? `${cashOnCash.toFixed(1)}%` : '—',
+                    cashOnCash != null && cashOnCash >= 8 ? 'good' : (cashOnCash != null ? 'bad' : 'muted'),
+                  ],
+                  [
+                    'Cap rate',
+                    capRateNum != null ? fmtPct(capRateNum) : '—',
+                    capRateNum != null && capRateNum >= 6 ? 'good' : (capRateNum != null ? 'bad' : 'muted'),
+                  ],
+                  [
+                    'ARV spread',
+                    `${arvSpreadPct.toFixed(0)}%`,
+                    arvSpreadPct >= 25 ? 'good' : (arvSpreadPct >= 0 ? 'warn' : 'bad'),
+                  ],
+                ]}
+              />
+            )}
+          </section>
+        )}
+
+        {/* ─── Deal analysis (full breakdown) ─────────────────────────── */}
+        {cfg.sections.dealAnalysis && metrics && (
+          <section>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">
+              Deal analysis · {STRATEGY_LABELS[selectedAnalysis?.strategy] || 'Scenario'}
+            </p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <MetricTile label="Monthly cash flow" value={fmtSignedUsd(metrics.monthlyCashFlow)} tone={metrics.monthlyCashFlow >= 0 ? 'text-emerald-400' : 'text-red-400'} />
+              <MetricTile label="Annual cash flow" value={fmtSignedUsd(metrics.monthlyCashFlow * 12)} tone={metrics.monthlyCashFlow >= 0 ? 'text-emerald-400' : 'text-red-400'} />
+              <MetricTile label="P&I / mo" value={fmtUsd(metrics.piti)} tone="text-white" />
+              <MetricTile label="Cash to close" value={fmtUsd(metrics.totalCash)} tone="text-white" />
+            </div>
+          </section>
+        )}
+
+        {/* ─── Rehab breakdown ────────────────────────────────────────── */}
+        {cfg.sections.rehabBreakdown && metrics && Array.isArray(metrics.items) && metrics.items.length > 0 && (
+          <section>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Rehab breakdown</p>
+            <div className="rounded-lg border border-slate-800 overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  {metrics.items.map((it, i) => {
+                    const safe = it && typeof it === 'object' ? it : {};
+                    return (
+                      <tr key={i} className={i % 2 ? 'bg-slate-900/40' : ''}>
+                        <td className="px-3 py-2 text-slate-300">{safe.label || safe.name || `Item ${i + 1}`}</td>
+                        <td className="px-3 py-2 text-right text-slate-200 font-mono">{fmtUsd(Number(safe.cost) || 0)}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="bg-amber-400/5 border-t border-amber-400/20">
+                    <td className="px-3 py-2 text-amber-300 font-semibold">Total rehab</td>
+                    <td className="px-3 py-2 text-right text-amber-300 font-semibold font-mono">{fmtUsd(metrics.rehab)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {/* ─── Notes ──────────────────────────────────────────────────── */}
+        {cfg.sections.notes && deal.notes && (
+          <section>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Notes</p>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3">
+              <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{deal.notes}</p>
+            </div>
+          </section>
+        )}
+
+        {/* ─── Documents (placeholder until per-doc IM toggle ships) ──── */}
+        {cfg.sections.documents && (
+          <section>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Documents</p>
+            <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 px-4 py-5 text-center">
+              <FileText className="w-5 h-5 text-slate-600 mx-auto mb-2" />
+              <p className="text-xs text-slate-400">
+                Per-document visibility ships with the next update — once you opt files in, they'll show here for buyers.
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* ─── Wholesaler contact ─────────────────────────────────────── */}
+        {cfg.sections.wholesalerContact && (
+          <section>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Wholesaler contact</p>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-amber-300 text-sm font-semibold shrink-0"
+                style={profile.avatarUrl ? { background: `center/cover no-repeat url(${profile.avatarUrl})`, border: 'none' } : {}}
+              >
+                {!profile.avatarUrl && (profile.name || profile.handle || 'W').slice(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0 text-sm">
+                <p className="text-white font-medium truncate">{profile.name || profile.handle || 'Wholesaler'}</p>
+                <p className="text-xs text-slate-400 truncate">
+                  {profile.handle ? `@${profile.handle}` : ''}{profile.bio ? ` · ${profile.bio}` : ''}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MetricTile({ label, value, hint, tone }) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3">
+      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
+      <p className={`text-lg font-semibold mt-1 font-mono ${tone || 'text-white'}`}>{value}</p>
+      {hint && <p className="text-[10px] text-slate-500 mt-0.5">{hint}</p>}
+    </div>
+  );
+}
+
+function DetailTable({ title, rows }) {
+  const toneCls = {
+    good: 'text-emerald-400',
+    bad:  'text-red-400',
+    warn: 'text-amber-400',
+    muted: 'text-slate-500',
+  };
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{title}</p>
+      <div className="rounded-lg border border-slate-800 overflow-hidden">
+        <table className="w-full text-sm">
+          <tbody>
+            {rows.map(([label, value, tone], i) => (
+              <tr key={i} className={i % 2 ? 'bg-slate-900/40' : ''}>
+                <td className="px-3 py-2 text-slate-400">{label}</td>
+                <td className={`px-3 py-2 text-right font-mono ${tone ? toneCls[tone] : 'text-slate-200'}`}>{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
