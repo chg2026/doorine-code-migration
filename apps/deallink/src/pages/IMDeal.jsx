@@ -142,7 +142,11 @@ export default function IMDeal() {
         }
         const data = await res.json();
         if (cancelled) return;
-        const d = data.deal || data;
+        // Public IM endpoint returns { gated: true, preview: { addr, city, zip,
+        // type, ask, arv, beds, baths, sqft, status } }. After buyer verifies
+        // the server returns the full deal under `deal`. Read from whichever
+        // is present, in that order.
+        const d = data.preview || data.deal || data;
         setDeal(d);
         if (d?.addr) document.title = `${d.addr} · DealLink`;
         if (initialBuyer?.id) recordVisit(dealId);
@@ -333,9 +337,11 @@ function Step0Preview({ deal, onUnlock }) {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">{deal.addr || 'Off-market property'}</h1>
+            <h1 className="text-2xl font-bold text-white">
+              {[deal.addr, deal.city].filter(Boolean).join(', ') || '—'}
+            </h1>
             <p className="text-sm text-slate-400 mt-1">
-              {[deal.city, deal.state].filter(Boolean).join(', ')}
+              {[deal.city, deal.state, deal.zip].filter(Boolean).join(', ')}
             </p>
           </div>
 
