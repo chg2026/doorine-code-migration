@@ -12,6 +12,8 @@ import Onboarding from './pages/Onboarding.jsx';
 import PublicProfile from './pages/PublicProfile.jsx';
 import DealDetail from './pages/DealDetail.jsx';
 import DealIM from './pages/DealIM.jsx';
+import IMDeal from './pages/IMDeal.jsx';
+import BuyerDashboard from './pages/BuyerDashboard.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 import Dashboard from './pages/Dashboard.jsx';
@@ -53,6 +55,8 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/onboarding" element={<Admin><Onboarding /></Admin>} />
         <Route path="/deal/:slug" element={<DealIM />} />
+        <Route path="/im/:dealId" element={<IMDeal />} />
+        <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
 
         <Route path="/dashboard" element={<Admin><Dashboard /></Admin>} />
         <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />

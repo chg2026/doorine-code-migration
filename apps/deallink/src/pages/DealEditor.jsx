@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, Info, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge } from 'lucide-react';
+import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, Info, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge, FileSignature, Eye } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
-import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge } from '../components/ui.jsx';
+import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge, Modal } from '../components/ui.jsx';
 import { DEAL_STATUSES, DealLinkAPI, DOCUMENT_CATEGORIES } from '../lib/deallink-api.js';
 import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -95,17 +95,10 @@ export default function DealEditor({ mode }) {
           {mode === 'edit' && existing && (
             <Button
               variant="secondary"
-              onClick={() => {
-                const el = document.getElementById('im-share-panel');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  el.classList.add('ring-2', 'ring-amber-400/60');
-                  setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400/60'), 1600);
-                }
-              }}
-              title={existing.imSlug ? 'Manage shareable IM link' : 'Generate a shareable IM link'}
+              onClick={() => setTab('im')}
+              title="Open Investment Memorandum builder"
             >
-              <Share2 className="w-4 h-4" /> {existing.imSlug ? 'Manage IM' : 'Share IM'}
+              <Share2 className="w-4 h-4" /> Share IM
             </Button>
           )}
           {mode === 'edit' && (
@@ -127,6 +120,7 @@ export default function DealEditor({ mode }) {
             { k: 'overview', label: 'Overview' },
             { k: 'analysis', label: 'Deal analysis' },
             { k: 'documents', label: 'Documents' },
+            { k: 'im',       label: 'Investment memo (IM)' },
           ].map((t) => {
             const active = tab === t.k;
             return (
@@ -224,14 +218,18 @@ export default function DealEditor({ mode }) {
               </div>
             </section>
 
-            {mode === 'edit' && existing && (
-              <IMSharePanel deal={existing} onChange={(patch) => dispatch({ type: 'update_deal', id: existing.id, patch })} show={show} />
-            )}
-
             </>)}
 
             {mode === 'edit' && existing && tab === 'documents' && (
               <DealDocumentsSection deal={existing} show={show} />
+            )}
+
+            {mode === 'edit' && existing && tab === 'im' && (
+              <DealIMSection
+                deal={existing}
+                onSave={(patch) => dispatch({ type: 'update_deal', id: existing.id, patch, throwOnError: true })}
+                show={show}
+              />
             )}
 
             {mode === 'edit' && existing && tab === 'analysis' && (
@@ -284,6 +282,108 @@ export default function DealEditor({ mode }) {
       </div>
       {node}
     </Layout>
+  );
+}
+
+// ─── (legacy ShareIMModal removed — its job moved into DealIMSection on
+// the "Investment memo (IM)" tab. Stub kept temporarily for diff
+// readability; safe to delete once the IM tab ships.) ───────────────────
+function _LegacyShareIMModal_unused({ open, onClose, deal, onSave, show }) {
+  const initial = React.useMemo(() => ({
+    show_photos:   deal.imConfig?.show_photos   ?? true,
+    show_analyzer: deal.imConfig?.show_analyzer ?? true,
+    show_rehab:    deal.imConfig?.show_rehab    ?? true,
+  }), [deal.imConfig]);
+
+  const [cfg, setCfg] = React.useState(initial);
+  const [saving, setSaving] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+
+  React.useEffect(() => { if (open) setCfg(initial); }, [open, initial]);
+
+  const shareUrl = `https://deallink.neuroaios.ai/im/${deal.id}`;
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      show('Link copied');
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      show('Could not copy — select and copy manually');
+    }
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      await onSave({ imConfig: cfg });
+      show('Settings saved');
+      onClose();
+    } catch (e) {
+      show(e?.response?.data?.error || e?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const toggles = [
+    { key: 'show_photos',   label: 'Show photos' },
+    { key: 'show_analyzer', label: 'Show deal analysis / analyzer scenarios' },
+    { key: 'show_rehab',    label: 'Show rehab estimate' },
+  ];
+
+  return (
+    <Modal open={open} onClose={onClose} title="Share Investment Memorandum" maxWidth="max-w-xl">
+      <div className="space-y-5">
+        <div className="space-y-2">
+          {toggles.map((t) => {
+            const value = !!cfg[t.key];
+            return (
+              <label
+                key={t.key}
+                className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border cursor-pointer ${
+                  value ? 'border-amber-400/30 bg-amber-400/5' : 'border-slate-700 bg-slate-800/40'
+                }`}
+              >
+                <span className="text-sm text-slate-200">{t.label}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={value}
+                  onClick={() => setCfg((c) => ({ ...c, [t.key]: !c[t.key] }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    value ? 'bg-amber-400' : 'bg-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      value ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </label>
+            );
+          })}
+        </div>
+
+        <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Shareable link</p>
+          <div className="flex items-center gap-2">
+            <Input value={shareUrl} readOnly onFocus={(e) => e.target.select()} className="font-mono text-xs" />
+            <Button variant="secondary" onClick={copy} title="Copy link">
+              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'Copied' : 'Copy link'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <Button variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save settings'}</Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -713,21 +813,10 @@ function SummaryStat({ label, value, tone }) {
   );
 }
 
-// ─── Investment Memorandum share panel ───────────────────────────────────
-// Lets the wholesaler generate a public /deal/<slug> link and choose which
-// fields appear on the buyer-facing IM page. Persists toggles immediately
-// (one PATCH per change) and pushes the new state back into the store so
-// the rest of the UI stays in sync.
-const IM_TOGGLES = [
-  { key: 'imShowAsking',       label: 'Asking price' },
-  { key: 'imShowArv',          label: 'ARV' },
-  { key: 'imShowRepair',       label: 'Repair / deal analysis' },
-  { key: 'imShowMao',          label: 'MAO (max allowable offer)', sensitive: true },
-  { key: 'imShowContact',      label: 'Wholesaler contact' },
-  { key: 'imShowStreetNumber', label: 'Street number on hero' },
-];
-
-function IMSharePanel({ deal, onChange, show }) {
+// ─── (legacy IMSharePanel removed — replaced by DealIMSection on the
+// "Investment memo (IM)" tab. Kept the stub below until 2026-Q3 cleanup
+// to make the diff easy to follow.) ─────────────────────────────────────
+function _LegacyIMSharePanel_unused({ deal, onChange, show }) {
   const [slug, setSlug] = React.useState(deal.imSlug || null);
   const [generating, setGenerating] = React.useState(false);
   const [saving, setSaving] = React.useState(null);
@@ -1081,5 +1170,384 @@ function DealDocumentsSection({ deal, show }) {
         </div>
       )}
     </section>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Investment Memorandum (IM) tab
+// ═══════════════════════════════════════════════════════════════════════════
+// Top-level "Investment memo (IM)" tab on the deal editor. Two sub-tabs:
+//   1. Memo builder — pick which saved analysis feeds the IM, toggle which
+//      sections appear, and copy the public link.
+//   2. Live preview — placeholder for the next sub-task; will render the IM
+//      exactly as buyers see it.
+// All persistence flows through `imConfig` JSONB on `deallink_deals`. Saves
+// are optimistic and per-toggle (the existing store dispatch handles PATCH).
+
+const IM_SECTIONS = [
+  { key: 'propertyOverview',  title: 'Property overview',  desc: 'Address, type, beds/baths',                       defaultOn: true  },
+  { key: 'description',       title: 'Description',        desc: 'Short pitch shown at top of the memo',            defaultOn: true  },
+  { key: 'photos',            title: 'Photos',             desc: 'Gallery from the property record',                defaultOn: true  },
+  { key: 'dealNumbers',       title: 'Deal numbers',       desc: 'ARV, asking, repair, MAO',                        defaultOn: true  },
+  { key: 'dealAnalysis',      title: 'Deal analysis',      desc: 'Cash flow, cap rate, ROI from the chosen scenario', defaultOn: true  },
+  { key: 'dealChecks',        title: 'Deal checks',        desc: '1% rule, ARV spread, etc.',                       defaultOn: true  },
+  { key: 'rehabBreakdown',    title: 'Rehab breakdown',    desc: 'Line-item scope & cost',                          defaultOn: true  },
+  { key: 'notes',             title: 'Notes',              desc: 'Public notes you write here',                     defaultOn: false },
+  { key: 'documents',         title: 'Documents',          desc: 'Files attached to this deal (per-doc toggles next)', defaultOn: false },
+  { key: 'wholesalerContact', title: 'Wholesaler contact', desc: 'Your name, phone, email',                         defaultOn: true  },
+];
+
+const IM_NUMBER_FIELDS = [
+  { key: 'showArv',    label: 'ARV',                            defaultOn: true  },
+  { key: 'showAsking', label: 'Asking price',                   defaultOn: true  },
+  { key: 'showRepair', label: 'Repair cost',                    defaultOn: true  },
+  { key: 'showMao',    label: 'MAO (max allowable offer)',      defaultOn: false, sensitive: true },
+];
+
+function defaultImConfig() {
+  return {
+    selectedAnalysisId: null,
+    sections: Object.fromEntries(IM_SECTIONS.map((s) => [s.key, s.defaultOn])),
+    fields:   Object.fromEntries(IM_NUMBER_FIELDS.map((f) => [f.key, f.defaultOn])),
+    privacy:  { showStreetNumber: true },
+  };
+}
+
+// Merge a stored config blob with the current defaults so newly-added
+// sections/fields appear in their default state for older deals.
+function mergeImConfig(stored) {
+  const def = defaultImConfig();
+  if (!stored || typeof stored !== 'object') return def;
+  return {
+    selectedAnalysisId: stored.selectedAnalysisId ?? def.selectedAnalysisId,
+    sections: { ...def.sections, ...(stored.sections || {}) },
+    fields:   { ...def.fields,   ...(stored.fields   || {}) },
+    privacy:  { ...def.privacy,  ...(stored.privacy  || {}) },
+  };
+}
+
+function dealAnalysesArray(deal) {
+  const raw = deal?.analyzerState;
+  if (Array.isArray(raw)) return raw.filter(Boolean);
+  if (raw && typeof raw === 'object') return [raw];
+  return [];
+}
+
+function analysisHeadline(a) {
+  if (!a) return null;
+  try {
+    const m = deriveMetrics(a);
+    const strategy = STRATEGY_LABELS[a.strategy] || a.strategy || 'Analysis';
+    const when = a.savedAt ? new Date(a.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    return { strategy, when, metrics: m };
+  } catch {
+    return { strategy: 'Analysis', when: '', metrics: null };
+  }
+}
+
+function DealIMSection({ deal, onSave, show }) {
+  const [sub, setSub] = React.useState('builder');
+
+  return (
+    <section className="space-y-5">
+      <div className="flex items-center gap-6 border-b border-slate-800 pb-2">
+        {[
+          { k: 'builder', label: 'Memo builder', Icon: FileSignature },
+          { k: 'preview', label: 'Live preview', Icon: Eye },
+        ].map((s) => {
+          const active = sub === s.k;
+          const Icon = s.Icon;
+          return (
+            <button
+              key={s.k}
+              onClick={() => setSub(s.k)}
+              className={`relative pb-2 flex items-center gap-2 text-sm font-medium transition-colors ${
+                active ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {s.label}
+              <span
+                className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full ${
+                  active ? 'bg-amber-400' : 'bg-transparent'
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {sub === 'builder' && <IMMemoBuilder deal={deal} onSave={onSave} show={show} />}
+      {sub === 'preview' && <IMLivePreviewPlaceholder />}
+    </section>
+  );
+}
+
+function IMLivePreviewPlaceholder() {
+  return (
+    <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 px-6 py-12 text-center">
+      <Eye className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+      <p className="text-slate-300 text-sm font-medium">Live preview coming next</p>
+      <p className="text-xs text-slate-500 mt-1.5 max-w-md mx-auto">
+        This will render the Investment Memorandum exactly as a buyer sees it,
+        using the sections you've turned on in the Memo builder.
+      </p>
+    </div>
+  );
+}
+
+function IMMemoBuilder({ deal, onSave, show }) {
+  const cfg = React.useMemo(() => mergeImConfig(deal.imConfig), [deal.imConfig]);
+  const analyses = React.useMemo(() => dealAnalysesArray(deal), [deal.analyzerState]);
+
+  const [saving, setSaving] = React.useState(null); // key currently being saved
+  const [error, setError] = React.useState(null);
+  const [copied, setCopied] = React.useState(false);
+
+  // The dedicated /im/:dealId public route hasn't been wired yet — that
+  // ships with the "Live preview" sub-task. Until then the link string is
+  // generated (and copyable for later) but the open-preview affordance is
+  // disabled to avoid sending users to a 404.
+  const shareUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/im/${deal.id}`
+    : `/im/${deal.id}`;
+  const previewLive = false;
+
+  // Optimistic patch helper. `path` is one of: 'selectedAnalysisId',
+  // 'sections.<key>', 'fields.<key>', 'privacy.<key>'.
+  async function patchCfg(path, value, savingKey) {
+    setSaving(savingKey || path);
+    setError(null);
+    const next = { ...cfg };
+    if (path === 'selectedAnalysisId') {
+      next.selectedAnalysisId = value;
+    } else {
+      const [bucket, key] = path.split('.');
+      next[bucket] = { ...next[bucket], [key]: value };
+    }
+    try {
+      await onSave({ imConfig: next });
+    } catch (e) {
+      setError(e?.response?.data?.error || e?.message || 'Could not save');
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      show && show('Link copied');
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setError('Could not copy — select and copy manually.');
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* ─── Public link ───────────────────────────────────────────────── */}
+      <div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Public link</p>
+        <div className="flex items-center gap-2">
+          <Input value={shareUrl} readOnly onFocus={(e) => e.target.select()} className="font-mono text-xs" />
+          <Button variant="secondary" onClick={copyLink} title="Copy link">
+            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copied' : 'Copy'}
+          </Button>
+          {previewLive ? (
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-400/40"
+              title="Open preview"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          ) : (
+            <span
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-800 text-slate-600 cursor-not-allowed"
+              title="The public IM page hasn't shipped yet — coming with the next sub-task."
+              aria-disabled="true"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </span>
+          )}
+        </div>
+        {!previewLive && (
+          <p className="text-[11px] text-slate-500 mt-1.5">
+            The public IM page goes live with the next update — copy the link now to share once it ships.
+          </p>
+        )}
+      </div>
+
+      {/* ─── Choose analysis ───────────────────────────────────────────── */}
+      <div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Choose analysis</p>
+        {analyses.length === 0 ? (
+          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-5 text-center">
+            <Calculator className="w-5 h-5 text-slate-500 mx-auto mb-2" />
+            <p className="text-sm text-slate-300">No saved analyses yet</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Save an analysis on the Deal analysis tab to feature it on the IM.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {analyses.map((a) => {
+              const head = analysisHeadline(a);
+              const selected = cfg.selectedAnalysisId === a.id;
+              const isSaving = saving === 'selectedAnalysisId';
+              return (
+                <button
+                  type="button"
+                  key={a.id}
+                  onClick={() => patchCfg('selectedAnalysisId', selected ? null : a.id)}
+                  disabled={isSaving}
+                  className={`w-full text-left rounded-lg border px-4 py-3 transition-all ${
+                    selected
+                      ? 'border-amber-400/60 bg-amber-400/5 ring-1 ring-amber-400/40'
+                      : 'border-slate-700 bg-slate-800/40 hover:border-slate-600'
+                  } ${isSaving ? 'opacity-60' : ''}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-white font-medium">
+                        {head?.strategy || 'Analysis'}
+                        {head?.when && <span className="text-slate-400 font-normal ml-2">· {head.when}</span>}
+                      </p>
+                      {head?.metrics && (
+                        <p className="text-xs text-slate-400 font-mono mt-1">
+                          CF: <span className={head.metrics.monthlyCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            {fmtSignedUsd(head.metrics.monthlyCashFlow)}/mo
+                          </span>
+                          {' · '}Cap: <span className="text-slate-200">{fmtPct(head.metrics.cap)}</span>
+                          {' · '}ARV: <span className="text-slate-200">{fmtUsd(Number(a.arv) || 0)}</span>
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      aria-hidden
+                      className={`mt-0.5 w-4 h-4 shrink-0 rounded-full border-2 ${
+                        selected ? 'border-amber-400 bg-amber-400' : 'border-slate-600'
+                      }`}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+            <p className="text-[11px] text-slate-500 mt-1">
+              Click again to deselect — the IM will skip the analysis section.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Sections to include ───────────────────────────────────────── */}
+      <div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Sections to include</p>
+        <div className="space-y-2">
+          {IM_SECTIONS.map((s) => {
+            const value = !!cfg.sections[s.key];
+            const isSaving = saving === `sections.${s.key}`;
+            return (
+              <SectionToggleRow
+                key={s.key}
+                title={s.title}
+                desc={s.desc}
+                value={value}
+                disabled={isSaving}
+                onToggle={() => patchCfg(`sections.${s.key}`, !value)}
+              >
+                {/* Inline sub-toggles for "Deal numbers" — fine-grained
+                    control over which dollar amounts appear on the IM. */}
+                {s.key === 'dealNumbers' && value && (
+                  <div className="mt-3 pl-3 border-l-2 border-amber-400/30 space-y-1.5">
+                    {IM_NUMBER_FIELDS.map((f) => {
+                      const fv = !!cfg.fields[f.key];
+                      const fSaving = saving === `fields.${f.key}`;
+                      return (
+                        <label
+                          key={f.key}
+                          className={`flex items-center justify-between gap-3 py-1 ${fSaving ? 'opacity-60' : ''}`}
+                        >
+                          <span className="text-xs text-slate-300">
+                            {f.label}
+                            {f.sensitive && (
+                              <span className="ml-2 text-[9px] uppercase tracking-wider text-amber-400">sensitive</span>
+                            )}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={fv}
+                            disabled={fSaving}
+                            onChange={(e) => patchCfg(`fields.${f.key}`, e.target.checked)}
+                            className="w-4 h-4 accent-amber-400"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </SectionToggleRow>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Privacy ───────────────────────────────────────────────────── */}
+      <div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Privacy</p>
+        <SectionToggleRow
+          title="Show street number"
+          desc="When off, the address is shown as &quot;— Wow Ave&quot; until a buyer requests details."
+          value={!!cfg.privacy.showStreetNumber}
+          disabled={saving === 'privacy.showStreetNumber'}
+          onToggle={() => patchCfg('privacy.showStreetNumber', !cfg.privacy.showStreetNumber)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SectionToggleRow({ title, desc, value, disabled, onToggle, children }) {
+  return (
+    <div
+      className={`rounded-lg border px-4 py-3 transition-colors ${
+        value ? 'border-amber-400/30 bg-amber-400/5' : 'border-slate-700 bg-slate-800/40'
+      } ${disabled ? 'opacity-60' : ''}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm text-white font-medium">{title}</p>
+          {desc && <p className="text-xs text-slate-400 mt-0.5">{desc}</p>}
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={value}
+          disabled={disabled}
+          onClick={onToggle}
+          className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            value ? 'bg-amber-400' : 'bg-slate-700'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              value ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+      {children}
+    </div>
   );
 }

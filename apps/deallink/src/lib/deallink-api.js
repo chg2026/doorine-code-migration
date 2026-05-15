@@ -52,6 +52,12 @@ export function dealFromApi(d) {
     // ─── Analyzer state ────────────────────────────────────────────────
     analyzerState: d.analyzer_state || null,
     analyzerStateUpdatedAt: d.analyzer_state_updated_at || null,
+    // ─── Investment memo (IM) builder config ────────────────────────────
+    // Single JSONB blob holding the entire Memo builder state — chosen
+    // analysis id + section/field/privacy toggles. Defaults are applied
+    // by the UI via DEFAULT_IM_CONFIG so older deals (no config saved yet)
+    // render as if every visible-by-default section is on.
+    imConfig: d.im_config && typeof d.im_config === 'object' ? d.im_config : null,
   };
 }
 
@@ -65,6 +71,7 @@ export function dealToApi(d) {
     description: 'description', photoUrl: 'photo_url', tags: 'tags',
     hideStreet: 'hide_street', new: 'is_new',
     analyzerState: 'analyzer_state',
+    imConfig: 'im_config',
   };
   for (const [from, to] of Object.entries(map)) {
     if (from in d) out[to] = d[from];

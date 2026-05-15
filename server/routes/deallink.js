@@ -71,7 +71,7 @@ router.put('/profile', async (req, res) => {
 const DEAL_FIELDS = [
   'addr', 'city', 'state', 'zip', 'type', 'units', 'beds', 'baths', 'sqft',
   'ask', 'arv', 'occ', 'access', 'status', 'notes', 'description', 'photo_url',
-  'tags', 'hide_street', 'is_new', 'analyzer_state',
+  'tags', 'hide_street', 'is_new', 'analyzer_state', 'im_config',
 ]
 
 const VALID_STATUSES = new Set(['New', 'Marketed', 'Under Contract', 'Closed', 'Dead'])
