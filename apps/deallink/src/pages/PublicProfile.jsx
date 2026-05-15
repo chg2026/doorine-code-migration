@@ -487,15 +487,28 @@ function DealDetailModal({ deal, theme, onClose, onInterested }) {
                 return (
                   <div
                     key={i}
+                    onClick={isOverflow ? onInterested : undefined}
+                    role={isOverflow ? 'button' : undefined}
+                    tabIndex={isOverflow ? 0 : undefined}
+                    onKeyDown={isOverflow ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onInterested?.(); }
+                    } : undefined}
+                    title={isOverflow ? 'Register to see all photos' : undefined}
                     style={{
                       position: 'relative',
                       aspectRatio: '1 / 1',
                       borderRadius: radius,
                       overflow: 'hidden',
-                      background: `center/cover no-repeat url(${url}), ${tone.dark}`,
+                      background: tone.dark,
                       boxShadow: neuOut(tone.base, tone.dark, 0.7, 8),
+                      cursor: isOverflow ? 'pointer' : 'default',
                     }}
                   >
+                    <img
+                      src={url}
+                      alt=""
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
                     {isOverflow && (
                       <div style={{
                         position: 'absolute', inset: 0,
