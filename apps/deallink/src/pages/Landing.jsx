@@ -16,7 +16,7 @@ export default function Landing() {
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/login"><Button variant="ghost">Sign in</Button></Link>
-            <Link to="/onboarding"><Button>Claim your handle <ArrowRight className="w-4 h-4" /></Button></Link>
+            <Link to="/signup"><Button>Claim your handle <ArrowRight className="w-4 h-4" /></Button></Link>
           </div>
         </div>
       </header>
@@ -26,7 +26,7 @@ export default function Landing() {
         <h1 className="text-5xl md:text-7xl font-bold text-white mt-6 leading-tight">One link for every<br />deal you wholesale.</h1>
         <p className="text-slate-400 text-base mt-6 max-w-xl mx-auto">Share a public profile. Post inventory once. Capture buyers — without the spreadsheet shuffle.</p>
         <div className="flex justify-center gap-3 mt-8">
-          <Link to="/onboarding"><Button size="lg">Claim your handle <ArrowRight className="w-4 h-4" /></Button></Link>
+          <Link to="/signup"><Button size="lg">Claim your handle <ArrowRight className="w-4 h-4" /></Button></Link>
           <Link to={`/p/${EXAMPLE_HANDLE}`}><Button size="lg" variant="secondary">View example profile</Button></Link>
         </div>
         <p className="text-slate-500 text-xs font-mono mt-6">deallink.io/<u>yourname</u></p>
