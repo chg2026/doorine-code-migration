@@ -69,7 +69,10 @@ export default function App() {
         <Route path="/admin/import" element={<Admin><CsvImport /></Admin>} />
 
         <Route path="/pipeline" element={<Admin><Pipeline /></Admin>} />
-        <Route path="/deal-analyzer" element={<Admin><DealAnalyzer /></Admin>} />
+        {/* Public — buyers (and visitors from BuyerDashboard) can analyze
+            any deal without signing in. The /:dealId variant remains
+            authed because it loads a specific wholesaler-owned deal. */}
+        <Route path="/deal-analyzer" element={<StoreProvider><DealAnalyzer /></StoreProvider>} />
         <Route path="/deal-analyzer/:dealId" element={<Admin><DealAnalyzer /></Admin>} />
         <Route path="/buyers" element={<Admin><ProGate pageTitle="Buyers" pageSubtitle="Your buyer network" title="Buyer CRM is a paid feature" body="Upgrade to Personal or Team to build a deduped buyer list, import from leads, and match buyers to deals.">
           <Buyers />
