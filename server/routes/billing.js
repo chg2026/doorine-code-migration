@@ -104,16 +104,46 @@ router.post('/checkout', requireAuth, async (req, res) => {
 
     const accountId = req.user.account_id
 
-    // Load the account row for billing_email and any existing stripe_customer_id.
+    // Load the account row — include stripe_subscription_id so we can
+    // upgrade an existing subscription instead of opening a new checkout.
     const { data: account, error: accountError } = await supabaseAdmin
       .from('accounts')
-      .select('id, name, billing_email, stripe_customer_id')
+      .select('id, name, billing_email, stripe_customer_id, stripe_subscription_id')
       .eq('id', accountId)
       .single()
     if (accountError || !account) {
       return res.status(500).json({ error: 'Failed to load account.' })
     }
 
+    // ── Upgrade path: existing subscription → swap price immediately ─────────
+    if (account.stripe_subscription_id) {
+      try {
+        const subscription = await s.subscriptions.retrieve(account.stripe_subscription_id)
+        await s.subscriptions.update(subscription.id, {
+          items: [{ id: subscription.items.data[0].id, price: priceId }],
+          proration_behavior: 'always_invoice',
+          metadata: { account_id: accountId, product_code, plan },
+        })
+
+        // Mirror the plan change in Supabase immediately (the
+        // customer.subscription.updated webhook will also fire, but updating
+        // here ensures instant consistency).
+        const { seat_limit, guest_limit } = planLimits(plan)
+        await supabaseAdmin
+          .from('account_products')
+          .update({ plan, seat_limit, guest_limit })
+          .eq('account_id', accountId)
+          .eq('status', 'active')
+
+        return res.json({ upgraded: true, url: null })
+      } catch (upgradeErr) {
+        // Subscription retrieval/update failed (e.g. cancelled/deleted in
+        // Stripe) — fall through to create a fresh checkout session.
+        console.warn('[billing/checkout] Subscription upgrade failed, falling back to checkout:', upgradeErr.message)
+      }
+    }
+
+    // ── New-subscription path ─────────────────────────────────────────────────
     // Get or create Stripe customer — one customer per account.
     let customerId = account.stripe_customer_id
     if (!customerId) {
