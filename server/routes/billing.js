@@ -74,11 +74,25 @@ async function getProductId(productCode) {
 }
 
 async function updateEntitlementBySubscription(subscriptionId, plan) {
+  // stripe_subscription_id lives on accounts, not account_products.
+  // Step 1: resolve account_id from accounts.
+  const { data: acct, error: acctErr } = await supabaseAdmin
+    .from('accounts')
+    .select('id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle()
+  if (acctErr) throw acctErr
+  if (!acct) {
+    console.warn(`[billing/webhook] updateEntitlementBySubscription: no account found for sub=${subscriptionId}`)
+    return
+  }
+  // Step 2: update account_products by account_id.
   const { seat_limit, guest_limit } = planLimits(plan)
   const { error } = await supabaseAdmin
     .from('account_products')
     .update({ plan, seat_limit, guest_limit, status: 'active' })
-    .eq('stripe_subscription_id', subscriptionId)
+    .eq('account_id', acct.id)
+    .eq('status', 'active')
   if (error) throw error
 }
 
@@ -268,14 +282,26 @@ router.post('/webhook', async (req, res) => {
       console.log(`[billing/webhook] customer.subscription.updated: sub=${sub.id} plan=${plan}`)
 
     } else if (event.type === 'customer.subscription.deleted') {
-      const sub                         = event.data.object
-      const { seat_limit, guest_limit } = planLimits('personal')
-      const { error } = await supabaseAdmin
-        .from('account_products')
-        .update({ plan: 'personal', seat_limit, guest_limit, status: 'active' })
+      const sub = event.data.object
+      // stripe_subscription_id lives on accounts — resolve account_id first.
+      const { data: acct, error: acctErr } = await supabaseAdmin
+        .from('accounts')
+        .select('id')
         .eq('stripe_subscription_id', sub.id)
-      if (error) throw error
-      console.log(`[billing/webhook] customer.subscription.deleted: sub=${sub.id} — downgraded to personal`)
+        .maybeSingle()
+      if (acctErr) throw acctErr
+      if (!acct) {
+        console.warn(`[billing/webhook] customer.subscription.deleted: no account found for sub=${sub.id}`)
+      } else {
+        const { seat_limit, guest_limit } = planLimits('personal')
+        const { error } = await supabaseAdmin
+          .from('account_products')
+          .update({ plan: 'personal', seat_limit, guest_limit, status: 'active' })
+          .eq('account_id', acct.id)
+          .eq('status', 'active')
+        if (error) throw error
+        console.log(`[billing/webhook] customer.subscription.deleted: sub=${sub.id} account=${acct.id} — downgraded to personal`)
+      }
     }
   } catch (e) {
     console.error(`[billing/webhook] Handler error for ${event.type}:`, e.message)
