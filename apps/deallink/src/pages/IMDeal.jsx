@@ -546,23 +546,21 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
         </div>
       </div>
 
-      {/* Photos */}
-      {showPhotos && (
+      {/* Photos — hidden entirely when none */}
+      {showPhotos && photos.length > 0 && (
         <section>
           <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Photos</h3>
-          {photos.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {photos.map((src, i) => (
-                <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden border border-slate-800 bg-slate-900">
-                  <img src={src} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="aspect-[16/9] rounded-lg border border-slate-800 bg-slate-900/60 flex items-center justify-center text-slate-600">
-              <Building2 className="w-12 h-12" />
-            </div>
-          )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {photos.map((src, i) => (
+              <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden border border-slate-800 bg-slate-900">
+                <img
+                  src={src}
+                  alt={`Photo ${i + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            ))}
+          </div>
         </section>
       )}
 
@@ -736,13 +734,17 @@ function PriceCell({ label, value, accent }) {
 
 function SpecCard({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 flex items-center gap-3">
-      <div className="w-9 h-9 rounded-md border border-slate-800 bg-slate-900/60 flex items-center justify-center text-amber-400">
+    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 flex items-start gap-3">
+      <div className="w-9 h-9 shrink-0 rounded-md border border-slate-800 bg-slate-900/60 flex items-center justify-center text-amber-400">
         <Icon className="w-4 h-4" />
       </div>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-        <p className="text-sm font-semibold text-white truncate">{value}</p>
+      <div className="min-w-0 flex flex-col gap-0.5">
+        <span className="block text-[10px] uppercase tracking-wider text-slate-500 leading-none">
+          {label}
+        </span>
+        <span className="block text-sm font-semibold text-white break-words leading-snug">
+          {value}
+        </span>
       </div>
     </div>
   );
