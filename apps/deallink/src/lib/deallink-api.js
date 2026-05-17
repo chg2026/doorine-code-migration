@@ -261,7 +261,10 @@ export const DealLinkAPI = {
   },
   async deleteDeal(id) { await api.delete(`/deallink/deals/${id}`); },
   async shareIM(id) {
-    return `https://deallink.neuroaios.ai/im/${id}`;
+    // Hits the server endpoint that generates + persists im_slug
+    // (idempotent — returns the existing slug on repeat calls).
+    const { data } = await api.post(`/deallink/deals/${id}/im/share`);
+    return data?.slug || null;
   },
   async updateIMToggles(id, toggles) {
     // toggles: { imShowArv?, imShowAsking?, imShowRepair?, imShowMao?, imShowContact?, imShowStreetNumber? }

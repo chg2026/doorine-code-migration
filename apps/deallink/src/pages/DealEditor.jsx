@@ -1320,6 +1320,7 @@ function DealIMSection({ deal, onSave, show }) {
 // public buyer link (slug) on first click via DealLinkAPI.shareIM, then
 // switches to a copy affordance with the resolved URL.
 function ShareIMButton({ deal, onSave, show }) {
+  const { dispatch } = useStore();
   const [busy, setBusy]   = React.useState(false);
   const [copied, setCopied] = React.useState(false);
   const [error, setError] = React.useState(null);
@@ -1334,7 +1335,10 @@ function ShareIMButton({ deal, onSave, show }) {
       setBusy(true);
       try {
         const s = await DealLinkAPI.shareIM(deal.id);
-        await onSave({ imSlug: s });
+        if (!s) throw new Error('Server did not return a share slug.');
+        // The /im/share endpoint already persists im_slug server-side,
+        // so we only need to refresh local state — no second PATCH.
+        dispatch({ type: '_optimistic_update_deal', id: deal.id, patch: { imSlug: s } });
         show && show('Share link ready — click again to copy');
       } catch (err) {
         setError(err?.response?.data?.error || err?.message || 'Failed to generate share link');
