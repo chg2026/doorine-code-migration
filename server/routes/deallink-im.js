@@ -179,6 +179,7 @@ router.post('/:dealId/verify-otp', async (req, res) => {
     const { data, error: otpErr } = await supabaseAnon.auth.verifyOtp({ phone, token: code, type: 'sms' })
     if (otpErr) return res.status(401).json({ error: 'Invalid or expired code.' })
     const supabaseSession = data.session
+    const supabaseUser    = data.user
 
     // Retrieve stored name from the im_sessions record created at send-otp.
     const { data: imSession, error: sessErr } = await db
@@ -233,6 +234,54 @@ router.post('/:dealId/verify-otp', async (req, res) => {
     if (buyerErr) {
       console.error('[deallink-im/verify-otp] Buyer upsert error:', buyerErr.message)
       return res.status(500).json({ error: 'Failed to register buyer.' })
+    }
+
+    // ── Provision a Deal Link free account for the buyer (if not already set up) ──
+    if (supabaseUser?.id) {
+      const { data: existingProfile } = await db
+        .from('user_profiles')
+        .select('id')
+        .eq('id', supabaseUser.id)
+        .maybeSingle()
+
+      if (!existingProfile) {
+        const newAccountId = crypto.randomUUID()
+
+        // 1. Account row.
+        const { error: acctErr } = await db
+          .from('accounts')
+          .insert({ id: newAccountId, name: buyerName || phone, status: 'active' })
+        if (acctErr) throw acctErr
+
+        // 2. Resolve the deallink product id.
+        const { data: product, error: productErr } = await db
+          .from('products')
+          .select('id')
+          .eq('code', 'deallink')
+          .single()
+        if (productErr) throw productErr
+
+        // 3. Entitlement row.
+        const { error: apErr } = await db
+          .from('account_products')
+          .insert({ account_id: newAccountId, product_id: product.id, plan: 'free', status: 'active' })
+        if (apErr) throw apErr
+
+        // 4. User profile row.
+        const { error: profileErr } = await db
+          .from('user_profiles')
+          .insert({ id: supabaseUser.id, phone, full_name: buyerName, account_id: newAccountId, status: 'active', is_account_admin: true })
+        if (profileErr) throw profileErr
+
+        // 5. Update the buyer's account_id to their own new account.
+        if (buyer?.id) {
+          await db.from('deallink_buyers').update({ account_id: newAccountId }).eq('id', buyer.id)
+        }
+
+        console.log(`[deallink-im/verify-otp] Buyer account provisioned: user=${supabaseUser.id} account=${newAccountId}`)
+      } else {
+        console.log(`[deallink-im/verify-otp] Existing profile found for user=${supabaseUser.id} — skipping provisioning`)
+      }
     }
 
     // Build the deal response filtered by im_config.
