@@ -72,6 +72,7 @@ const DEAL_FIELDS = [
   'addr', 'city', 'state', 'zip', 'type', 'units', 'beds', 'baths', 'sqft',
   'ask', 'arv', 'occ', 'access', 'status', 'notes', 'description', 'photo_url',
   'tags', 'hide_street', 'is_new', 'analyzer_state', 'im_config',
+  'marketplace_visible',
 ]
 
 const VALID_STATUSES = new Set(['New', 'Marketed', 'Under Contract', 'Closed', 'Dead'])
@@ -493,6 +494,7 @@ router.get('/marketplace', async (req, res) => {
     .select('*')
     .in('account_id', Array.from(byAccount.keys()))
     .in('status', ['New', 'Marketed', 'Under Contract'])
+    .eq('marketplace_visible', true)
     .order('created_at', { ascending: false })
     .limit(200)
   if (dErr) return res.status(500).json({ error: dErr.message })

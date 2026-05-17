@@ -38,8 +38,20 @@ export function Tag({ children, active, onClick, style }) {
   );
 }
 
-export function Status({ kind = 'active' }) {
-  const labels = { active: 'Active', pending: 'Pending', sold: 'Sold', new: 'New' };
+export function Status({ kind = 'New' }) {
+  const labels = {
+    // New vocabulary
+    'New': 'New',
+    'Marketed': 'Marketed',
+    'Under Contract': 'Under Contract',
+    'Closed': 'Closed',
+    'Dead': 'Dead',
+    // Legacy fallbacks
+    active: 'Marketed',
+    pending: 'Under Contract',
+    sold: 'Closed',
+    new: 'New',
+  };
   return (
     <span className={`status ${kind}`}>
       <span className="dot" />
