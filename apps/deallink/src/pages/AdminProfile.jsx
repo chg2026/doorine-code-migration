@@ -80,6 +80,7 @@ export default function AdminProfile() {
         backgroundValue: theme.accent,
         socialLinks: form.socialLinks || {},
         name: form.name || '',
+        marketplaceOptIn: !!form.marketplaceOptIn,
         onboarding: nextOnboarding,
         tone: theme.tone,
         accentColor: theme.accent,
@@ -224,6 +225,20 @@ export default function AdminProfile() {
                   <div style={{ fontSize: 11, color: ADMIN.mute }}>Soft diagonal wash on the page background.</div>
                 </div>
                 <NeuToggle on={theme.gradient} onChange={(v) => setT({ gradient: v })} />
+              </div>
+            </NeuCard>
+
+            <NeuCard>
+              <SectionTitle>Marketplace</SectionTitle>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ minWidth: 0 }}>
+                  <Label>Appear on the cross-wholesaler marketplace</Label>
+                  <div style={{ fontSize: 11, color: ADMIN.mute, lineHeight: 1.5 }}>
+                    When on, your public deals are eligible to appear in the shared marketplace alongside
+                    other wholesalers. You can still hide individual deals from the marketplace in the deal editor.
+                  </div>
+                </div>
+                <NeuToggle on={!!form.marketplaceOptIn} onChange={(v) => setField('marketplaceOptIn', v)} />
               </div>
             </NeuCard>
 

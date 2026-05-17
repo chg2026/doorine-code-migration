@@ -17,6 +17,7 @@ const EMPTY = {
   addr: '', city: '', state: '', zip: '', type: 'SFR', units: 1, beds: 3, baths: 2, sqft: 1200,
   ask: 0, arv: 0, occ: 'Vacant', access: 'Lockbox', status: 'New', notes: '',
   description: '', photoUrl: '', photos: [], tags: [], hideStreet: false,
+  marketplaceVisible: true,
 };
 
 export default function DealEditor({ mode }) {
@@ -194,6 +195,24 @@ export default function DealEditor({ mode }) {
               <Field label="Long notes (private)">
                 <Textarea rows={4} value={form.notes} onChange={(e) => patch({ notes: e.target.value })} placeholder="New roof 2023. Seller motivated. Contract ready." />
               </Field>
+            </section>
+
+            <section>
+              <h3 className="text-white font-semibold text-sm mb-3">Marketplace</h3>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800 text-amber-400 focus:ring-amber-400"
+                  checked={form.marketplaceVisible !== false}
+                  onChange={(e) => patch({ marketplaceVisible: e.target.checked })}
+                />
+                <span>
+                  <span className="block text-sm text-white font-medium">Show on marketplace</span>
+                  <span className="block text-xs text-slate-400 mt-0.5">
+                    When on, this deal appears on the cross-wholesaler marketplace (provided your profile is opted in).
+                  </span>
+                </span>
+              </label>
             </section>
 
             <section>

@@ -40,6 +40,7 @@ export function dealFromApi(d) {
     photos: Array.isArray(d.photos) ? d.photos.filter((u) => typeof u === 'string' && u) : [],
     tags: Array.isArray(d.tags) ? d.tags : [],
     hideStreet: !!d.hide_street,
+    marketplaceVisible: d.marketplace_visible == null ? true : !!d.marketplace_visible,
     new: !!d.is_new,
     createdAt: d.created_at,
     // ─── IM (Investment Memorandum) — Module 1 ──────────────────────────
@@ -70,7 +71,7 @@ export function dealToApi(d) {
     beds: 'beds', baths: 'baths', sqft: 'sqft', ask: 'ask', arv: 'arv',
     occ: 'occ', access: 'access', status: 'status', notes: 'notes',
     description: 'description', photoUrl: 'photo_url', photos: 'photos', tags: 'tags',
-    hideStreet: 'hide_street', new: 'is_new',
+    hideStreet: 'hide_street', marketplaceVisible: 'marketplace_visible', new: 'is_new',
     analyzerState: 'analyzer_state',
     imConfig: 'im_config',
   };
