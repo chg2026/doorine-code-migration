@@ -80,7 +80,7 @@ const DEAL_FIELDS = [
   'addr', 'city', 'zip', 'type', 'units', 'beds', 'baths', 'sqft',
   'ask', 'arv', 'occ', 'access', 'status', 'notes', 'hide_street', 'is_new',
   'analyzer_state', 'analyzer_state_updated_at', 'im_config',
-  'photos',
+  'photos', 'marketplace_visible',
 ]
 
 function pickDeal(body) {
@@ -202,6 +202,7 @@ router.get('/marketplace', async (req, res) => {
     .select('*')
     .in('account_id', Array.from(byAccount.keys()))
     .in('status', ['New', 'Marketed', 'Under Contract'])
+    .eq('marketplace_visible', true)
     .order('created_at', { ascending: false })
     .limit(200)
   if (dErr) return res.status(500).json({ error: dErr.message })
