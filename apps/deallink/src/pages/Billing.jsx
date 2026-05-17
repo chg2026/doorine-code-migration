@@ -86,8 +86,13 @@ export default function Billing() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error || `Checkout failed (${res.status})`);
       const url = body?.url || body?.checkout_url || body?.redirect_url;
-      if (!url) throw new Error('Checkout response did not include a redirect URL.');
-      window.location.href = url;
+      if (url) {
+        window.location.href = url;
+      } else if (body?.upgraded) {
+        window.location.href = `/billing/success?plan=${planCode}`;
+      } else {
+        throw new Error('Checkout response did not include a redirect URL.');
+      }
     } catch (e) {
       setError(e?.message || 'Could not start checkout.');
       setBusyPlan(null);
