@@ -217,6 +217,25 @@ async function syncSupabaseUser(
     return refreshFromSupabase(existing, authEmail);
   }
 
+  // Fallback: a Prisma User row may already exist with this email but a
+  // different id (e.g. created under a prior auth provider before the
+  // Supabase migration). Without this lookup the create() below would
+  // crash with P2002 unique-constraint-on-email and surface as a generic
+  // "Application error" on /login (digest 145877138). Reuse the existing
+  // row by email so the user can sign in. Full identity reconciliation
+  // (rewriting Prisma User.id to match Supabase auth.uid) is tracked
+  // separately.
+  if (authEmail) {
+    const byEmail = await prisma.user.findUnique({ where: { email: authEmail } });
+    if (byEmail) {
+      console.log(
+        `[auth:diag] syncSupabaseUser | user=${authUserId} | id_lookup=miss | email_fallback=hit | prisma_user_id=${byEmail.id} | action=refresh_existing_by_email`
+      );
+      if (!byEmail.active) return null;
+      return refreshFromSupabase(byEmail, authEmail);
+    }
+  }
+
   // First Supabase sign-in for this user — pull profile + account from Supabase.
   const admin = getSupabaseAdminClient();
   type UserProfileRow = {
