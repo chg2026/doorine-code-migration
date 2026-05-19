@@ -20,7 +20,7 @@ const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null
 // Per-product canonical domains for Stripe redirect URLs.
 const PRODUCT_DOMAINS = {
   'chg':                'https://chg.neuroaios.ai',
-  'deallink':           'https://deallink.neuroaios.ai',
+  'deallink':           'https://reiflywheel.doorine.com',
   'contractor-portal':  'https://contractorportal.neuroaios.ai',
 }
 
