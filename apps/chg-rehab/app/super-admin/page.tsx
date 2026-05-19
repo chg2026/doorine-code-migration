@@ -5,7 +5,7 @@ import { requireSuperAdmin } from "@/lib/superAdmin";
 import SuperAdminClient from "./Client";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Super Admin · CHG Rehab" };
+export const metadata = { title: "Super Admin · CHG Platform" };
 
 export default async function SuperAdminPage() {
   // Bounce logged-out users to /login first so they get the standard

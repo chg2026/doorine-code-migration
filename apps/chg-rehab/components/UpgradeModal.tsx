@@ -21,7 +21,7 @@ const PLANS: Plan[] = [
     guests: "2 guests",
     features: [
       "Solo workspace",
-      "Core CHG Rehab modules",
+      "Core CHG Platform modules",
       "Up to 2 external collaborators",
     ],
   },
@@ -142,7 +142,7 @@ export default function UpgradeModal({
             <div
               style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 4 }}
             >
-              Add teammates and more guests to your CHG Rehab workspace.
+              Add teammates and more guests to your CHG Platform workspace.
             </div>
           </div>
           <button

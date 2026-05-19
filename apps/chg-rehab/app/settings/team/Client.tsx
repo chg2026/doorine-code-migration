@@ -355,7 +355,7 @@ export default function TeamSettingsClient({
                   lineHeight: 1.5,
                 }}
               >
-                People in your organization with access to CHG Rehab.
+                People in your organization with access to CHG Platform.
               </div>
             </div>
             <UsageBar used={seatsUsed} limit={seatLimit} label="Seats used" />

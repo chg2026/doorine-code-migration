@@ -37,10 +37,10 @@ const PRODUCTS: Product[] = [
   },
   {
     code: "deallink",
-    name: "Deal Link",
-    tagline: "Wholesaler deal links",
+    name: "REI Flywheel",
+    tagline: "Wholesale deal platform",
     color: "#16A34A",
-    initial: "D",
+    initial: "R",
     devPort: 3001,
     ssoEnabled: true,
     productionUrl: (process.env.NEXT_PUBLIC_DEALLINK_URL || "").replace(/\/$/, "") || undefined,

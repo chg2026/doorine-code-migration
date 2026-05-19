@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import InvestorPortalClient from "./Client";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Investor Portal · CHG Rehab" };
+export const metadata = { title: "Investor Portal · CHG Platform" };
 
 const VALID_TABS = new Set(["overview", "investors", "deals", "fundraising", "finance"]);
 

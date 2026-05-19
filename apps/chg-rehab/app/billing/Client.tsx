@@ -23,7 +23,7 @@ const PLAN_FEATURES: Record<string, { name: string; features: string[] }> = {
     name: "Personal",
     features: [
       "Solo workspace",
-      "Core CHG Rehab modules",
+      "Core CHG Platform modules",
       "Up to 2 external guests",
     ],
   },

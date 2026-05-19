@@ -7,7 +7,7 @@ import ProfileCompletionBanner from "@/components/ProfileCompletionBanner";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "CHG Rehab",
+  title: "CHG Platform",
   description: "Property rehab operations platform",
 };
 
