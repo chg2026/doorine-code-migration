@@ -11,6 +11,7 @@ import AppSwitcher from './AppSwitcher.jsx';
 
 const navGroups = [
   { label: null, items: [
+    { label: 'Deal Analyzer', path: '/deal-analyzer', icon: Calculator },
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   ]},
   { label: 'Deals', items: [
@@ -19,9 +20,6 @@ const navGroups = [
     { label: 'Offers', path: '/offers', icon: FileText },
     { label: 'Marketplace', path: '/marketplace', icon: Globe },
     { label: 'Import CSV', path: '/admin/import', icon: Upload },
-  ]},
-  { label: 'Deal Analyzer', items: [
-    { label: 'Deal Analyzer', path: '/deal-analyzer', icon: Calculator },
   ]},
   { label: 'Buyers', items: [
     { label: 'Buyers List', path: '/buyers', icon: Users },
