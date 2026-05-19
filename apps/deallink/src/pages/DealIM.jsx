@@ -31,7 +31,7 @@ function DealIMInner() {
     try {
       const result = await ImAPI.getDeal(slug);
       setData(result);
-      if (result?.summary?.addr) document.title = `${result.summary.addr} · DealLink`;
+      if (result?.summary?.addr) document.title = `${result.summary.addr} · REI Flywheel`;
     } catch (err) {
       setError(err?.status === 404 ? 'This deal link is no longer active.' : (err?.message || 'Failed to load deal'));
     } finally { setLoadingDeal(false); }
@@ -52,7 +52,7 @@ function DealIMInner() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6 text-center">
         <div className="max-w-sm">
-          <div className="text-amber-400 font-bold mb-3">DealLink</div>
+          <div className="text-amber-400 font-bold mb-3">REI Flywheel</div>
           <h1 className="text-xl font-semibold text-white mb-2">Deal unavailable</h1>
           <p className="text-sm text-slate-400">{error}</p>
         </div>

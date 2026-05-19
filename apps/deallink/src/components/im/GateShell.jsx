@@ -46,7 +46,7 @@ export default function GateShell({ step, summary, onBack, title, subtitle, chil
             <ChevronLeft className="w-5 h-5" />
           </button>
         ) : <div className="w-7" />}
-        <div className="text-amber-400 font-bold tracking-wide">DealLink</div>
+        <div className="text-amber-400 font-bold tracking-wide">REI Flywheel</div>
       </header>
 
       {/* Centered card */}
@@ -68,7 +68,7 @@ export default function GateShell({ step, summary, onBack, title, subtitle, chil
       </main>
 
       <footer className="px-4 py-4 text-center text-[11px] text-slate-500">
-        By continuing you agree to DealLink's <a className="underline hover:text-amber-400" href="#">Terms of Service</a>.
+        By continuing you agree to REI Flywheel's <a className="underline hover:text-amber-400" href="#">Terms of Service</a>.
       </footer>
     </div>
   );

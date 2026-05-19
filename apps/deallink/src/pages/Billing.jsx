@@ -132,7 +132,7 @@ export default function Billing() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white">Billing</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Manage your Deal Link subscription and payment plan.
+            Manage your REI Flywheel subscription and payment plan.
           </p>
         </div>
 

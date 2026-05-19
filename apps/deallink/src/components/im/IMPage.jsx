@@ -44,7 +44,7 @@ export default function IMPage({ deal, buyer, onUnlockWholesaler }) {
         <Link to="/buyer" className="text-slate-400 hover:text-amber-400 inline-flex items-center gap-1 text-sm">
           <ArrowLeft className="w-4 h-4" /> My deals
         </Link>
-        <div className="text-amber-400 font-bold tracking-wide text-sm">DealLink</div>
+        <div className="text-amber-400 font-bold tracking-wide text-sm">REI Flywheel</div>
         <div className="text-xs text-slate-400 truncate max-w-[40%]">{buyer?.name}</div>
       </header>
 
@@ -61,7 +61,7 @@ export default function IMPage({ deal, buyer, onUnlockWholesaler }) {
         </div>
         <div className="absolute top-3 left-3"><StatusBadge status={deal.status} /></div>
         <div className="absolute bottom-2 right-3 text-[10px] uppercase tracking-wider text-slate-300/70 bg-black/40 backdrop-blur px-2 py-0.5 rounded">
-          Powered by DealLink
+          Powered by REI Flywheel
         </div>
       </section>
 
@@ -166,7 +166,7 @@ export default function IMPage({ deal, buyer, onUnlockWholesaler }) {
         )}
 
         <footer className="text-center text-[11px] text-slate-500 py-6">
-          Powered by DealLink · <a className="underline hover:text-amber-400" href="#">Terms of Service</a>
+          Powered by REI Flywheel · <a className="underline hover:text-amber-400" href="#">Terms of Service</a>
         </footer>
       </main>
     </div>

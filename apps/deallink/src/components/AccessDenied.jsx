@@ -11,7 +11,7 @@ export default function AccessDenied() {
   return (
     <div className="center-grid">
       <div className="pane left">
-        <Link to="/" style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase' }}>DealLink</Link>
+        <Link to="/" style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase' }}>REI Flywheel</Link>
         <div>
           <div className="serif" style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.05 }}>
             One link for<br />every deal<br />you wholesale.
@@ -22,9 +22,9 @@ export default function AccessDenied() {
       <div className="pane right" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center' }}>
           <Kicker>Access denied</Kicker>
-          <div className="serif" style={{ fontSize: 26, marginTop: 8 }}>Not in the Deal Link beta.</div>
+          <div className="serif" style={{ fontSize: 26, marginTop: 8 }}>Not in the REI Flywheel beta.</div>
           <p style={{ marginTop: 14, color: 'var(--mute)', fontSize: 13, lineHeight: 1.6 }}>
-            Your Gold Bridge account doesn't have an active Deal Link entitlement.
+            Your Gold Bridge account doesn't have an active REI Flywheel entitlement.
             Ask your account admin (or your Gold Bridge contact) to enable it from
             the super-admin Entitlements panel, then reload this page.
           </p>

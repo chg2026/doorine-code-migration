@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase.js';
 
 const PRODUCTS = [
   { code: 'chg', name: 'CHG Platform', tagline: 'Operations platform', color: '#0C447C', envKey: 'VITE_CHG_URL' },
-  { code: 'deallink', name: 'Deal Link', tagline: 'Wholesaler deal links', color: '#16A34A', envKey: 'VITE_DEALLINK_URL' },
+  { code: 'deallink', name: 'REI Flywheel', tagline: 'Wholesaler deal links', color: '#16A34A', envKey: 'VITE_DEALLINK_URL' },
   { code: 'investor-portal', name: 'Investor Portal', tagline: 'Dashboard & returns', color: '#7C3AED', envKey: 'VITE_INVESTOR_URL', gated: true, hidden: true },
   { code: 'contractor-portal', name: 'Contractor Portal', tagline: 'Job tracking & invoices', color: '#D97706', envKey: 'VITE_CONTRACTOR_URL', gated: true },
 ];

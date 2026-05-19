@@ -195,7 +195,7 @@ export default function PublicProfile() {
             background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 10),
             fontSize: 12, color: tone.mute, letterSpacing: 0.4,
           }}>
-            Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle}</span> on DealLink
+            Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle}</span> on REI Flywheel
           </div>
         </div>
         </div>

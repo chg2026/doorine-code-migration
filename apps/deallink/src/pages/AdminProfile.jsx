@@ -661,7 +661,7 @@ function PhonePreview({ profile, deals, theme }) {
             background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 8),
             fontSize: 10, color: tone.mute, letterSpacing: 0.4,
           }}>
-            Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle || 'unclaimed'}</span> on DealLink
+            Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle || 'unclaimed'}</span> on REI Flywheel
           </div>
         </div>
       </div>

@@ -120,7 +120,7 @@ export default function Login() {
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-r border-slate-800">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-          <span className="text-white font-bold text-lg">Deal<span className="text-amber-400">Link</span></span>
+          <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
         </Link>
         <div>
           <h2 className="text-white text-4xl font-bold leading-tight">One link for<br />every deal you<br />wholesale.</h2>
@@ -133,7 +133,7 @@ export default function Login() {
         <div className="w-full max-w-sm mx-auto">
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-            <span className="text-white font-bold text-lg">Deal<span className="text-amber-400">Link</span></span>
+            <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
           </div>
           <p className="text-amber-400 text-xs uppercase tracking-widest font-mono">Sign in</p>
           <h1 className="text-2xl text-white font-bold mt-2">Welcome back.</h1>

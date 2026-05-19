@@ -149,7 +149,7 @@ export default function IMDeal() {
         // is present, in that order.
         const d = data.preview || data.deal || data;
         setDeal(d);
-        if (d?.addr) document.title = `${d.addr} · DealLink`;
+        if (d?.addr) document.title = `${d.addr} · REI Flywheel`;
         if (initialBuyer?.id) recordVisit(dealId);
       } catch (e) {
         if (cancelled) return;
@@ -304,7 +304,7 @@ function DealLinkShell({ children }) {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="px-4 py-3 border-b border-slate-800/60 flex items-center justify-center">
-        <div className="text-amber-400 font-bold tracking-wide text-sm">DealLink</div>
+        <div className="text-amber-400 font-bold tracking-wide text-sm">REI Flywheel</div>
       </header>
       <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
     </div>
@@ -384,7 +384,7 @@ function Step0Preview({ deal, onUnlock }) {
           <p className="text-center text-xs text-slate-500">
             This deal is shared by{' '}
             <span className="text-amber-300 font-semibold">@{wholesaler.handle || 'wholesaler'}</span>{' '}
-            on DealLink
+            on REI Flywheel
           </p>
         </div>
       </div>
@@ -716,7 +716,7 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
       )}
 
       <footer className="text-center text-[11px] text-slate-500 py-6">
-        Powered by DealLink
+        Powered by REI Flywheel
       </footer>
     </div>
   );

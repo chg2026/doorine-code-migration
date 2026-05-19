@@ -106,7 +106,7 @@ export default function Layout({ children }) {
           <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center">
             <Building2 className="w-5 h-5 text-slate-900" />
           </div>
-          <span className="text-white font-bold text-lg tracking-tight">Deal<span className="text-amber-400">Link</span></span>
+          <span className="text-white font-bold text-lg tracking-tight">REI <span className="text-amber-400">Flywheel</span></span>
         </Link>
       </div>
 

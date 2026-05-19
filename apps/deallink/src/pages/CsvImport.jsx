@@ -73,7 +73,7 @@ export default function CsvImport() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'deallink-template.csv';
+    a.download = 'reiflywheel-template.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -148,7 +148,7 @@ export default function CsvImport() {
               <thead>
                 <tr className="border-b border-slate-700">
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Your column</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">DealLink field</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">REI Flywheel field</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Sample value</th>
                 </tr>
               </thead>

@@ -121,7 +121,7 @@ export function StoreProvider({ children }) {
         });
       } catch (e) {
         if (cancelled) return;
-        handleError(e, 'Failed to load Deal Link data');
+        handleError(e, 'Failed to load REI Flywheel data');
         rawDispatch({ type: 'hydrate', signedIn: true, profile: null, deals: [], leads: [], buyers: [], offers: [] });
       }
     }

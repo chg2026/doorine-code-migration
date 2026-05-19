@@ -49,14 +49,14 @@ export default function BuyerDashboard() {
           </div>
           <h1 className="text-xl font-semibold text-white mb-2">Buyer dashboard</h1>
           <p className="text-sm text-slate-400 mb-6">
-            Start by clicking a DealLink from a wholesaler.
+            Start by clicking an REI Flywheel link from a wholesaler.
           </p>
           <button
             type="button"
             onClick={() => navigate('/')}
             className="px-4 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
           >
-            Back to DealLink
+            Back to REI Flywheel
           </button>
         </div>
       </Shell>
@@ -93,7 +93,7 @@ export default function BuyerDashboard() {
           <Building2 className="w-4 h-4 text-amber-400" /> Deals shared with me
         </h2>
         {sharedDeals.length === 0 ? (
-          <Empty body="No deals shared with you yet. Ask a wholesaler for their DealLink." />
+          <Empty body="No deals shared with you yet. Ask a wholesaler for their REI Flywheel link." />
         ) : (
           <div className="space-y-2">
             {sharedDeals.map((d, i) => {
@@ -158,7 +158,7 @@ export default function BuyerDashboard() {
           <ShieldCheck className="w-5 h-5 text-amber-400 mt-0.5" />
           <div>
             <p className="text-white font-semibold">Are you a wholesaler?</p>
-            <p className="text-sm text-slate-300">Unlock the full DealLink toolkit — list deals, build a buyer network, share IMs.</p>
+            <p className="text-sm text-slate-300">Unlock the full REI Flywheel toolkit — list deals, build a buyer network, share IMs.</p>
           </div>
         </div>
         <button
@@ -171,7 +171,7 @@ export default function BuyerDashboard() {
       </section>
 
       <footer className="text-center text-[11px] text-slate-500 py-8">
-        Powered by DealLink
+        Powered by REI Flywheel
       </footer>
     </Shell>
   );
@@ -181,7 +181,7 @@ function Shell({ children }) {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="px-4 py-3 border-b border-slate-800/60 flex items-center justify-center">
-        <div className="text-amber-400 font-bold tracking-wide text-sm">DealLink</div>
+        <div className="text-amber-400 font-bold tracking-wide text-sm">REI Flywheel</div>
       </header>
       <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
     </div>

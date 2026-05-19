@@ -141,11 +141,11 @@ export default function Signup() {
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-r border-slate-800">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-          <span className="text-white font-bold text-lg">Deal<span className="text-amber-400">Link</span></span>
+          <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
         </Link>
         <div>
           <h2 className="text-white text-4xl font-bold leading-tight">Claim your<br />wholesaler<br />link in seconds.</h2>
-          <p className="text-slate-400 text-sm mt-4 max-w-sm">Create a Gold Bridge account, get your DealLink handle, and start sharing inventory with buyers in minutes.</p>
+          <p className="text-slate-400 text-sm mt-4 max-w-sm">Create a Gold Bridge account, get your REI Flywheel handle, and start sharing inventory with buyers in minutes.</p>
         </div>
         <p className="text-slate-600 text-xs font-mono">© 2026 · BuildFlow</p>
       </div>
@@ -154,7 +154,7 @@ export default function Signup() {
         <div className="w-full max-w-sm mx-auto">
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-            <span className="text-white font-bold text-lg">Deal<span className="text-amber-400">Link</span></span>
+            <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
           </div>
           <p className="text-amber-400 text-xs uppercase tracking-widest font-mono">Sign up</p>
           <h1 className="text-2xl text-white font-bold mt-2">Create your account.</h1>
