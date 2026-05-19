@@ -851,9 +851,7 @@ function _LegacyIMSharePanel_unused({ deal, onChange, show }) {
 
   React.useEffect(() => { setSlug(deal.imSlug || null); }, [deal.imSlug]);
 
-  const shareUrl = slug && typeof window !== 'undefined'
-    ? `${window.location.origin}/deal/${slug}`
-    : '';
+  const shareUrl = slug ? `https://doorine.com/r/${deal.id}` : '';
 
   async function generate() {
     setGenerating(true); setError(null);
@@ -1325,9 +1323,7 @@ function ShareIMButton({ deal, onSave, show }) {
   const [copied, setCopied] = React.useState(false);
   const [error, setError] = React.useState(null);
   const slug = deal.imSlug || null;
-  const shareUrl = slug && typeof window !== 'undefined'
-    ? `${window.location.origin}/deal/${slug}`
-    : '';
+  const shareUrl = slug ? `https://doorine.com/r/${deal.id}` : '';
 
   async function handleClick() {
     setError(null);
@@ -1712,9 +1708,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
   // ships with the "Live preview" sub-task. Until then the link string is
   // generated (and copyable for later) but the open-preview affordance is
   // disabled to avoid sending users to a 404.
-  const shareUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/im/${deal.id}`
-    : `/im/${deal.id}`;
+  const shareUrl = `https://doorine.com/r/${deal.id}`;
   const previewLive = false;
 
   // Optimistic patch helper. `path` is one of: 'selectedAnalysisId',

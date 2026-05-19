@@ -262,9 +262,14 @@ export const DealLinkAPI = {
   async deleteDeal(id) { await api.delete(`/deallink/deals/${id}`); },
   async shareIM(id) {
     // Hits the server endpoint that generates + persists im_slug
-    // (idempotent — returns the existing slug on repeat calls).
+    // (idempotent — returns the existing slug on repeat calls). The
+    // server still owns slug persistence so the underlying public route
+    // keeps resolving; we just expose the short link the buyer should
+    // see/copy, which is keyed off the deal id (not the slug) and is
+    // redirected by the doorine-landing server.
     const { data } = await api.post(`/deallink/deals/${id}/im/share`);
-    return data?.slug || null;
+    if (!data?.slug) return null;
+    return `https://doorine.com/r/${id}`;
   },
   async updateIMToggles(id, toggles) {
     // toggles: { imShowArv?, imShowAsking?, imShowRepair?, imShowMao?, imShowContact?, imShowStreetNumber? }

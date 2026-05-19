@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle, Copy, Check, ExternalLink } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { DealLinkAPI } from '../lib/deallink-api.js';
@@ -150,8 +150,11 @@ export default function AdminProfile() {
                 </div>
                 <div>
                   <Label>Handle</Label>
-                  <NeuInput value={form.handle} readOnly prefix="deallink.io/" />
+                  <NeuInput value={form.handle} readOnly prefix="doorine.com/r/" />
                 </div>
+                {form.handle && (
+                  <ShareableLinkRow handle={form.handle} show={show} />
+                )}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <Label>Bio</Label>
@@ -283,6 +286,67 @@ export default function AdminProfile() {
 }
 
 /* ────────────── primitives (admin chrome) ────────────── */
+
+function ShareableLinkRow({ handle, show }) {
+  const shareUrl = `https://doorine.com/r/${handle}`;
+  const [copied, setCopied] = React.useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      show && show('Link copied');
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      show && show('Could not copy — select and copy manually');
+    }
+  }
+
+  return (
+    <div>
+      <Label>Shareable link</Label>
+      <div style={{
+        borderRadius: 12, boxShadow: INSET_SHADOW, background: ADMIN.bg,
+        display: 'flex', alignItems: 'center', padding: '6px 6px 6px 14px', gap: 8,
+      }}>
+        <span style={{
+          flex: 1, color: ADMIN.inkStrong, fontSize: 13,
+          fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'nowrap',
+          overflow: 'hidden', textOverflow: 'ellipsis',
+        }} title={shareUrl}>{shareUrl}</span>
+        <button
+          type="button"
+          onClick={copy}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: ADMIN.accent, color: '#1a1208',
+            border: 'none', borderRadius: 8, padding: '8px 12px',
+            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+          title="Copy public link"
+        >
+          {copied ? <Check style={{ width: 14, height: 14 }} /> : <Copy style={{ width: 14, height: 14 }} />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+        <a
+          href={shareUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 34, height: 34, borderRadius: 8,
+            color: ADMIN.mute, textDecoration: 'none',
+          }}
+          title="Open public profile"
+          aria-label="Open public profile"
+        >
+          <ExternalLink style={{ width: 14, height: 14 }} />
+        </a>
+      </div>
+    </div>
+  );
+}
 
 function NeuCard({ children, style }) {
   return (

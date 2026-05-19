@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Users, Kanban, FileText, BarChart3, Bell, ChevronRight,
   Menu, X, Zap, Globe, Handshake, UserCheck, Eye, LogOut, ExternalLink, Settings,
-  ListChecks, Upload, Calculator, CreditCard,
+  ListChecks, Upload, Calculator, CreditCard, Copy, Check,
 } from 'lucide-react';
 import { useStore } from '../store.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -42,6 +42,46 @@ const navGroups = [
     { label: 'Billing', path: '/billing', icon: CreditCard },
   ]},
 ];
+
+function ShareHandlePill({ handle }) {
+  const shareUrl = `https://doorine.com/r/${handle}`;
+  const [copied, setCopied] = React.useState(false);
+
+  async function copy(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked — ignore */
+    }
+  }
+
+  return (
+    <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 font-mono">
+      <a
+        href={shareUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-1.5 hover:text-amber-400"
+        title="Open public profile"
+      >
+        doorine.com/r/{handle} <ExternalLink className="w-3 h-3" />
+      </a>
+      <button
+        type="button"
+        onClick={copy}
+        className="ml-1 inline-flex items-center justify-center w-6 h-6 rounded hover:bg-slate-800 hover:text-amber-400"
+        title={copied ? 'Copied!' : 'Copy public link'}
+        aria-label="Copy public link"
+      >
+        {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+      </button>
+    </div>
+  );
+}
 
 export default function Layout({ children }) {
   const loc = useLocation();
@@ -135,11 +175,7 @@ export default function Layout({ children }) {
           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setMobileOpen((v) => !v)}>
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-          {handle ? (
-            <a href={`/p/${handle}`} target="_blank" rel="noreferrer" className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 font-mono">
-              deallink.io/{handle} <ExternalLink className="w-3 h-3" />
-            </a>
-          ) : <span />}
+          {handle ? <ShareHandlePill handle={handle} /> : <span />}
           <div className="flex-1" />
           <AppSwitcher currentProduct="deallink" enabledProducts={auth.enabledProducts || []} iconColor="#94a3b8" />
           <button className="relative text-slate-400 hover:text-white" title="Notifications">
