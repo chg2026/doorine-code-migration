@@ -11,8 +11,8 @@ import AppSwitcher from './AppSwitcher.jsx';
 
 const navGroups = [
   { label: null, items: [
-    { label: 'Deal Analyzer', path: '/deal-analyzer', icon: Calculator },
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Deal Analyzer', path: '/deal-analyzer', icon: Calculator },
   ]},
   { label: 'Deals', items: [
     { label: 'Properties', path: '/admin', icon: Building2 },
