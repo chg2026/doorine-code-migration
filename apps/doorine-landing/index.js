@@ -190,42 +190,24 @@ app.get('/og/im/:dealId', async (req, res) => {
   const redirectUrl = `https://reiflywheel.doorine.com/im/${dealId}`
   const data = await fetchJson(`${API_BASE}/api/deallink/im/${encodeURIComponent(dealId)}`)
 
-  const deal = data?.deal ?? data ?? {}
-  const addr = deal.address || deal.addr || deal.street || ''
-  const city = deal.city || ''
-  const ask = deal.ask || deal.asking || deal.asking_price || deal.askPrice || deal.price
-  const arv = deal.arv || deal.ARV || deal.after_repair_value
-  const type = deal.type || deal.property_type || deal.propertyType || 'Property'
-  const beds = deal.beds ?? deal.bedrooms ?? '?'
-  const baths = deal.baths ?? deal.bathrooms ?? '?'
-  const sqft = deal.sqft ?? deal.square_feet ?? deal.squareFeet ?? '?'
-  const spread = Number(arv) - Number(ask)
+  const preview = data?.preview ?? {}
+  const { addr = '', city = '', ask, arv, type = 'Property', beds = '?', baths = '?', sqft = '?' } = preview
 
-  const photos = deal.photos || deal.images || []
+  const askStr = Number.isFinite(Number(ask)) ? `$${Number(ask).toLocaleString('en-US')}` : ''
+  const arvStr = Number.isFinite(Number(arv)) ? `$${Number(arv).toLocaleString('en-US')}` : ''
+
+  const location = [addr, city].filter(Boolean).join(', ')
+  const priceLine = [askStr && `${askStr} asking`, arvStr && `${arvStr} ARV`].filter(Boolean).join(' / ')
+  const title = [location, priceLine].filter(Boolean).join(' — ') || 'Deal — REI Flywheel'
+
+  const description = `${type} · ${beds}bd/${baths}ba · ${sqft}sqft · View full deal analysis on REI Flywheel`
+
+  const photos = preview.photos || data?.photos || []
   let firstPhoto = ''
   if (Array.isArray(photos) && photos.length) {
     const p = photos[0]
     firstPhoto = typeof p === 'string' ? p : p?.url || p?.src || ''
   }
-  if (!firstPhoto) firstPhoto = deal.cover_photo || deal.coverPhoto || deal.photo_url || deal.image_url || ''
-
-  const title = [
-    [addr, city].filter(Boolean).join(', '),
-    [ask && `${formatMoney(ask)} asking`, arv && `${formatMoney(arv)} ARV`].filter(Boolean).join(' / '),
-  ]
-    .filter(Boolean)
-    .join(' — ') || 'Deal — REI Flywheel'
-
-  const spreadStr = Number.isFinite(spread) ? `${formatMoney(spread)} spread` : ''
-  const description = [
-    type,
-    `${beds}bd/${baths}ba`,
-    `${sqft}sqft`,
-    spreadStr,
-    'View full deal analysis.',
-  ]
-    .filter(Boolean)
-    .join(' · ')
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.send(
