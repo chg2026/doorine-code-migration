@@ -348,6 +348,46 @@ router.get('/leads', async (req, res) => {
   res.json({ leads: data || [] })
 })
 
+// ─── BUYERS ───────────────────────────────────────────────────────────────
+
+router.get('/buyers', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+  const accountId = accountIdFor(req)
+  if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
+
+  const { data, error } = await db
+    .from('deallink_buyers')
+    .select('*')
+    .eq('account_id', accountId)
+    .order('created_at', { ascending: false })
+
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ buyers: data || [] })
+})
+
+// ─── OFFERS ───────────────────────────────────────────────────────────────
+
+router.get('/offers', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+  const accountId = accountIdFor(req)
+  if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
+
+  const { data, error } = await db
+    .from('deallink_offers')
+    .select('*')
+    .eq('account_id', accountId)
+    .order('created_at', { ascending: false })
+
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ offers: data || [] })
+})
+
+// ─── IM SHARE LINK ────────────────────────────────────────────────────────
+
+router.post('/deals/:id/im/share', (req, res) => {
+  res.json({ url: `https://doorine.com/im/${req.params.id}` })
+})
+
 // ─── MARKETPLACE ─────────────────────────────────────────────────────────
 // Cross-wholesaler deal feed. Auth required + product entitlement, but
 // returns deals from ANY account whose profile has marketplace_opt_in=true.
