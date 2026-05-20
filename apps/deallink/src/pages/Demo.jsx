@@ -429,7 +429,7 @@ function LeadFormModal({ open, onClose, deal, onSubmit }) {
   const [first, setFirst]   = React.useState('');
   const [last, setLast]     = React.useState('');
   const [email, setEmail]   = React.useState('');
-  const [phone, setPhone]   = React.useState('');
+  const [phone, setPhone]   = React.useState('+1 ');
   const [type, setType]     = React.useState('Cash');
 
   React.useEffect(() => {

@@ -149,7 +149,7 @@ function LeadModal({ handle, deal, onClose, onSubmitted }) {
   const [first, setFirst] = React.useState('');
   const [last, setLast] = React.useState('');
   const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
+  const [phone, setPhone] = React.useState('+1 ');
   const [buyerType, setBuyerType] = React.useState('Cash');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);

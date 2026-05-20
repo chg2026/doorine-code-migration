@@ -12,7 +12,7 @@ const COUNTRY_CODES = [
 
 export default function GateStep2Phone({ summary, name, initialPhone = '', onNext, onBack }) {
   const [cc, setCc] = React.useState('+1');
-  const [phone, setPhone] = React.useState(initialPhone);
+  const [phone, setPhone] = React.useState(initialPhone || '+1 ');
   const [sending, setSending] = React.useState(false);
   const [error, setError] = React.useState(null);
 

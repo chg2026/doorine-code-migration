@@ -120,8 +120,8 @@ export default function Buyers() {
 }
 
 function AddBuyerModal({ open, onClose, onSave }) {
-  const [form, setForm] = React.useState({ name: '', email: '', phone: '', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' });
-  React.useEffect(() => { if (open) setForm({ name: '', email: '', phone: '', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' }); }, [open]);
+  const [form, setForm] = React.useState({ name: '', email: '', phone: '+1 ', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' });
+  React.useEffect(() => { if (open) setForm({ name: '', email: '', phone: '+1 ', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' }); }, [open]);
 
   function submit(e) {
     e.preventDefault();

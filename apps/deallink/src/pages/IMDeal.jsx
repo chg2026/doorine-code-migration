@@ -127,7 +127,7 @@ export default function IMDeal() {
   const initialNameParts = initialFullName ? initialFullName.split(/\s+/) : [];
   const [firstName, setFirstName] = React.useState(initialBuyer?.first_name || initialNameParts[0] || '');
   const [lastName, setLastName] = React.useState(initialBuyer?.last_name || initialNameParts.slice(1).join(' ') || '');
-  const [phone, setPhone] = React.useState(initialBuyer?.phone || '');
+  const [phone, setPhone] = React.useState(initialBuyer?.phone || '+1 ');
   const [code, setCode] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [flash, setFlash] = React.useState(null);

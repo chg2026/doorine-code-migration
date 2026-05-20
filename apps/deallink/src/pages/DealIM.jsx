@@ -23,7 +23,7 @@ function DealIMInner() {
   // Gate state
   const [step, setStep] = React.useState(1);
   const [name, setName] = React.useState('');
-  const [phone, setPhone] = React.useState('');
+  const [phone, setPhone] = React.useState('+1 ');
   const [devCode, setDevCode] = React.useState(null);
 
   const reload = React.useCallback(async () => {

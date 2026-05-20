@@ -20,7 +20,7 @@ export default function Login() {
   const [error, setError] = React.useState(null);
 
   // Phone tab state
-  const [phone, setPhone] = React.useState('');
+  const [phone, setPhone] = React.useState('+1 ');
   const [code, setCode] = React.useState('');
   const [phoneStep, setPhoneStep] = React.useState('phone'); // 'phone' | 'code'
   const [phoneSubmitting, setPhoneSubmitting] = React.useState(false);

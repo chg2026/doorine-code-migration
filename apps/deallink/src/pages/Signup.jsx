@@ -27,7 +27,7 @@ export default function Signup() {
   const [lastName, setLastName] = React.useState('');
 
   // Phone state
-  const [phone, setPhone] = React.useState('');
+  const [phone, setPhone] = React.useState('+1 ');
   const [code, setCode] = React.useState('');
   const [phoneStep, setPhoneStep] = React.useState('enter'); // 'enter' | 'verify'
 
