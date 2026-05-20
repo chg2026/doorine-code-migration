@@ -58,12 +58,12 @@ function ShareHandlePill({ handle }) {
   }
 
   return (
-    <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 font-mono">
+    <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#6e6e73] font-mono">
       <a
         href={shareUrl}
         target="_blank"
         rel="noreferrer"
-        className="flex items-center gap-1.5 hover:text-amber-400"
+        className="flex items-center gap-1.5 hover:text-[#b8860b]"
         title="Open public profile"
       >
         doorine.com/r/{handle} <ExternalLink className="w-3 h-3" />
@@ -71,7 +71,7 @@ function ShareHandlePill({ handle }) {
       <button
         type="button"
         onClick={copy}
-        className="ml-1 inline-flex items-center justify-center w-6 h-6 rounded hover:bg-slate-800 hover:text-amber-400"
+        className="ml-1 inline-flex items-center justify-center w-6 h-6 rounded hover:bg-[rgba(0,0,0,0.06)] hover:text-[#b8860b]"
         title={copied ? 'Copied!' : 'Copy public link'}
         aria-label="Copy public link"
       >
@@ -99,12 +99,12 @@ export default function Layout({ children }) {
 
   const Sidebar = () => (
     <div className="flex flex-col h-full">
-      <div className="px-5 py-4 border-b border-slate-700">
+      <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.10)]">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-slate-900" />
+          <div className="w-8 h-8 bg-[#b8860b] rounded-lg flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white font-bold text-lg tracking-tight">REI <span className="text-amber-400">Flywheel</span></span>
+          <span className="text-[#1d1d1f] font-bold text-lg tracking-tight">REI <span className="text-[#b8860b]">Flywheel</span></span>
         </Link>
       </div>
 
@@ -112,7 +112,7 @@ export default function Layout({ children }) {
         {navGroups.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider px-3 mb-1">{group.label}</p>
+              <p className="text-[#86868b] text-[10px] font-semibold uppercase tracking-wider px-3 mb-1">{group.label}</p>
             )}
             <div className="space-y-0.5">
               {group.items.map(({ label, path, icon: Icon, enterprise }) => {
@@ -123,13 +123,13 @@ export default function Layout({ children }) {
                     to={path}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      active ? 'bg-amber-400 text-slate-900' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      active ? 'bg-[rgba(184,134,11,0.10)] text-[#b8860b]' : 'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[rgba(0,0,0,0.06)]'
                     }`}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
                     <span className="flex-1 truncate">{label}</span>
                     {enterprise && !active && (
-                      <span className="text-[10px] bg-amber-400/20 text-amber-400 px-1.5 py-0.5 rounded font-medium">E</span>
+                      <span className="text-[10px] bg-[rgba(184,134,11,0.10)] text-[#b8860b] px-1.5 py-0.5 rounded font-medium">E</span>
                     )}
                     {active && <ChevronRight className="w-3 h-3 ml-auto" />}
                   </Link>
@@ -140,12 +140,12 @@ export default function Layout({ children }) {
         ))}
       </nav>
 
-      <div className="px-3 py-3 border-t border-slate-700 space-y-1">
-        <Link to="/admin/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">
+      <div className="px-3 py-3 border-t border-[rgba(0,0,0,0.10)] space-y-1">
+        <Link to="/admin/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[rgba(0,0,0,0.06)]">
           <Settings className="w-4 h-4" /> Profile
         </Link>
         {handle && (
-          <a href={`/p/${handle}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800">
+          <a href={`/p/${handle}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[rgba(0,0,0,0.06)]">
             <ExternalLink className="w-4 h-4" /> Public profile
           </a>
         )}
@@ -154,39 +154,45 @@ export default function Layout({ children }) {
   );
 
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
-      <aside className="hidden md:flex w-56 bg-slate-900 flex-col flex-shrink-0 border-r border-slate-700">
+    <div className="flex h-screen bg-[#f5f5f7] overflow-hidden">
+      <aside
+        className="hidden md:flex w-56 flex-col flex-shrink-0 border-r border-[rgba(0,0,0,0.12)]"
+        style={{ background: 'var(--sidebar-bg)' }}
+      >
         <Sidebar />
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-56 bg-slate-900 border-r border-slate-700">
+          <aside
+            className="absolute left-0 top-0 h-full w-56 border-r border-[rgba(0,0,0,0.12)]"
+            style={{ background: 'var(--sidebar-bg)' }}
+          >
             <Sidebar />
           </aside>
         </div>
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <header className="h-14 bg-slate-900 border-b border-slate-700 flex items-center px-4 gap-4 flex-shrink-0">
-          <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setMobileOpen((v) => !v)}>
+        <header className="h-14 bg-white border-b border-[rgba(0,0,0,0.08)] flex items-center px-4 gap-4 flex-shrink-0">
+          <button className="md:hidden text-[#6e6e73] hover:text-[#1d1d1f]" onClick={() => setMobileOpen((v) => !v)}>
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           {handle ? <ShareHandlePill handle={handle} /> : <span />}
           <div className="flex-1" />
           <AppSwitcher currentProduct="deallink" enabledProducts={auth.enabledProducts || []} iconColor="#94a3b8" />
-          <button className="relative text-slate-400 hover:text-white" title="Notifications">
+          <button className="relative text-[#6e6e73] hover:text-[#1d1d1f]" title="Notifications">
             <Bell className="w-5 h-5" />
-            {state.leads?.length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />}
+            {state.leads?.length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#b8860b] rounded-full" />}
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-slate-900 font-bold text-sm">{initials}</div>
-            <span className="text-white text-sm font-medium hidden sm:block">{profile.name || auth.user?.email || 'Admin'}</span>
+            <div className="w-8 h-8 rounded-full bg-[#b8860b] flex items-center justify-center text-white font-bold text-sm">{initials}</div>
+            <span className="text-[#1d1d1f] text-sm font-medium hidden sm:block">{profile.name || auth.user?.email || 'Admin'}</span>
           </div>
           <button
             onClick={async () => { await dispatch({ type: 'sign_out' }); nav('/'); }}
-            className="text-slate-400 hover:text-white text-xs flex items-center gap-1.5"
+            className="text-[#6e6e73] hover:text-[#1d1d1f] text-xs flex items-center gap-1.5"
             title="Sign out"
           >
             <LogOut className="w-4 h-4" />
@@ -194,7 +200,7 @@ export default function Layout({ children }) {
           </button>
         </header>
 
-        <main className="flex-1 overflow-auto bg-slate-950 p-4 md:p-6">
+        <main className="flex-1 overflow-auto bg-[#f5f5f7] p-4 md:p-6">
           {children}
         </main>
       </div>

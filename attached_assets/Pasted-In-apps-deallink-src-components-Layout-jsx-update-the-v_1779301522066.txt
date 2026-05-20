@@ -1,0 +1,34 @@
+In apps/deallink/src/components/Layout.jsx, update the visual styling to match the new light design system. Make only style changes — do not touch any logic, routing, nav items, or icons.
+
+SIDEBAR (the <aside> elements):
+- Change bg-slate-900 → use inline style: background: 'var(--sidebar-bg)' (#ede5d4 warm nude)
+- Change border-slate-700 → border-[rgba(0,0,0,0.12)]
+- Logo text: change text-white to text-[#1d1d1f], change text-amber-400 (on the Flywheel word) to text-[#b8860b]
+- Logo icon square: change bg-amber-400 to bg-[#b8860b] and text-slate-900 to text-white
+- Section group labels: change text-slate-500 to text-[#86868b]
+- Inactive nav items: change text-slate-400 to text-[#6e6e73] and hover:bg-slate-800 to hover:bg-[rgba(0,0,0,0.06)] and hover:text-white to hover:text-[#1d1d1f]
+- Active nav items: change bg-amber-400 text-slate-900 to bg-[rgba(184,134,11,0.10)] text-[#b8860b]
+- Enterprise badge: change bg-amber-400/20 text-amber-400 to bg-[rgba(184,134,11,0.10)] text-[#b8860b]
+- Bottom links (Profile, Public profile): same as inactive nav items above
+- Border between sections: change border-slate-700 to border-[rgba(0,0,0,0.10)]
+
+TOP BAR (the <header>):
+- Change bg-slate-900 to bg-white
+- Change border-slate-700 to border-[rgba(0,0,0,0.08)]
+- ShareHandlePill: change text-slate-400 to text-[#6e6e73], hover:text-amber-400 to hover:text-[#b8860b]
+- Copy button: change hover:bg-slate-800 to hover:bg-[rgba(0,0,0,0.06)], hover:text-amber-400 to hover:text-[#b8860b]
+- Bell icon: change text-slate-400 to text-[#6e6e73], hover:text-white to hover:text-[#1d1d1f]
+- Notification dot: change bg-amber-400 to bg-[#b8860b]
+- User avatar circle: change bg-amber-400 to bg-[#b8860b], text-slate-900 to text-white
+- User name text: change text-white to text-[#1d1d1f]
+- Sign out button: change text-slate-400 to text-[#6e6e73], hover:text-white to hover:text-[#1d1d1f]
+- Mobile menu button: same color updates
+
+MAIN WRAPPER AND CONTENT AREA:
+- Outer wrapper: change bg-slate-950 to bg-[#f5f5f7]
+- Main content area: change bg-slate-950 to bg-[#f5f5f7]
+
+MOBILE SIDEBAR OVERLAY:
+- Apply the same sidebar color changes to the mobile <aside> as the desktop sidebar above
+
+Do not change any logic, links, icons, nav structure, or component behavior. Only edit files inside apps/deallink/. Do not touch any other folder.
