@@ -91,4 +91,4 @@
 .pane { padding: 40px 32px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
 .pane.left { background: var(--sidebar-bg); color: var(--ink); }
 .pane.right { background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); }
-.pane.left .kicker, .pane.left .field-label { color: rgba(255,255,255,0.55); }
+.pane.left .kicker, .pane.left .field-label { color: rgba(0,0,0,0.45); }
