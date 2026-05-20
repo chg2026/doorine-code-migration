@@ -220,10 +220,10 @@ export function documentFromApi(d) {
   return {
     id: d.id,
     dealId: d.deal_id,
-    name: d.name || '',
+    name: d.filename || d.name || '',
     category: d.category || 'Other',
-    storagePath: d.storage_path || '',
-    fileSizeBytes: Number(d.file_size_bytes) || 0,
+    storagePath: d.path || d.storage_path || '',
+    fileSizeBytes: Number(d.size || d.file_size_bytes) || 0,
     mimeType: d.mime_type || '',
     createdAt: d.created_at || null,
   };
@@ -324,11 +324,10 @@ export const DealLinkAPI = {
   },
   async commitDocument(dealId, payload) {
     const body = {
-      name:            payload.name,
-      category:        payload.category,
-      storage_path:    payload.storagePath,
-      file_size_bytes: payload.fileSizeBytes,
-      mime_type:       payload.mimeType,
+      filename:  payload.name,
+      path:      payload.storagePath,
+      size:      payload.fileSizeBytes,
+      mime_type: payload.mimeType,
     };
     const { data } = await api.post(`/deallink/deals/${dealId}/documents`, body);
     return documentFromApi(data.document);
