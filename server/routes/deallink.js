@@ -245,12 +245,17 @@ router.post('/deals/:dealId/documents', async (req, res) => {
   const accountId = accountIdFor(req)
   if (!accountId) return res.status(400).json({ error: 'No account_id available.' })
 
-  const { filename, path, size, mime_type } = req.body
-  if (!filename || !path) return res.status(400).json({ error: 'filename and path are required.' })
+  const { filename, path: storagePath, size, mime_type } = req.body
+  if (!filename || !storagePath) return res.status(400).json({ error: 'filename and path are required.' })
 
   try {
     const owned = await assertDealOwner(db, req.params.dealId, accountId)
     if (!owned) return res.status(404).json({ error: 'Deal not found.' })
+
+    const validPrefixes = [`${accountId}/${req.params.dealId}/`, `deals/${req.params.dealId}/`]
+    if (!validPrefixes.some(p => storagePath.startsWith(p))) {
+      return res.status(400).json({ error: 'storage_path does not match this deal.' })
+    }
 
     const { data, error } = await db
       .from('deallink_documents')
@@ -258,7 +263,7 @@ router.post('/deals/:dealId/documents', async (req, res) => {
         deal_id:   req.params.dealId,
         account_id: accountId,
         filename,
-        path,
+        path:      storagePath,
         size:      size      || null,
         mime_type: mime_type || null,
       })

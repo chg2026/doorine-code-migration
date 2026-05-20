@@ -122,11 +122,11 @@ export default function QuoteBuilderClient({
 
         <div className="ctitle" style={{ marginTop: 8, marginBottom: 4 }}>Line items</div>
         <div style={{ display: "grid", gridTemplateColumns: "2.5fr .6fr .7fr 1fr 1fr 52px", gap: 6, marginBottom: 4, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Description</span>
-          <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Qty</span>
-          <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Unit</span>
-          <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Unit $</span>
-          <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Total</span>
+          <span style={{ fontSize: 10, color: "#a09e99", textTransform: "uppercase" }}>Description</span>
+          <span style={{ fontSize: 10, color: "#a09e99", textTransform: "uppercase" }}>Qty</span>
+          <span style={{ fontSize: 10, color: "#a09e99", textTransform: "uppercase" }}>Unit</span>
+          <span style={{ fontSize: 10, color: "#a09e99", textTransform: "uppercase" }}>Unit $</span>
+          <span style={{ fontSize: 10, color: "#a09e99", textTransform: "uppercase" }}>Total</span>
           <span />
         </div>
         {lines.map((l, idx) => (
@@ -144,14 +144,14 @@ export default function QuoteBuilderClient({
                 onClick={() => moveUp(idx)}
                 disabled={idx === 0}
                 title="Move up"
-                style={{ width: 20, height: 20, border: "1px solid var(--border)", borderRadius: 4, background: "var(--bg-secondary)", cursor: idx === 0 ? "default" : "pointer", opacity: idx === 0 ? 0.3 : 1, fontSize: 10, lineHeight: 1 }}
+                style={{ width: 20, height: 20, border: "1px solid rgba(0,0,0,.15)", borderRadius: 4, background: "#f7f6f3", cursor: idx === 0 ? "default" : "pointer", opacity: idx === 0 ? 0.3 : 1, fontSize: 10, lineHeight: 1 }}
               >↑</button>
               <button
                 type="button"
                 onClick={() => moveDown(idx)}
                 disabled={idx === lines.length - 1}
                 title="Move down"
-                style={{ width: 20, height: 20, border: "1px solid var(--border)", borderRadius: 4, background: "var(--bg-secondary)", cursor: idx === lines.length - 1 ? "default" : "pointer", opacity: idx === lines.length - 1 ? 0.3 : 1, fontSize: 10, lineHeight: 1 }}
+                style={{ width: 20, height: 20, border: "1px solid rgba(0,0,0,.15)", borderRadius: 4, background: "#f7f6f3", cursor: idx === lines.length - 1 ? "default" : "pointer", opacity: idx === lines.length - 1 ? 0.3 : 1, fontSize: 10, lineHeight: 1 }}
               >↓</button>
               <button type="button" onClick={() => remove(l.id)} className="bg-red-light text-red" style={{ width: 20, height: 20, borderRadius: "50%", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1 }}>×</button>
             </div>
