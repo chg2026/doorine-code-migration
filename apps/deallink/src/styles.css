@@ -49,11 +49,21 @@
    their original light-theme look so buyers see a clean page when they tap a
    wholesaler's link. */
 :root {
-  --bg: #ffffff;
-  --ink: #0f172a;
-  --mute: #64748b;
-  --line: #e2e8f0;
-  --accent: #f59e0b;
+  --bg: #f5f5f7;
+  --panel: #ffffff;
+  --sidebar-bg: #ede5d4;
+  --ink: #1d1d1f;
+  --mute: #6e6e73;
+  --dim: #86868b;
+  --line: rgba(0,0,0,0.08);
+  --line-strong: rgba(0,0,0,0.14);
+  --accent: #b8860b;
+  --accent-soft: rgba(184,134,11,0.10);
+  --accent-gradient: linear-gradient(180deg, #d4a23a 0%, #b8860b 100%);
+  --card: #ffffff;
+  --good: #22a06b;
+  --hot: #d4493a;
+  --info: #3478f6;
   --sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --serif: 'Source Serif Pro', Georgia, serif;
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
@@ -65,7 +75,7 @@
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: 999px; background: var(--ink); color: #fff; font-family: var(--sans); font-weight: 600; font-size: 14px; border: none; cursor: pointer; text-decoration: none; }
 .btn.sm { padding: 6px 14px; font-size: 12px; }
 .btn:hover { opacity: 0.92; }
-.btn.solid { background: var(--accent); color: #1a1208; }
+.btn.solid { background: var(--accent-gradient); color: #ffffff; }
 
 /* Legacy public-page primitives (PublicProfile, DealDetail, AccessDenied) */
 .kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--mute); }
@@ -79,6 +89,6 @@
 .center-grid { min-height: 100vh; display: grid; grid-template-columns: 1fr; gap: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
 @media (min-width: 720px) { .center-grid { grid-template-columns: 1fr 1fr; } }
 .pane { padding: 40px 32px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
-.pane.left { background: var(--ink); color: #fff; }
+.pane.left { background: var(--sidebar-bg); color: var(--ink); }
 .pane.right { background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); }
 .pane.left .kicker, .pane.left .field-label { color: rgba(255,255,255,0.55); }
