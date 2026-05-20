@@ -12,14 +12,14 @@ import {
 // Admin uses its own dark slate chrome (kept from prior version) so the
 // editing surface stays consistent regardless of which tone is being edited.
 const ADMIN = {
-  bg: '#161b2e',
-  accent: '#F5C518',
-  ink: '#c8cfe8',
-  mute: '#5a6180',
-  inkStrong: '#eef0fa',
+  bg: '#ffffff',
+  accent: '#b8860b',
+  ink: '#1d1d1f',
+  mute: '#6e6e73',
+  inkStrong: '#1d1d1f',
 };
-const RAISED_SHADOW = '-5px -5px 12px rgba(255,255,255,0.06), 5px 5px 12px rgba(0,0,0,0.55)';
-const INSET_SHADOW = 'inset -3px -3px 8px rgba(255,255,255,0.06), inset 3px 3px 8px rgba(0,0,0,0.55)';
+const RAISED_SHADOW = '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)';
+const INSET_SHADOW = 'inset 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.08)';
 
 const SOCIALS = [
   { key: 'instagram', label: 'Instagram', icon: Instagram,     placeholder: 'https://instagram.com/you' },
@@ -103,7 +103,7 @@ export default function AdminProfile() {
   return (
     <Layout>
       <div style={{
-        background: ADMIN.bg, color: ADMIN.ink,
+        background: '#f5f5f7', color: ADMIN.ink,
         margin: '-16px', padding: 24, minHeight: 'calc(100vh - 56px)',
       }} className="md:!-m-6 md:p-8">
         <div style={{ marginBottom: 24 }}>
@@ -430,7 +430,7 @@ function NeuButton({ children, onClick, type = 'button', gold = false, disabled 
       onMouseLeave={() => setPressed(false)}
       style={{
         background: gold ? ADMIN.accent : ADMIN.bg,
-        color: gold ? '#1a1208' : ADMIN.ink,
+        color: gold ? '#ffffff' : ADMIN.ink,
         fontWeight: gold ? 700 : 500, fontSize: 13, border: 'none',
         borderRadius: 12, padding: '10px 18px',
         cursor: disabled ? 'not-allowed' : 'pointer',
