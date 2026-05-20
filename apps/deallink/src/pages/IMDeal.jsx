@@ -123,7 +123,10 @@ export default function IMDeal() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
-  const [name, setName] = React.useState(initialBuyer?.name || '');
+  const initialFullName = (initialBuyer?.name || '').trim();
+  const initialNameParts = initialFullName ? initialFullName.split(/\s+/) : [];
+  const [firstName, setFirstName] = React.useState(initialBuyer?.first_name || initialNameParts[0] || '');
+  const [lastName, setLastName] = React.useState(initialBuyer?.last_name || initialNameParts.slice(1).join(' ') || '');
   const [phone, setPhone] = React.useState(initialBuyer?.phone || '');
   const [code, setCode] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
@@ -178,7 +181,7 @@ export default function IMDeal() {
       const res = await fetch(`${IM_API_BASE}/${encodeURIComponent(dealId)}/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone: formattedPhone }),
+        body: JSON.stringify({ first_name: firstName, last_name: lastName, phone: formattedPhone }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -219,7 +222,8 @@ export default function IMDeal() {
         }
       }
       const buyerId = data.buyer_id || data.buyerId || data.id || `buyer-${Date.now()}`;
-      const buyer = { id: buyerId, name, phone, verifiedAt: Date.now() };
+      const joinedName = [firstName, lastName].filter(Boolean).join(' ').trim();
+      const buyer = { id: buyerId, first_name: firstName, last_name: lastName, name: joinedName, phone, verifiedAt: Date.now() };
       saveBuyer(buyer);
       recordVisit(dealId);
       setStep('report');
@@ -256,8 +260,10 @@ export default function IMDeal() {
       {step === 'name' && (
         <Step1Name
           deal={deal}
-          value={name}
-          onChange={setName}
+          firstName={firstName}
+          lastName={lastName}
+          onChangeFirst={setFirstName}
+          onChangeLast={setLastName}
           onNext={() => setStep('phone')}
         />
       )}
@@ -414,20 +420,30 @@ function GateLayout({ deal, step, total, children }) {
   );
 }
 
-function Step1Name({ deal, value, onChange, onNext }) {
-  const can = (value || '').trim().length >= 2;
+function Step1Name({ deal, firstName, lastName, onChangeFirst, onChangeLast, onNext }) {
+  const can = (firstName || '').trim().length >= 2;
   return (
     <GateLayout deal={deal} step={1} total={3}>
       <h2 className="text-xl font-semibold text-white mb-1">What's your name?</h2>
       <p className="text-sm text-slate-400 mb-5">We'll share it with the wholesaler if you make an offer.</p>
-      <input
-        autoFocus
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter' && can) onNext(); }}
-        placeholder="Jane Doe"
-        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-      />
+      <div className="flex gap-2">
+        <input
+          autoFocus
+          value={firstName}
+          onChange={(e) => onChangeFirst(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && can) onNext(); }}
+          placeholder="Jane"
+          required
+          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+        />
+        <input
+          value={lastName}
+          onChange={(e) => onChangeLast(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && can) onNext(); }}
+          placeholder="Doe"
+          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+        />
+      </div>
       <div className="mt-5 flex justify-end">
         <button
           type="button"
