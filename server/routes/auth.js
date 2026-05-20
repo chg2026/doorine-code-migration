@@ -65,7 +65,7 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
   let authUserId = null
 
   try {
-    const { email, password, full_name, company_name, product_code: rawProductCode } = req.body
+    const { email, password, first_name, last_name, company_name, product_code: rawProductCode } = req.body
     const product_code = (rawProductCode || 'chg').trim().toLowerCase()
 
     if (!email || !password || (!company_name && product_code !== 'deallink')) {
@@ -82,7 +82,9 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
     }
 
     const normalizedEmail  = email.toLowerCase().trim()
-    const sanitizedName    = (full_name || '').slice(0, 100).trim()
+    const sanitizedFirstName = (first_name || '').slice(0, 50).trim()
+    const sanitizedLastName  = (last_name  || '').slice(0, 50).trim()
+    const sanitizedName      = [sanitizedFirstName, sanitizedLastName].filter(Boolean).join(' ')
     const resolvedCompany  = company_name || (product_code === 'deallink' ? sanitizedName : '')
     const sanitizedCompany = resolvedCompany.slice(0, 100).trim()
 
@@ -168,7 +170,7 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
       email: normalizedEmail,
       password,
       email_confirm: true,
-      user_metadata: { full_name: sanitizedName, account_id: accountId, role_id: roleId },
+      user_metadata: { full_name: sanitizedName, first_name: sanitizedFirstName, last_name: sanitizedLastName, account_id: accountId, role_id: roleId },
     })
     authUser = createResult.data
     authError = createResult.error
@@ -178,7 +180,7 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
         email: normalizedEmail,
         password,
         email_confirm: true,
-        user_metadata: { full_name: sanitizedName },
+        user_metadata: { full_name: sanitizedName, first_name: sanitizedFirstName, last_name: sanitizedLastName },
       })
       authUser = retryResult.data
       authError = retryResult.error
@@ -191,7 +193,9 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
       .upsert({
         id: authUser.user.id,
         email: normalizedEmail,
-        full_name: sanitizedName,
+        full_name:  sanitizedName,
+        first_name: sanitizedFirstName,
+        last_name:  sanitizedLastName,
         account_id: accountId,
         role_id: roleId,
         is_account_admin: true,
