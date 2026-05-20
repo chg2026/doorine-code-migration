@@ -102,8 +102,8 @@ export function EmptyState({ icon: Icon = Building2Icon, title, body, action }) 
       <div className="inline-flex w-12 h-12 rounded-full bg-[rgba(0,0,0,0.06)] items-center justify-center mb-4">
         <Icon className="w-6 h-6 text-[#6e6e73]" />
       </div>
-      <h3 className="text-white font-semibold text-lg">{title}</h3>
-      {body && <p className="text-slate-400 text-sm mt-2 max-w-md mx-auto">{body}</p>}
+      <h3 className="text-[#1d1d1f] font-semibold text-lg">{title}</h3>
+      {body && <p className="text-[#6e6e73] text-sm mt-2 max-w-md mx-auto">{body}</p>}
       {action && <div className="mt-6">{action}</div>}
     </Card>
   );
