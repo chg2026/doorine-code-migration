@@ -25,7 +25,8 @@ export default function Onboarding() {
 
   const profile = state.profile || {};
   const authEmail = (authProfile?.email || authUser?.email || '').trim();
-  const authFullName = (authProfile?.full_name || authProfile?.fullName || '').trim();
+  const authFirstName = (authProfile?.first_name || '').trim();
+  const authLastName = (authProfile?.last_name || '').trim();
 
   // Step state — always start at 1 and walk through all five.
   const [step, setStep] = React.useState(1);
@@ -33,10 +34,8 @@ export default function Onboarding() {
 
   // Step 1
   const [handle, setHandle] = React.useState((profile.handle || '').replace(/\.deals$/, ''));
-  const initialFull = (profile.name || authFullName || '').trim();
-  const initialParts = initialFull ? initialFull.split(/\s+/) : [];
-  const [firstName, setFirstName] = React.useState(initialParts[0] || '');
-  const [lastName, setLastName] = React.useState(initialParts.slice(1).join(' ') || '');
+  const [firstName, setFirstName] = React.useState(authFirstName || '');
+  const [lastName, setLastName] = React.useState(authLastName || '');
   const [email, setEmail] = React.useState(profile.email || authEmail || '');
 
   // Step 2
@@ -44,7 +43,7 @@ export default function Onboarding() {
 
   // Step 3
   const [avatarUrl, setAvatarUrl] = React.useState(profile.avatarUrl || '');
-  const [displayName, setDisplayName] = React.useState(profile.name || authFullName || '');
+  const [displayName, setDisplayName] = React.useState(profile.name || [authFirstName, authLastName].filter(Boolean).join(' ') || '');
   const [bio, setBio] = React.useState(profile.bio || '');
 
   // Step 5
@@ -54,14 +53,13 @@ export default function Onboarding() {
 
   React.useEffect(() => {
     if (!email && authEmail) setEmail(authEmail);
-    if (!firstName && !lastName && authFullName) {
-      const parts = authFullName.trim().split(/\s+/);
-      setFirstName(parts[0] || '');
-      setLastName(parts.slice(1).join(' ') || '');
-      setDisplayName(authFullName);
+    if (!firstName && !lastName && (authFirstName || authLastName)) {
+      setFirstName(authFirstName);
+      setLastName(authLastName);
+      setDisplayName([authFirstName, authLastName].filter(Boolean).join(' '));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authEmail, authFullName]);
+  }, [authEmail, authFirstName, authLastName]);
 
   const emailLocked = !!authEmail;
 
