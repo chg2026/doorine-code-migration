@@ -79,12 +79,12 @@ export default function GateStep3Verify({ summary, phone, devCode, onVerified, o
               onKeyDown={(e) => handleKeyDown(i, e)}
               inputMode="numeric"
               maxLength={1}
-              className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-semibold rounded-lg bg-slate-950 border border-slate-700 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+              className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-semibold rounded-lg bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] focus:border-[#b8860b] focus:outline-none focus:ring-2 focus:ring-[rgba(184,134,11,0.30)]"
             />
           ))}
         </div>
         {resentCode && (
-          <div className="text-xs text-amber-300 bg-amber-400/10 border border-amber-400/30 px-3 py-2 rounded-lg">
+          <div className="text-xs text-[#b8860b] bg-[rgba(184,134,11,0.10)] border border-[rgba(184,134,11,0.30)] px-3 py-2 rounded-lg">
             Dev mode — code: <span className="font-mono font-semibold">{resentCode}</span>
           </div>
         )}
@@ -92,9 +92,9 @@ export default function GateStep3Verify({ summary, phone, devCode, onVerified, o
         <Button type="submit" disabled={!complete || verifying} className="w-full justify-center">
           {verifying ? 'Verifying…' : 'Verify & view deal'}
         </Button>
-        <div className="text-center text-xs text-slate-400">
+        <div className="text-center text-xs text-[#6e6e73]">
           Didn't get it?{' '}
-          <button type="button" onClick={resend} disabled={resending} className="underline hover:text-amber-400 disabled:opacity-50">
+          <button type="button" onClick={resend} disabled={resending} className="underline hover:text-[#b8860b] disabled:opacity-50">
             {resending ? 'Sending…' : 'Resend code'}
           </button>
         </div>

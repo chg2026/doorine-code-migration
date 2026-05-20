@@ -45,16 +45,16 @@ function DealIMInner() {
 
   if (authLoading || loadingDeal) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 text-sm">Loading deal…</div>
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center text-[#86868b] text-sm">Loading deal…</div>
     );
   }
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6 text-center">
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-6 text-center">
         <div className="max-w-sm">
-          <div className="text-amber-400 font-bold mb-3">REI Flywheel</div>
-          <h1 className="text-xl font-semibold text-white mb-2">Deal unavailable</h1>
-          <p className="text-sm text-slate-400">{error}</p>
+          <div className="text-[#b8860b] font-bold mb-3">REI Flywheel</div>
+          <h1 className="text-xl font-semibold text-[#1d1d1f] mb-2">Deal unavailable</h1>
+          <p className="text-sm text-[#6e6e73]">{error}</p>
         </div>
       </div>
     );

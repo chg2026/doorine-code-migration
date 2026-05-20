@@ -235,22 +235,22 @@ export default function IMDeal() {
   }
 
   if (loading) {
-    return <DealLinkShell><div className="py-32 text-center text-slate-500 text-sm">Loading deal…</div></DealLinkShell>;
+    return <DealLinkShell><div className="py-32 text-center text-[#86868b] text-sm">Loading deal…</div></DealLinkShell>;
   }
   if (error) {
     return (
       <DealLinkShell>
         <div className="py-24 text-center max-w-md mx-auto">
-          <div className="inline-flex w-12 h-12 rounded-full bg-slate-800 items-center justify-center mb-4">
-            <Lock className="w-5 h-5 text-slate-500" />
+          <div className="inline-flex w-12 h-12 rounded-full bg-[rgba(0,0,0,0.06)] items-center justify-center mb-4">
+            <Lock className="w-5 h-5 text-[#86868b]" />
           </div>
-          <h1 className="text-xl font-semibold text-white mb-2">Deal unavailable</h1>
-          <p className="text-sm text-slate-400">{error}</p>
+          <h1 className="text-xl font-semibold text-[#1d1d1f] mb-2">Deal unavailable</h1>
+          <p className="text-sm text-[#6e6e73]">{error}</p>
         </div>
       </DealLinkShell>
     );
   }
-  if (!deal) return <DealLinkShell><div className="py-32 text-center text-slate-500 text-sm">No deal</div></DealLinkShell>;
+  if (!deal) return <DealLinkShell><div className="py-32 text-center text-[#86868b] text-sm">No deal</div></DealLinkShell>;
 
   return (
     <DealLinkShell>
@@ -297,7 +297,7 @@ export default function IMDeal() {
       )}
 
       {flash && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-red-500/40 text-red-200 text-sm px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[rgba(0,0,0,0.06)] border border-red-500/40 text-red-200 text-sm px-4 py-2 rounded-lg shadow-lg">
           {flash}
         </div>
       )}
@@ -308,9 +308,9 @@ export default function IMDeal() {
 // ─── Shell + reusable bits ───────────────────────────────────────────────
 function DealLinkShell({ children }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="px-4 py-3 border-b border-slate-800/60 flex items-center justify-center">
-        <div className="text-amber-400 font-bold tracking-wide text-sm">REI Flywheel</div>
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <header className="px-4 py-3 border-b border-[rgba(0,0,0,0.08)] flex items-center justify-center">
+        <div className="text-[#b8860b] font-bold tracking-wide text-sm">REI Flywheel</div>
       </header>
       <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
     </div>
@@ -319,11 +319,11 @@ function DealLinkShell({ children }) {
 
 function PropertyPill({ deal }) {
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800 bg-slate-900/60 text-xs text-slate-300 font-mono">
-      <MapPin className="w-3.5 h-3.5 text-amber-400" />
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[rgba(0,0,0,0.08)] bg-white text-xs text-[#3a3a3c] font-mono">
+      <MapPin className="w-3.5 h-3.5 text-[#b8860b]" />
       <span className="truncate max-w-[16rem]">{deal.addr || 'Property'}</span>
-      <span className="text-slate-500">—</span>
-      <span className="text-amber-300 font-semibold">{fmtUsd(deal.ask)} asking</span>
+      <span className="text-[#86868b]">—</span>
+      <span className="text-[#b8860b] font-semibold">{fmtUsd(deal.ask)} asking</span>
     </div>
   );
 }
@@ -332,12 +332,12 @@ function ProgressBar({ step, total }) {
   const pct = Math.round((step / total) * 100);
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2">
+      <div className="flex items-center justify-between text-[11px] text-[#86868b] mb-2">
         <span>Step {step} of {total}</span>
         <span>{pct}%</span>
       </div>
-      <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
-        <div className="h-full bg-amber-400 transition-all" style={{ width: `${pct}%` }} />
+      <div className="h-1.5 rounded-full bg-[rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="h-full bg-[#b8860b] transition-all" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -348,30 +348,30 @@ function Step0Preview({ deal, onUnlock }) {
   const wholesaler = deal.wholesaler || {};
   return (
     <div>
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden">
-        <div className="aspect-[16/9] bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
+      <div className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white overflow-hidden">
+        <div className="aspect-[16/9] bg-gradient-to-br from-[#f5f5f7] to-white flex items-center justify-center relative">
           {deal.photo_url ? (
             <img src={deal.photo_url} alt="" className="w-full h-full object-cover blur-sm opacity-60" />
           ) : (
-            <Building2 className="w-16 h-16 text-slate-700" />
+            <Building2 className="w-16 h-16 text-[#86868b]" />
           )}
-          <div className="absolute inset-0 bg-slate-950/40" />
+          <div className="absolute inset-0 bg-[rgba(0,0,0,0.10)]" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Lock className="w-10 h-10 text-amber-400/80" />
+            <Lock className="w-10 h-10 text-[#b8860b]/80" />
           </div>
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-[#1d1d1f]">
               {[deal.addr, deal.city].filter(Boolean).join(', ') || '—'}
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-[#6e6e73] mt-1">
               {[deal.city, deal.state, deal.zip].filter(Boolean).join(', ')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <Stat label="Asking"   value={fmtUsd(deal.ask)} accent="text-amber-400" />
+            <Stat label="Asking"   value={fmtUsd(deal.ask)} accent="text-[#b8860b]" />
             <Stat label="ARV"      value={fmtUsd(deal.arv)} />
             <Stat label="Type"     value={deal.type || '—'} />
             <Stat label="Beds"     value={deal.beds ?? '—'} />
@@ -382,14 +382,14 @@ function Step0Preview({ deal, onUnlock }) {
           <button
             type="button"
             onClick={onUnlock}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209]"
           >
             <Lock className="w-4 h-4" /> View full analysis
           </button>
 
-          <p className="text-center text-xs text-slate-500">
+          <p className="text-center text-xs text-[#86868b]">
             This deal is shared by{' '}
-            <span className="text-amber-300 font-semibold">@{wholesaler.handle || 'wholesaler'}</span>{' '}
+            <span className="text-[#b8860b] font-semibold">@{wholesaler.handle || 'wholesaler'}</span>{' '}
             on REI Flywheel
           </p>
         </div>
@@ -400,9 +400,9 @@ function Step0Preview({ deal, onUnlock }) {
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`text-base font-semibold mt-1 ${accent || 'text-white'}`}>{value}</p>
+    <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white p-3">
+      <p className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</p>
+      <p className={`text-base font-semibold mt-1 ${accent || 'text-[#1d1d1f]'}`}>{value}</p>
     </div>
   );
 }
@@ -413,7 +413,7 @@ function GateLayout({ deal, step, total, children }) {
     <div>
       <div className="flex justify-center mb-4"><PropertyPill deal={deal} /></div>
       <ProgressBar step={step} total={total} />
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <div className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white p-6">
         {children}
       </div>
     </div>
@@ -424,8 +424,8 @@ function Step1Name({ deal, firstName, lastName, onChangeFirst, onChangeLast, onN
   const can = (firstName || '').trim().length >= 2;
   return (
     <GateLayout deal={deal} step={1} total={3}>
-      <h2 className="text-xl font-semibold text-white mb-1">What's your name?</h2>
-      <p className="text-sm text-slate-400 mb-5">We'll share it with the wholesaler if you make an offer.</p>
+      <h2 className="text-xl font-semibold text-[#1d1d1f] mb-1">What's your name?</h2>
+      <p className="text-sm text-[#6e6e73] mb-5">We'll share it with the wholesaler if you make an offer.</p>
       <div className="flex gap-2">
         <input
           autoFocus
@@ -434,14 +434,14 @@ function Step1Name({ deal, firstName, lastName, onChangeFirst, onChangeLast, onN
           onKeyDown={(e) => { if (e.key === 'Enter' && can) onNext(); }}
           placeholder="Jane"
           required
-          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+          className="flex-1 bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#b8860b]"
         />
         <input
           value={lastName}
           onChange={(e) => onChangeLast(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && can) onNext(); }}
           placeholder="Doe"
-          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+          className="flex-1 bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-2.5 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#b8860b]"
         />
       </div>
       <div className="mt-5 flex justify-end">
@@ -449,7 +449,7 @@ function Step1Name({ deal, firstName, lastName, onChangeFirst, onChangeLast, onN
           type="button"
           onClick={onNext}
           disabled={!can}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next <ArrowRight className="w-4 h-4" />
         </button>
@@ -463,11 +463,11 @@ function Step2Phone({ deal, value, onChange, onBack, onNext, submitting }) {
   const can = digits.length === 10;
   return (
     <GateLayout deal={deal} step={2} total={3}>
-      <h2 className="text-xl font-semibold text-white mb-1">What's your number?</h2>
-      <p className="text-sm text-slate-400 mb-5">We'll text you a 6-digit code to verify.</p>
+      <h2 className="text-xl font-semibold text-[#1d1d1f] mb-1">What's your number?</h2>
+      <p className="text-sm text-[#6e6e73] mb-5">We'll text you a 6-digit code to verify.</p>
 
       <div className="flex items-center gap-2">
-        <span className="inline-flex items-center px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800/50 text-slate-300 font-mono text-sm">+1</span>
+        <span className="inline-flex items-center px-3 py-2.5 rounded-lg border border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.03)] text-[#3a3a3c] font-mono text-sm">+1</span>
         <input
           autoFocus
           inputMode="tel"
@@ -475,19 +475,19 @@ function Step2Phone({ deal, value, onChange, onBack, onNext, submitting }) {
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && can && !submitting) onNext(); }}
           placeholder="(555) 123-4567"
-          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-white placeholder-slate-500 font-mono focus:outline-none focus:border-amber-400"
+          className="flex-1 bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-2.5 text-[#1d1d1f] placeholder-[#86868b] font-mono focus:outline-none focus:border-[#b8860b]"
         />
       </div>
 
       <div className="mt-5 flex items-center justify-between">
-        <button type="button" onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200 inline-flex items-center gap-1">
+        <button type="button" onClick={onBack} className="text-sm text-[#6e6e73] hover:text-[#1d1d1f] inline-flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <button
           type="button"
           onClick={onNext}
           disabled={!can || submitting}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? 'Sending…' : <>Send code <ArrowRight className="w-4 h-4" /></>}
         </button>
@@ -501,8 +501,8 @@ function Step3Verify({ deal, value, onChange, onBack, onVerify, submitting }) {
   const can = clean.length === 6;
   return (
     <GateLayout deal={deal} step={3} total={3}>
-      <h2 className="text-xl font-semibold text-white mb-1">Enter your code</h2>
-      <p className="text-sm text-slate-400 mb-5">Check your texts — it should arrive in a few seconds.</p>
+      <h2 className="text-xl font-semibold text-[#1d1d1f] mb-1">Enter your code</h2>
+      <p className="text-sm text-[#6e6e73] mb-5">Check your texts — it should arrive in a few seconds.</p>
 
       <input
         autoFocus
@@ -511,19 +511,19 @@ function Step3Verify({ deal, value, onChange, onBack, onVerify, submitting }) {
         onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
         onKeyDown={(e) => { if (e.key === 'Enter' && can && !submitting) onVerify(); }}
         placeholder="000000"
-        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-3 text-2xl font-mono tracking-[0.5em] text-center text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+        className="w-full bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-3 text-2xl font-mono tracking-[0.5em] text-center text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#b8860b]"
         maxLength={6}
       />
 
       <div className="mt-5 flex items-center justify-between">
-        <button type="button" onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200 inline-flex items-center gap-1">
+        <button type="button" onClick={onBack} className="text-sm text-[#6e6e73] hover:text-[#1d1d1f] inline-flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <button
           type="button"
           onClick={onVerify}
           disabled={!can || submitting}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? 'Verifying…' : <>Verify <ArrowRight className="w-4 h-4" /></>}
         </button>
@@ -561,15 +561,15 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
       <div>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">{deal.addr || 'Property'}</h1>
-            <div className="flex items-center gap-2 mt-1 text-sm text-slate-400">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#1d1d1f]">{deal.addr || 'Property'}</h1>
+            <div className="flex items-center gap-2 mt-1 text-sm text-[#6e6e73]">
               <MapPin className="w-3.5 h-3.5" />
               <span>{[deal.city, deal.state].filter(Boolean).join(', ') || '—'}</span>
               {deal.status && <StatusBadge status={deal.status} />}
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 text-right">
-            <PriceCell label="Asking" value={fmtUsd(deal.ask)} accent="text-amber-400" />
+            <PriceCell label="Asking" value={fmtUsd(deal.ask)} accent="text-[#b8860b]" />
             <PriceCell label="ARV"    value={fmtUsd(deal.arv)} />
             <PriceCell label="Spread" value={spread != null ? fmtSignedUsd(spread) : '—'} accent={spread > 0 ? 'text-emerald-400' : 'text-rose-400'} />
           </div>
@@ -579,10 +579,10 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
       {/* Photos — hidden entirely when none */}
       {showPhotos && photos.length > 0 && (
         <section>
-          <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Photos</h3>
+          <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2">Photos</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {photos.map((src, i) => (
-              <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden border border-slate-800 bg-slate-900">
+              <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden border border-[rgba(0,0,0,0.08)] bg-white">
                 <img
                   src={src}
                   alt={`Photo ${i + 1}`}
@@ -596,7 +596,7 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
 
       {/* Specs grid */}
       <section>
-        <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Property specs</h3>
+        <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2">Property specs</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <SpecCard icon={Building2} label="Type"      value={deal.type || '—'} />
           <SpecCard icon={Bed}       label="Beds"      value={deal.beds ?? '—'} />
@@ -610,8 +610,8 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
       {/* Analyzer */}
       {showAnalyzer && (
         <section>
-          <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2 flex items-center gap-2">
-            <BarChart3 className="w-3.5 h-3.5 text-amber-400" /> Deal analysis
+          <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2 flex items-center gap-2">
+            <BarChart3 className="w-3.5 h-3.5 text-[#b8860b]" /> Deal analysis
           </h3>
           {metrics ? (
             <div className="space-y-4">
@@ -621,7 +621,7 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
                       { label: 'Net Profit',        value: fmtSignedUsd(metrics.flipNetProfit), tone: metrics.flipNetProfit >= 0 ? 'text-emerald-300' : 'text-rose-300' },
                       { label: 'Total ROI',         value: fmtPct(metrics.flipROI),             tone: metrics.flipROI >= 0 ? 'text-emerald-300' : 'text-rose-300' },
                       { label: 'Annualized ROI',    value: fmtPct(metrics.flipAnnROI),          tone: metrics.flipAnnROI >= 0 ? 'text-emerald-300' : 'text-rose-300' },
-                      { label: 'Total Investment',  value: fmtUsd(metrics.flipInvestment),      tone: 'text-white' },
+                      { label: 'Total Investment',  value: fmtUsd(metrics.flipInvestment),      tone: 'text-[#1d1d1f]' },
                     ]
                   : [
                       { label: 'Monthly Cash Flow',     value: fmtSignedUsd(metrics.monthlyCashFlow), tone: metrics.monthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300' },
@@ -630,15 +630,15 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
                       { label: 'Annual NOI',            value: fmtSignedUsd(metrics.noi),             tone: metrics.noi >= 0 ? 'text-emerald-300' : 'text-rose-300' },
                     ]
                 ).map((k) => (
-                  <div key={k.label} className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
-                    <p className="text-[11px] uppercase tracking-wider text-slate-500">{k.label}</p>
+                  <div key={k.label} className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white p-4">
+                    <p className="text-[11px] uppercase tracking-wider text-[#86868b]">{k.label}</p>
                     <p className={`text-xl font-semibold mt-1 ${k.tone}`}>{k.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-900/40 divide-y divide-slate-800">
-                <h4 className="px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Investment summary</h4>
+              <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white divide-y divide-[rgba(0,0,0,0.08)]">
+                <h4 className="px-4 py-2 text-[10px] uppercase tracking-wider text-[#86868b] font-semibold">Investment summary</h4>
                 {[
                   { label: 'Purchase Price',      value: fmtUsd(metrics.purchasePrice) },
                   { label: 'Rehab Costs',         value: fmtUsd(metrics.rehab) },
@@ -648,14 +648,14 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
                   { label: 'Monthly Mortgage',    value: fmtUsd(metrics.piti) },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
-                    <span className={`text-sm ${row.strong ? 'text-white font-semibold' : 'text-slate-300'}`}>{row.label}</span>
-                    <span className={`text-sm font-mono ${row.strong ? 'text-amber-300 font-semibold' : 'text-white'}`}>{row.value}</span>
+                    <span className={`text-sm ${row.strong ? 'text-[#1d1d1f] font-semibold' : 'text-[#3a3a3c]'}`}>{row.label}</span>
+                    <span className={`text-sm font-mono ${row.strong ? 'text-[#b8860b] font-semibold' : 'text-[#1d1d1f]'}`}>{row.value}</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">The wholesaler hasn't shared a saved analysis for this deal.</p>
+            <p className="text-sm text-[#86868b]">The wholesaler hasn't shared a saved analysis for this deal.</p>
           )}
         </section>
       )}
@@ -663,44 +663,44 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
       {/* Rehab line items */}
       {showRehab && (
         <section>
-          <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2 flex items-center gap-2">
-            <Hammer className="w-3.5 h-3.5 text-amber-400" /> Rehab estimate
+          <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2 flex items-center gap-2">
+            <Hammer className="w-3.5 h-3.5 text-[#b8860b]" /> Rehab estimate
           </h3>
           {rehabItems.length > 0 ? (
-            <div className="rounded-lg border border-slate-800 bg-slate-900/40 overflow-hidden">
-              <div className="grid grid-cols-12 px-4 py-2 bg-slate-900/60 border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+            <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white overflow-hidden">
+              <div className="grid grid-cols-12 px-4 py-2 bg-white border-b border-[rgba(0,0,0,0.08)] text-[10px] uppercase tracking-wider text-[#86868b] font-semibold">
                 <div className="col-span-4">Category</div>
                 <div className="col-span-6">Description</div>
                 <div className="col-span-2 text-right">Cost</div>
               </div>
-              <div className="divide-y divide-slate-800">
+              <div className="divide-y divide-[rgba(0,0,0,0.08)]">
                 {rehabItems.map((i, idx) => (
                   <div key={i.id || idx} className="grid grid-cols-12 px-4 py-2.5 text-sm">
-                    <div className="col-span-4 text-slate-300">{i.category || '—'}</div>
-                    <div className="col-span-6 text-slate-400">{i.description || '—'}</div>
-                    <div className="col-span-2 text-right font-mono text-white">{fmtUsd(Number(i.cost) || 0)}</div>
+                    <div className="col-span-4 text-[#3a3a3c]">{i.category || '—'}</div>
+                    <div className="col-span-6 text-[#6e6e73]">{i.description || '—'}</div>
+                    <div className="col-span-2 text-right font-mono text-[#1d1d1f]">{fmtUsd(Number(i.cost) || 0)}</div>
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-12 px-4 py-2.5 bg-slate-900/60 border-t border-slate-800">
-                <div className="col-span-10 text-sm text-white font-semibold">Total</div>
-                <div className="col-span-2 text-right text-sm font-mono text-amber-300 font-semibold">{fmtUsd(rehabTotal)}</div>
+              <div className="grid grid-cols-12 px-4 py-2.5 bg-white border-t border-[rgba(0,0,0,0.08)]">
+                <div className="col-span-10 text-sm text-[#1d1d1f] font-semibold">Total</div>
+                <div className="col-span-2 text-right text-sm font-mono text-[#b8860b] font-semibold">{fmtUsd(rehabTotal)}</div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">No rehab line items provided.</p>
+            <p className="text-sm text-[#86868b]">No rehab line items provided.</p>
           )}
         </section>
       )}
 
       {/* Wholesaler contact */}
-      <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-amber-400/20 text-amber-300 inline-flex items-center justify-center font-bold border border-amber-400/30">
+      <section className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white p-5 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-[rgba(184,134,11,0.10)] text-[#b8860b] inline-flex items-center justify-center font-bold border border-[rgba(184,134,11,0.30)]">
           {(wholesaler.initials || (wholesaler.name || wholesaler.handle || '?').slice(0, 2)).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-white font-semibold truncate">@{wholesaler.handle || 'wholesaler'}</p>
-          {wholesaler.name && <p className="text-sm text-slate-400 truncate">{wholesaler.name}</p>}
+          <p className="text-[#1d1d1f] font-semibold truncate">@{wholesaler.handle || 'wholesaler'}</p>
+          {wholesaler.name && <p className="text-sm text-[#6e6e73] truncate">{wholesaler.name}</p>}
         </div>
       </section>
 
@@ -709,14 +709,14 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
         <button
           type="button"
           onClick={() => setOfferOpen(true)}
-          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209]"
         >
           <Send className="w-4 h-4" /> Make an offer
         </button>
         <button
           type="button"
           onClick={onDashboard}
-          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 hover:border-amber-400 hover:text-amber-300"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white text-[#1d1d1f] hover:border-[#b8860b] hover:text-[#b8860b]"
         >
           Go to my dashboard <ArrowRight className="w-4 h-4" />
         </button>
@@ -731,7 +731,7 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
         />
       )}
 
-      <footer className="text-center text-[11px] text-slate-500 py-6">
+      <footer className="text-center text-[11px] text-[#86868b] py-6">
         Powered by REI Flywheel
       </footer>
     </div>
@@ -740,14 +740,14 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
 
 function StatusBadge({ status }) {
   const map = {
-    'New':            'bg-amber-400/15 text-amber-300 border-amber-400/30',
+    'New':            'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[rgba(184,134,11,0.30)]',
     'Marketed':       'bg-blue-400/15 text-blue-300 border-blue-400/30',
     'Under Contract': 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30',
-    'Closed':         'bg-slate-600/30 text-slate-300 border-slate-600/40',
+    'Closed':         'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.08)]',
     'Dead':           'bg-rose-500/15 text-rose-300 border-rose-500/30',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${map[status] || 'bg-slate-700 text-slate-200 border-slate-600'}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${map[status] || 'bg-[rgba(0,0,0,0.08)] text-[#1d1d1f] border-[rgba(0,0,0,0.08)]'}`}>
       {status}
     </span>
   );
@@ -756,23 +756,23 @@ function StatusBadge({ status }) {
 function PriceCell({ label, value, accent }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`text-sm font-semibold font-mono ${accent || 'text-white'}`}>{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</p>
+      <p className={`text-sm font-semibold font-mono ${accent || 'text-[#1d1d1f]'}`}>{value}</p>
     </div>
   );
 }
 
 function SpecCard({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 flex items-start gap-3">
-      <div className="w-9 h-9 shrink-0 rounded-md border border-slate-800 bg-slate-900/60 flex items-center justify-center text-amber-400">
+    <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white p-3 flex items-start gap-3">
+      <div className="w-9 h-9 shrink-0 rounded-md border border-[rgba(0,0,0,0.08)] bg-white flex items-center justify-center text-[#b8860b]">
         <Icon className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex flex-col gap-0.5">
-        <span className="block text-[10px] uppercase tracking-wider text-slate-500 leading-none">
+        <span className="block text-[10px] uppercase tracking-wider text-[#86868b] leading-none">
           {label}
         </span>
-        <span className="block text-sm font-semibold text-white break-words leading-snug">
+        <span className="block text-sm font-semibold text-[#1d1d1f] break-words leading-snug">
           {value}
         </span>
       </div>
@@ -826,21 +826,21 @@ function OfferModal({ deal, dealId, buyer, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-white font-bold text-lg mb-1">Make an offer</h2>
-        <p className="text-xs text-slate-400 mb-4 truncate">{deal.addr}</p>
+      <div className="relative bg-white border border-[rgba(0,0,0,0.08)] rounded-xl p-6 w-full max-w-md">
+        <h2 className="text-[#1d1d1f] font-bold text-lg mb-1">Make an offer</h2>
+        <p className="text-xs text-[#6e6e73] mb-4 truncate">{deal.addr}</p>
 
         {sent ? (
           <div className="text-center py-6">
             <div className="inline-flex w-12 h-12 rounded-full bg-emerald-500/20 items-center justify-center mb-3">
               <ShieldCheck className="w-6 h-6 text-emerald-300" />
             </div>
-            <p className="text-white font-semibold mb-1">Offer sent</p>
-            <p className="text-sm text-slate-400 mb-5">The wholesaler will reach out shortly.</p>
+            <p className="text-[#1d1d1f] font-semibold mb-1">Offer sent</p>
+            <p className="text-sm text-[#6e6e73] mb-5">The wholesaler will reach out shortly.</p>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
+              className="px-4 py-2 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209]"
             >
               Done
             </button>
@@ -848,7 +848,7 @@ function OfferModal({ deal, dealId, buyer, onClose }) {
         ) : (
           <div className="space-y-3">
             <div>
-              <label className="text-slate-400 text-xs block mb-1">Offer amount ($)</label>
+              <label className="text-[#6e6e73] text-xs block mb-1">Offer amount ($)</label>
               <input
                 type="number"
                 min="0"
@@ -856,15 +856,15 @@ function OfferModal({ deal, dealId, buyer, onClose }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                className="w-full bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-2 text-sm text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#b8860b]"
               />
             </div>
             <div>
-              <label className="text-slate-400 text-xs block mb-1">Buyer type</label>
+              <label className="text-[#6e6e73] text-xs block mb-1">Buyer type</label>
               <select
                 value={buyerType}
                 onChange={(e) => setBuyerType(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400"
+                className="w-full bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-2 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#b8860b]"
               >
                 <option>Cash Buyer</option>
                 <option>Hard Money</option>
@@ -874,13 +874,13 @@ function OfferModal({ deal, dealId, buyer, onClose }) {
               </select>
             </div>
             <div>
-              <label className="text-slate-400 text-xs block mb-1">Notes</label>
+              <label className="text-[#6e6e73] text-xs block mb-1">Notes</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="Closing timeline, contingencies, anything else…"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 min-h-[80px]"
+                className="w-full bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg px-3 py-2 text-sm text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#b8860b] min-h-[80px]"
               />
             </div>
 
@@ -893,7 +893,7 @@ function OfferModal({ deal, dealId, buyer, onClose }) {
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-sm"
+                className="px-4 py-2 rounded-lg bg-[rgba(0,0,0,0.06)] hover:bg-[rgba(0,0,0,0.06)] text-[#1d1d1f] border border-[rgba(0,0,0,0.08)] text-sm"
               >
                 Cancel
               </button>
@@ -901,7 +901,7 @@ function OfferModal({ deal, dealId, buyer, onClose }) {
                 type="button"
                 onClick={submit}
                 disabled={submitting || !amount}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300 disabled:opacity-50 text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#b8860b] text-white font-semibold hover:bg-[#9a7209] disabled:opacity-50 text-sm"
               >
                 {submitting ? 'Sending…' : <>Submit offer <Send className="w-4 h-4" /></>}
               </button>
