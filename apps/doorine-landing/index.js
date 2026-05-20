@@ -123,7 +123,6 @@ ${imageTags}  <meta property="og:url" content="${safeUrl}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDescription}" />
-  <meta http-equiv="refresh" content="0;url=${safeRedirect}" />
   <link rel="canonical" href="${safeRedirect}" />
 </head>
 <body>
