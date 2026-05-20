@@ -11,16 +11,16 @@ function StatCard({ label, value, sub, icon: Icon, trend }) {
     <Card className="p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">{label}</p>
-          <p className="text-white text-3xl font-bold mt-2">{value}</p>
-          {sub && <p className="text-slate-500 text-xs mt-1">{sub}</p>}
+          <p className="text-[#6e6e73] text-xs font-medium uppercase tracking-wider">{label}</p>
+          <p className="text-[#1d1d1f] text-3xl font-bold mt-2">{value}</p>
+          {sub && <p className="text-[#86868b] text-xs mt-1">{sub}</p>}
         </div>
-        <div className="w-10 h-10 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-[rgba(184,134,11,0.10)] text-[#b8860b] flex items-center justify-center">
           <Icon className="w-5 h-5" />
         </div>
       </div>
       {trend != null && (
-        <div className="mt-3 inline-flex items-center gap-1 text-xs text-green-400">
+        <div className="mt-3 inline-flex items-center gap-1 text-xs text-[#22a06b]">
           <TrendingUp className="w-3 h-3" />{trend}
         </div>
       )}
@@ -43,8 +43,8 @@ export default function Dashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-white">Welcome back{profile?.name ? `, ${profile.name.split(' ')[0]}` : ''}</h1>
-            <p className="text-slate-400 text-sm mt-1">Here's what's happening across your inventory.</p>
+            <h1 className="text-2xl font-bold text-[#1d1d1f]">Welcome back{profile?.name ? `, ${profile.name.split(' ')[0]}` : ''}</h1>
+            <p className="text-[#6e6e73] text-sm mt-1">Here's what's happening across your inventory.</p>
           </div>
           <div className="flex gap-2">
             <Link to="/admin/import"><Button variant="secondary"><Upload className="w-4 h-4" /> Import CSV</Button></Link>
@@ -63,28 +63,28 @@ export default function Dashboard() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Recent deals</CardTitle>
-              <Link to="/admin" className="text-amber-400 text-xs hover:underline">View all →</Link>
+              <Link to="/admin" className="text-[#b8860b] text-xs hover:underline">View all →</Link>
             </CardHeader>
-            <div className="divide-y divide-slate-700">
+            <div className="divide-y divide-[rgba(0,0,0,0.08)]">
               {recent.length === 0 && (
-                <div className="px-5 py-12 text-center text-slate-500 text-sm">
-                  No deals yet. <Link to="/admin/deal/new" className="text-amber-400 hover:underline">Add your first deal</Link>.
+                <div className="px-5 py-12 text-center text-[#86868b] text-sm">
+                  No deals yet. <Link to="/admin/deal/new" className="text-[#b8860b] hover:underline">Add your first deal</Link>.
                 </div>
               )}
               {recent.map((d) => (
-                <Link key={d.id} to={`/admin/deal/${d.id}`} className="px-5 py-3 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+                <Link key={d.id} to={`/admin/deal/${d.id}`} className="px-5 py-3 flex items-center justify-between hover:bg-[rgba(0,0,0,0.03)] transition-colors">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-4 h-4 text-slate-400" />
+                    <div className="w-9 h-9 bg-[rgba(0,0,0,0.06)] rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-4 h-4 text-[#6e6e73]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{d.addr || '—'}</p>
-                      <p className="text-slate-400 text-xs truncate">{[d.city, d.state || d.zip].filter(Boolean).join(' · ')}</p>
+                      <p className="text-[#1d1d1f] text-sm font-medium truncate hover:text-[#b8860b]">{d.addr || '—'}</p>
+                      <p className="text-[#6e6e73] text-xs truncate">{[d.city, d.state || d.zip].filter(Boolean).join(' · ')}</p>
                     </div>
                   </div>
                   <div className="text-right hidden sm:block mr-4">
-                    <p className="text-white text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
-                    <p className="text-slate-400 text-xs">ARV ${Number(d.arv || 0).toLocaleString()}</p>
+                    <p className="text-[#1d1d1f] text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
+                    <p className="text-[#6e6e73] text-xs">ARV ${Number(d.arv || 0).toLocaleString()}</p>
                   </div>
                   <StatusBadge status={d.status} />
                 </Link>
@@ -96,25 +96,25 @@ export default function Dashboard() {
             <CardHeader><CardTitle>Recent activity</CardTitle></CardHeader>
             <div className="p-5 space-y-4">
               {recentLeads.length === 0 && offers.length === 0 && (
-                <p className="text-slate-500 text-sm text-center py-8">Quiet so far. Share your link.</p>
+                <p className="text-[#86868b] text-sm text-center py-8">Quiet so far. Share your link.</p>
               )}
               {recentLeads.map((l) => (
                 <div key={l.id} className="flex gap-3">
-                  <Eye className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-400" />
+                  <Eye className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#b8860b]" />
                   <div>
-                    <p className="text-slate-300 text-sm">
+                    <p className="text-[#1d1d1f] text-sm">
                       <b>{[l.first, l.last].filter(Boolean).join(' ') || 'A buyer'}</b> {l.kind === 'deal-interest' ? 'is interested in a deal' : 'joined your buyer list'}
                     </p>
-                    <p className="text-slate-500 text-xs mt-0.5">{formatRelTime(l.createdAt)}</p>
+                    <p className="text-[#86868b] text-xs mt-0.5">{formatRelTime(l.createdAt)}</p>
                   </div>
                 </div>
               ))}
               {offers.slice(0, 3).map((o) => (
                 <div key={o.id} className="flex gap-3">
-                  <ArrowUpRight className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-400" />
+                  <ArrowUpRight className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#3478f6]" />
                   <div>
-                    <p className="text-slate-300 text-sm"><b>{o.buyerName || 'Buyer'}</b> offered ${Number(o.amount).toLocaleString()}</p>
-                    <p className="text-slate-500 text-xs mt-0.5">{formatRelTime(o.createdAt)} · {o.status}</p>
+                    <p className="text-[#1d1d1f] text-sm"><b>{o.buyerName || 'Buyer'}</b> offered ${Number(o.amount).toLocaleString()}</p>
+                    <p className="text-[#86868b] text-xs mt-0.5">{formatRelTime(o.createdAt)} · {o.status}</p>
                   </div>
                 </div>
               ))}

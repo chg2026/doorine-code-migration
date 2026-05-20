@@ -1,0 +1,70 @@
+Update apps/deallink/src/components/ui.jsx and apps/deallink/src/pages/Dashboard.jsx to match the new light design system. Style changes only — do not touch any logic, props, or structure.
+
+IN apps/deallink/src/components/ui.jsx:
+
+Card:
+  FROM: bg-slate-900 border border-slate-700 rounded-xl
+  TO:   bg-white border border-[rgba(0,0,0,0.08)] rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_14px_rgba(0,0,0,0.04)]
+
+CardHeader border:
+  FROM: border-b border-slate-700
+  TO:   border-b border-[rgba(0,0,0,0.08)]
+
+CardTitle: change text color from text-white (or text-slate-100) to text-[#1d1d1f]
+
+Button variants:
+  primary:   bg-amber-400 hover:bg-amber-300 text-slate-900 → style="background: var(--accent-gradient)" with className text-white hover:opacity-90
+  secondary: bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 → bg-white hover:bg-[rgba(0,0,0,0.04)] text-[#1d1d1f] border border-[rgba(0,0,0,0.12)]
+  ghost:     text-slate-400 hover:text-white hover:bg-slate-800 → text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[rgba(0,0,0,0.06)]
+  danger:    keep as-is
+
+Input, Select, Textarea:
+  FROM: bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-amber-400
+  TO:   bg-white border-[rgba(0,0,0,0.12)] text-[#1d1d1f] placeholder-[#86868b] focus:border-[#b8860b]
+
+StatusBadge color map — replace all entries with light-mode versions:
+  New:            bg-[rgba(52,120,246,0.10)] text-[#3478f6]  dot: bg-[#3478f6]  border: border-[#3478f6]
+  Marketed:       bg-[rgba(52,120,246,0.10)] text-[#3478f6]  dot: bg-[#3478f6]  border: border-[#3478f6]
+  Under Contract: bg-[rgba(184,134,11,0.10)] text-[#b8860b]  dot: bg-[#b8860b]  border: border-[#b8860b]
+  Closed:         bg-[rgba(34,160,107,0.10)] text-[#22a06b]  dot: bg-[#22a06b]  border: border-[#22a06b]
+  Dead:           bg-[rgba(212,73,58,0.10)]  text-[#d4493a]  dot: bg-[#d4493a]  border: border-[#d4493a]
+
+Modal backdrop stays bg-black/70. Modal panel:
+  FROM: bg-slate-900 border-slate-700
+  TO:   bg-white border-[rgba(0,0,0,0.08)]
+
+EmptyState icon circle:
+  FROM: bg-slate-800
+  TO:   bg-[rgba(0,0,0,0.06)]
+
+IN apps/deallink/src/pages/Dashboard.jsx:
+
+StatCard component — update all dark classes:
+  Label: text-slate-400 → text-[#6e6e73]
+  Value: text-white → text-[#1d1d1f]
+  Sub text: text-slate-500 → text-[#86868b]
+  Icon square: bg-amber-400/10 text-amber-400 → bg-[rgba(184,134,11,0.10)] text-[#b8860b]
+  Trend: text-green-400 → text-[#22a06b]
+
+Welcome header:
+  h1: text-white → text-[#1d1d1f]
+  subtitle p: text-slate-400 → text-[#6e6e73]
+
+Recent deals panel rows:
+  Property icon square: bg-slate-800 → bg-[rgba(0,0,0,0.06)]; icon: text-slate-400 → text-[#6e6e73]
+  Address link: text-white → text-[#1d1d1f]; hover:text-amber-400 → hover:text-[#b8860b]
+  City/zip sub: text-slate-400 → text-[#6e6e73]
+  Price: text-white → text-[#1d1d1f]
+  ARV sub: text-slate-400 → text-[#6e6e73]
+  Row hover: hover:bg-slate-800/50 → hover:bg-[rgba(0,0,0,0.03)]
+  Dividers: divide-slate-700 → divide-[rgba(0,0,0,0.08)]
+  Empty state link: text-amber-400 → text-[#b8860b]
+
+Activity panel:
+  Lead icon: text-amber-400 → text-[#b8860b]
+  Offer icon: text-blue-400 → text-[#3478f6]
+  Activity text: text-slate-300 → text-[#1d1d1f]
+  Timestamp: text-slate-500 → text-[#86868b]
+  Empty message: text-slate-500 → text-[#86868b]
+
+Only edit files inside apps/deallink/. Do not touch any other folder.
