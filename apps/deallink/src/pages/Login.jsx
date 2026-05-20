@@ -116,35 +116,35 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-slate-950">
-      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-r border-slate-800">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#f5f5f7]">
+      <div className="hidden lg:flex flex-col justify-between p-12 bg-white border-r border-[rgba(0,0,0,0.08)]">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-          <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
+          <div className="w-8 h-8 bg-[#b8860b] rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-[#1d1d1f]" /></div>
+          <span className="text-[#1d1d1f] font-bold text-lg">REI <span className="text-[#b8860b]">Flywheel</span></span>
         </Link>
         <div>
-          <h2 className="text-white text-4xl font-bold leading-tight">One link for<br />every deal you<br />wholesale.</h2>
-          <p className="text-slate-400 text-sm mt-4 max-w-sm">Share a public profile. Post inventory once. Capture buyers. Track every offer.</p>
+          <h2 className="text-[#1d1d1f] text-4xl font-bold leading-tight">One link for<br />every deal you<br />wholesale.</h2>
+          <p className="text-[#6e6e73] text-sm mt-4 max-w-sm">Share a public profile. Post inventory once. Capture buyers. Track every offer.</p>
         </div>
-        <p className="text-slate-600 text-xs font-mono">© 2026 · BuildFlow</p>
+        <p className="text-[#6e6e73] text-xs font-mono">© 2026 · BuildFlow</p>
       </div>
 
       <div className="flex flex-col justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm mx-auto">
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-            <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
+            <div className="w-8 h-8 bg-[#b8860b] rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-[#1d1d1f]" /></div>
+            <span className="text-[#1d1d1f] font-bold text-lg">REI <span className="text-[#b8860b]">Flywheel</span></span>
           </div>
-          <p className="text-amber-400 text-xs uppercase tracking-widest font-mono">Sign in</p>
-          <h1 className="text-2xl text-white font-bold mt-2">Welcome back.</h1>
+          <p className="text-[#b8860b] text-xs uppercase tracking-widest font-mono">Sign in</p>
+          <h1 className="text-2xl text-[#1d1d1f] font-bold mt-2">Welcome back.</h1>
 
           {/* Tabs */}
-          <div className="mt-6 grid grid-cols-2 gap-2 p-1 rounded-lg bg-slate-900 border border-slate-800">
+          <div className="mt-6 grid grid-cols-2 gap-2 p-1 rounded-lg bg-white border border-[rgba(0,0,0,0.08)]">
             <button
               type="button"
               onClick={() => { setTab('email'); setError(null); }}
               className={`inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                tab === 'email' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                tab === 'email' ? 'bg-[rgba(0,0,0,0.06)] text-[#1d1d1f]' : 'text-[#6e6e73] hover:text-[#3a3a3c]'
               }`}
             >
               <Mail className="w-4 h-4" /> Email
@@ -153,7 +153,7 @@ export default function Login() {
               type="button"
               onClick={() => { setTab('phone'); setPhoneError(null); }}
               className={`inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                tab === 'phone' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                tab === 'phone' ? 'bg-[rgba(0,0,0,0.06)] text-[#1d1d1f]' : 'text-[#6e6e73] hover:text-[#3a3a3c]'
               }`}
             >
               <Phone className="w-4 h-4" /> Phone
@@ -166,7 +166,7 @@ export default function Login() {
               <Field label="Password"><Input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" disabled={submitting} /></Field>
               {error && <p className="text-sm text-red-400">{error}</p>}
               <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Signing in…' : <>Sign in <ArrowRight className="w-4 h-4" /></>}</Button>
-              <p className="text-xs text-slate-400 text-center">Need an account? <Link to="/signup" className="text-amber-400 hover:underline">Sign up</Link></p>
+              <p className="text-xs text-[#6e6e73] text-center">Need an account? <Link to="/signup" className="text-[#b8860b] hover:underline">Sign up</Link></p>
             </form>
           ) : phoneStep === 'phone' ? (
             <form onSubmit={sendPhoneCode} className="mt-6 space-y-4">
@@ -181,12 +181,12 @@ export default function Login() {
                   disabled={phoneSubmitting}
                 />
               </Field>
-              <p className="text-xs text-slate-500">We'll text you a 6-digit code. US numbers only.</p>
+              <p className="text-xs text-[#86868b]">We'll text you a 6-digit code. US numbers only.</p>
               {phoneError && <p className="text-sm text-red-400">{phoneError}</p>}
               <Button type="submit" className="w-full" disabled={phoneSubmitting}>
                 {phoneSubmitting ? 'Sending…' : <>Send code <ArrowRight className="w-4 h-4" /></>}
               </Button>
-              <p className="text-xs text-slate-400 text-center">Need an account? <Link to="/signup" className="text-amber-400 hover:underline">Sign up</Link></p>
+              <p className="text-xs text-[#6e6e73] text-center">Need an account? <Link to="/signup" className="text-[#b8860b] hover:underline">Sign up</Link></p>
             </form>
           ) : (
             <form onSubmit={verifyPhoneCode} className="mt-6 space-y-4">
@@ -202,7 +202,7 @@ export default function Login() {
                   maxLength={6}
                 />
               </Field>
-              <p className="text-xs text-slate-500">Sent to {sentPhone || phone}. <button type="button" onClick={() => { setPhoneStep('phone'); setCode(''); setPhoneError(null); }} className="text-amber-400 hover:underline">Change number</button></p>
+              <p className="text-xs text-[#86868b]">Sent to {sentPhone || phone}. <button type="button" onClick={() => { setPhoneStep('phone'); setCode(''); setPhoneError(null); }} className="text-[#b8860b] hover:underline">Change number</button></p>
               {phoneError && <p className="text-sm text-red-400">{phoneError}</p>}
               <Button type="submit" className="w-full" disabled={phoneSubmitting}>
                 {phoneSubmitting ? 'Verifying…' : <>Verify <ArrowRight className="w-4 h-4" /></>}
@@ -211,7 +211,7 @@ export default function Login() {
                 type="button"
                 onClick={() => sendPhoneCode()}
                 disabled={phoneSubmitting}
-                className="block w-full text-xs text-slate-400 text-center hover:text-amber-400 disabled:opacity-50"
+                className="block w-full text-xs text-[#6e6e73] text-center hover:text-[#b8860b] disabled:opacity-50"
               >
                 Resend code
               </button>

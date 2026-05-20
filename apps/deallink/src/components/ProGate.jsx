@@ -15,7 +15,7 @@ export default function ProGate({
   if (loading) {
     return (
       <Layout>
-        <div className="py-32 text-center text-slate-400 text-xs font-mono">Loading…</div>
+        <div className="py-32 text-center text-[#6e6e73] text-xs font-mono">Loading…</div>
       </Layout>
     );
   }

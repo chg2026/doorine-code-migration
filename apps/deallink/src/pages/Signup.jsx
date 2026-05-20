@@ -139,57 +139,57 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-slate-950">
-      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-r border-slate-800">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#f5f5f7]">
+      <div className="hidden lg:flex flex-col justify-between p-12 bg-white border-r border-[rgba(0,0,0,0.08)]">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-          <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
+          <div className="w-8 h-8 bg-[#b8860b] rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-[#1d1d1f]" /></div>
+          <span className="text-[#1d1d1f] font-bold text-lg">REI <span className="text-[#b8860b]">Flywheel</span></span>
         </Link>
         <div>
-          <h2 className="text-white text-4xl font-bold leading-tight">Claim your<br />wholesaler<br />link in seconds.</h2>
-          <p className="text-slate-400 text-sm mt-4 max-w-sm">Create a Gold Bridge account, get your REI Flywheel handle, and start sharing inventory with buyers in minutes.</p>
+          <h2 className="text-[#1d1d1f] text-4xl font-bold leading-tight">Claim your<br />wholesaler<br />link in seconds.</h2>
+          <p className="text-[#6e6e73] text-sm mt-4 max-w-sm">Create a Gold Bridge account, get your REI Flywheel handle, and start sharing inventory with buyers in minutes.</p>
         </div>
-        <p className="text-slate-600 text-xs font-mono">© 2026 · BuildFlow</p>
+        <p className="text-[#6e6e73] text-xs font-mono">© 2026 · BuildFlow</p>
       </div>
 
       <div className="flex flex-col justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm mx-auto">
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-slate-900" /></div>
-            <span className="text-white font-bold text-lg">REI <span className="text-amber-400">Flywheel</span></span>
+            <div className="w-8 h-8 bg-[#b8860b] rounded-lg flex items-center justify-center"><Building2 className="w-5 h-5 text-[#1d1d1f]" /></div>
+            <span className="text-[#1d1d1f] font-bold text-lg">REI <span className="text-[#b8860b]">Flywheel</span></span>
           </div>
-          <p className="text-amber-400 text-xs uppercase tracking-widest font-mono">Sign up</p>
-          <h1 className="text-2xl text-white font-bold mt-2">Create your account.</h1>
+          <p className="text-[#b8860b] text-xs uppercase tracking-widest font-mono">Sign up</p>
+          <h1 className="text-2xl text-[#1d1d1f] font-bold mt-2">Create your account.</h1>
 
           {alreadyRegistered ? (
             <div className="mt-8 space-y-4">
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-                <p className="text-amber-300 text-sm font-medium">You already have a Gold Bridge account.</p>
-                <p className="text-slate-300 text-sm mt-2">Sign in with your existing credentials.</p>
+              <div className="rounded-lg border border-[#b8860b]/30 bg-[rgba(184,134,11,0.10)] p-4">
+                <p className="text-[#b8860b] text-sm font-medium">You already have a Gold Bridge account.</p>
+                <p className="text-[#3a3a3c] text-sm mt-2">Sign in with your existing credentials.</p>
               </div>
               <Link to="/login"><Button className="w-full">Go to sign in <ArrowRight className="w-4 h-4" /></Button></Link>
               <button
                 type="button"
                 onClick={() => { setAlreadyRegistered(false); setError(null); }}
-                className="w-full text-xs text-slate-400 hover:text-amber-400"
+                className="w-full text-xs text-[#6e6e73] hover:text-[#b8860b]"
               >
                 Use a different email
               </button>
             </div>
           ) : (
             <>
-              <div className="mt-6 grid grid-cols-2 gap-2 p-1 bg-slate-900 border border-slate-800 rounded-lg">
+              <div className="mt-6 grid grid-cols-2 gap-2 p-1 bg-white border border-[rgba(0,0,0,0.08)] rounded-lg">
                 <button
                   type="button"
                   onClick={() => { setMethod('email'); setPhoneStep('enter'); setCode(''); resetMessages(); }}
-                  className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-medium transition-colors ${method === 'email' ? 'bg-amber-400 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                  className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-medium transition-colors ${method === 'email' ? 'bg-[#b8860b] text-white' : 'text-[#6e6e73] hover:text-[#1d1d1f]'}`}
                 >
                   <Mail className="w-3.5 h-3.5" /> Email
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMethod('phone'); resetMessages(); }}
-                  className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-medium transition-colors ${method === 'phone' ? 'bg-amber-400 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                  className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs font-medium transition-colors ${method === 'phone' ? 'bg-[#b8860b] text-white' : 'text-[#6e6e73] hover:text-[#1d1d1f]'}`}
                 >
                   <Phone className="w-3.5 h-3.5" /> Phone
                 </button>
@@ -220,11 +220,11 @@ export default function Signup() {
                   </Field>
                   {error && <p className="text-sm text-red-400">{error}</p>}
                   <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Sending code…' : <>Send code <ArrowRight className="w-4 h-4" /></>}</Button>
-                  <p className="text-xs text-slate-500 text-center">We'll text you a 6-digit verification code.</p>
+                  <p className="text-xs text-[#86868b] text-center">We'll text you a 6-digit verification code.</p>
                 </form>
               ) : (
                 <form onSubmit={verifyOtp} className="mt-6 space-y-4">
-                  <p className="text-xs text-slate-400">Code sent to <span className="text-white font-mono">{phone}</span></p>
+                  <p className="text-xs text-[#6e6e73]">Code sent to <span className="text-[#1d1d1f] font-mono">{phone}</span></p>
                   <Field label="Verification code">
                     <Input
                       value={code}
@@ -240,14 +240,14 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => { setPhoneStep('enter'); setCode(''); resetMessages(); }}
-                    className="w-full text-xs text-slate-400 hover:text-amber-400"
+                    className="w-full text-xs text-[#6e6e73] hover:text-[#b8860b]"
                   >
                     Use a different number
                   </button>
                 </form>
               )}
 
-              <p className="mt-6 text-xs text-slate-400 text-center">Already have an account? <Link to="/login" className="text-amber-400 hover:underline">Sign in</Link></p>
+              <p className="mt-6 text-xs text-[#6e6e73] text-center">Already have an account? <Link to="/login" className="text-[#b8860b] hover:underline">Sign in</Link></p>
             </>
           )}
         </div>

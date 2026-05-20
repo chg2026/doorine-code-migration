@@ -20,7 +20,7 @@ export default function AdminShell({ children }) {
   if (!state.loaded) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-32 text-slate-400 font-mono text-xs tracking-wide">Loading…</div>
+        <div className="flex items-center justify-center py-32 text-[#6e6e73] font-mono text-xs tracking-wide">Loading…</div>
       </Layout>
     );
   }

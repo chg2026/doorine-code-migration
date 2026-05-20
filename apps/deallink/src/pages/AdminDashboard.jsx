@@ -36,13 +36,13 @@ export default function AdminDashboard() {
 
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by address, city, ZIP..." className="pl-9" />
         </div>
         <div className="flex gap-2 flex-wrap">
           {['All', ...DEAL_STATUSES].map((s) => (
             <button key={s} onClick={() => setFilter(s)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${filter === s ? 'bg-amber-400 text-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'}`}>
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${filter === s ? 'bg-[#b8860b] text-white' : 'bg-[rgba(0,0,0,0.06)] text-[#6e6e73] border border-[rgba(0,0,0,0.08)] hover:text-[#1d1d1f]'}`}>
               {s} {s !== 'All' ? counts[s] || 0 : state.deals.length}
             </button>
           ))}
@@ -60,36 +60,36 @@ export default function AdminDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Property</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell">Asking</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden md:table-cell">ARV</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden lg:table-cell">Details</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                <tr className="border-b border-[rgba(0,0,0,0.08)]">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider">Property</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider hidden sm:table-cell">Asking</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider hidden md:table-cell">ARV</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider hidden lg:table-cell">Details</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider">Status</th>
                   <th className="px-5 py-3 w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-[rgba(0,0,0,0.08)]">
                 {filtered.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-800/50 transition-colors">
+                  <tr key={d.id} className="hover:bg-[rgba(0,0,0,0.03)] transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-4 h-4 text-slate-400" />
+                        <div className="w-9 h-9 bg-[rgba(0,0,0,0.06)] rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-4 h-4 text-[#6e6e73]" />
                         </div>
                         <div className="min-w-0">
-                          <Link to={`/admin/deal/${d.id}`} className="text-white text-sm font-medium hover:text-amber-400 truncate block">{d.addr || '—'}</Link>
-                          <p className="text-slate-400 text-xs truncate">{[d.city, d.state || d.zip].filter(Boolean).join(', ')} · {d.type}</p>
+                          <Link to={`/admin/deal/${d.id}`} className="text-[#1d1d1f] text-sm font-medium hover:text-[#b8860b] truncate block">{d.addr || '—'}</Link>
+                          <p className="text-[#6e6e73] text-xs truncate">{[d.city, d.state || d.zip].filter(Boolean).join(', ')} · {d.type}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 hidden sm:table-cell"><p className="text-white text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p></td>
+                    <td className="px-5 py-4 hidden sm:table-cell"><p className="text-[#1d1d1f] text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p></td>
                     <td className="px-5 py-4 hidden md:table-cell">
                       <p className="text-green-400 text-sm font-semibold">${Number(d.arv || 0).toLocaleString()}</p>
-                      {d.arv > 0 && d.ask > 0 && <p className="text-slate-500 text-xs">{Math.round((d.arv - d.ask) / d.arv * 100)}% spread</p>}
+                      {d.arv > 0 && d.ask > 0 && <p className="text-[#86868b] text-xs">{Math.round((d.arv - d.ask) / d.arv * 100)}% spread</p>}
                     </td>
                     <td className="px-5 py-4 hidden lg:table-cell">
-                      <div className="flex items-center gap-3 text-slate-400 text-xs">
+                      <div className="flex items-center gap-3 text-[#6e6e73] text-xs">
                         {d.beds > 0 && <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{d.beds}</span>}
                         {d.baths > 0 && <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{d.baths}</span>}
                         {d.sqft > 0 && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{Number(d.sqft).toLocaleString()}</span>}
@@ -97,18 +97,18 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-5 py-4"><StatusBadge status={d.status} /></td>
                     <td className="px-5 py-4 relative">
-                      <button onClick={() => setMenu(menu === d.id ? null : d.id)} className="text-slate-400 hover:text-white"><MoreVertical className="w-4 h-4" /></button>
+                      <button onClick={() => setMenu(menu === d.id ? null : d.id)} className="text-[#6e6e73] hover:text-[#1d1d1f]"><MoreVertical className="w-4 h-4" /></button>
                       {menu === d.id && (
-                        <div className="absolute right-2 top-12 z-20 bg-slate-800 border border-slate-700 rounded-lg min-w-[180px] py-1 shadow-xl text-xs" onMouseLeave={() => setMenu(null)}>
-                          <Link to={`/admin/deal/${d.id}`} className="block px-3 py-2 text-slate-300 hover:bg-slate-700">Edit</Link>
-                          {state.profile.handle && <Link to={`/p/${state.profile.handle}/${d.id}`} target="_blank" className="block px-3 py-2 text-slate-300 hover:bg-slate-700">View public ↗</Link>}
-                          <button onClick={() => { dispatch({ type: 'update_profile', patch: { featuredId: d.id } }); setMenu(null); show('Featured updated'); }} className="block w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-700">Set as featured</button>
-                          <div className="border-t border-slate-700 my-1" />
+                        <div className="absolute right-2 top-12 z-20 bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] rounded-lg min-w-[180px] py-1 shadow-xl text-xs" onMouseLeave={() => setMenu(null)}>
+                          <Link to={`/admin/deal/${d.id}`} className="block px-3 py-2 text-[#3a3a3c] hover:bg-[rgba(0,0,0,0.08)]">Edit</Link>
+                          {state.profile.handle && <Link to={`/p/${state.profile.handle}/${d.id}`} target="_blank" className="block px-3 py-2 text-[#3a3a3c] hover:bg-[rgba(0,0,0,0.08)]">View public ↗</Link>}
+                          <button onClick={() => { dispatch({ type: 'update_profile', patch: { featuredId: d.id } }); setMenu(null); show('Featured updated'); }} className="block w-full text-left px-3 py-2 text-[#3a3a3c] hover:bg-[rgba(0,0,0,0.08)]">Set as featured</button>
+                          <div className="border-t border-[rgba(0,0,0,0.08)] my-1" />
                           {DEAL_STATUSES.filter((s) => s !== d.status).map((s) => (
-                            <button key={s} onClick={() => { dispatch({ type: 'update_deal', id: d.id, patch: { status: s } }); setMenu(null); show(`Marked ${s}`); }} className="block w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-700">Mark {s}</button>
+                            <button key={s} onClick={() => { dispatch({ type: 'update_deal', id: d.id, patch: { status: s } }); setMenu(null); show(`Marked ${s}`); }} className="block w-full text-left px-3 py-2 text-[#3a3a3c] hover:bg-[rgba(0,0,0,0.08)]">Mark {s}</button>
                           ))}
-                          <div className="border-t border-slate-700 my-1" />
-                          <button onClick={() => { if (confirm('Delete this deal?')) { dispatch({ type: 'remove_deal', id: d.id }); setMenu(null); show('Deal deleted'); } }} className="block w-full text-left px-3 py-2 text-red-400 hover:bg-slate-700">Delete</button>
+                          <div className="border-t border-[rgba(0,0,0,0.08)] my-1" />
+                          <button onClick={() => { if (confirm('Delete this deal?')) { dispatch({ type: 'remove_deal', id: d.id }); setMenu(null); show('Deal deleted'); } }} className="block w-full text-left px-3 py-2 text-red-400 hover:bg-[rgba(0,0,0,0.08)]">Delete</button>
                         </div>
                       )}
                     </td>

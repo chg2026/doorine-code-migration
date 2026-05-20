@@ -44,17 +44,17 @@ export default function BuyerDashboard() {
     return (
       <Shell>
         <div className="max-w-md mx-auto text-center py-24">
-          <div className="inline-flex w-12 h-12 rounded-full bg-slate-800 items-center justify-center mb-4">
-            <ShieldCheck className="w-5 h-5 text-slate-500" />
+          <div className="inline-flex w-12 h-12 rounded-full bg-[rgba(0,0,0,0.06)] items-center justify-center mb-4">
+            <ShieldCheck className="w-5 h-5 text-[#86868b]" />
           </div>
-          <h1 className="text-xl font-semibold text-white mb-2">Buyer dashboard</h1>
-          <p className="text-sm text-slate-400 mb-6">
+          <h1 className="text-xl font-semibold text-[#1d1d1f] mb-2">Buyer dashboard</h1>
+          <p className="text-sm text-[#6e6e73] mb-6">
             Start by clicking an REI Flywheel link from a wholesaler.
           </p>
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="px-4 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
+            className="px-4 py-2 rounded-lg bg-[#b8860b] text-white font-semibold hover:opacity-90"
           >
             Back to REI Flywheel
           </button>
@@ -75,22 +75,22 @@ export default function BuyerDashboard() {
   return (
     <Shell>
       <header className="mb-6">
-        <p className="text-xs uppercase tracking-wider text-amber-400 font-semibold">Buyer dashboard</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mt-1">Welcome, {displayName}</h1>
-        <p className="text-sm text-slate-400 mt-1">Your shared deals and submitted offers in one place.</p>
+        <p className="text-xs uppercase tracking-wider text-[#b8860b] font-semibold">Buyer dashboard</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#1d1d1f] mt-1">Welcome, {displayName}</h1>
+        <p className="text-sm text-[#6e6e73] mt-1">Your shared deals and submitted offers in one place.</p>
       </header>
 
       {/* Stats row */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
         <StatCard label="Deals shared with me" value={sharedDeals.length} icon={Building2} />
         <StatCard label="Offers sent"          value={offers.length}      icon={Send} />
-        <StatCard label="Best spread"          value={bestSpread > 0 ? fmtUsd(bestSpread) : '—'} icon={ListChecks} accent="text-amber-400" />
+        <StatCard label="Best spread"          value={bestSpread > 0 ? fmtUsd(bestSpread) : '—'} icon={ListChecks} accent="text-[#b8860b]" />
       </section>
 
       {/* Shared deals */}
       <section className="mb-8">
-        <h2 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-amber-400" /> Deals shared with me
+        <h2 className="text-[#1d1d1f] font-semibold text-sm mb-3 flex items-center gap-2">
+          <Building2 className="w-4 h-4 text-[#b8860b]" /> Deals shared with me
         </h2>
         {sharedDeals.length === 0 ? (
           <Empty body="No deals shared with you yet. Ask a wholesaler for their REI Flywheel link." />
@@ -103,19 +103,19 @@ export default function BuyerDashboard() {
                 <Link
                   key={id || i}
                   to={id ? `/im/${id}` : '#'}
-                  className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 hover:border-amber-400/40"
+                  className="flex items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3 hover:border-[#b8860b]/40"
                 >
-                  <div className="w-9 h-9 rounded-md border border-slate-800 bg-slate-900/60 flex items-center justify-center text-amber-400">
+                  <div className="w-9 h-9 rounded-md border border-[rgba(0,0,0,0.08)] bg-white/60 flex items-center justify-center text-[#b8860b]">
                     <Building2 className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white font-medium truncate">{addr}</p>
-                    <p className="text-xs text-slate-500 font-mono mt-0.5">
+                    <p className="text-sm text-[#1d1d1f] font-medium truncate">{addr}</p>
+                    <p className="text-xs text-[#86868b] font-mono mt-0.5">
                       {d.ask != null && <>Asking {fmtUsd(d.ask)} · </>}
                       {fmtRelative(d.at)}
                     </p>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-500" />
+                  <ArrowRight className="w-4 h-4 text-[#86868b]" />
                 </Link>
               );
             })}
@@ -125,8 +125,8 @@ export default function BuyerDashboard() {
 
       {/* My offers */}
       <section className="mb-8">
-        <h2 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
-          <Send className="w-4 h-4 text-amber-400" /> My offers
+        <h2 className="text-[#1d1d1f] font-semibold text-sm mb-3 flex items-center gap-2">
+          <Send className="w-4 h-4 text-[#b8860b]" /> My offers
         </h2>
         {offers.length === 0 ? (
           <Empty body="You haven't sent any offers yet." />
@@ -135,15 +135,15 @@ export default function BuyerDashboard() {
             {offers.map((o, i) => (
               <div
                 key={o.id || i}
-                className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3"
+                className="flex items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-white font-medium truncate">{o.addr || o.deal_addr || `Deal ${o.dealId || o.deal_id || ''}`}</p>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">
+                  <p className="text-sm text-[#1d1d1f] font-medium truncate">{o.addr || o.deal_addr || `Deal ${o.dealId || o.deal_id || ''}`}</p>
+                  <p className="text-xs text-[#86868b] font-mono mt-0.5">
                     Offer {fmtUsd(o.amount)} · {o.buyer_type || o.buyerType || 'Buyer'} · {fmtRelative(o.at || o.created_at)}
                   </p>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-amber-400/30 text-amber-300 bg-amber-400/10">
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-[#b8860b]/30 text-[#b8860b] bg-[rgba(184,134,11,0.10)]">
                   Sent
                 </span>
               </div>
@@ -153,24 +153,24 @@ export default function BuyerDashboard() {
       </section>
 
       {/* Wholesaler unlock */}
-      <section className="rounded-xl border border-amber-400/30 bg-amber-400/[0.06] p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <section className="rounded-xl border border-[#b8860b]/30 bg-[#b8860b]/[0.06] p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-amber-400 mt-0.5" />
+          <ShieldCheck className="w-5 h-5 text-[#b8860b] mt-0.5" />
           <div>
-            <p className="text-white font-semibold">Are you a wholesaler?</p>
-            <p className="text-sm text-slate-300">Unlock the full REI Flywheel toolkit — list deals, build a buyer network, share IMs.</p>
+            <p className="text-[#1d1d1f] font-semibold">Are you a wholesaler?</p>
+            <p className="text-sm text-[#3a3a3c]">Unlock the full REI Flywheel toolkit — list deals, build a buyer network, share IMs.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => navigate('/signup')}
-          className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
+          className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#b8860b] text-white font-semibold hover:opacity-90"
         >
           Yes, unlock <ArrowRight className="w-4 h-4" />
         </button>
       </section>
 
-      <footer className="text-center text-[11px] text-slate-500 py-8">
+      <footer className="text-center text-[11px] text-[#86868b] py-8">
         Powered by REI Flywheel
       </footer>
     </Shell>
@@ -179,9 +179,9 @@ export default function BuyerDashboard() {
 
 function Shell({ children }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="px-4 py-3 border-b border-slate-800/60 flex items-center justify-center">
-        <div className="text-amber-400 font-bold tracking-wide text-sm">REI Flywheel</div>
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <header className="px-4 py-3 border-b border-[rgba(0,0,0,0.08)]/60 flex items-center justify-center">
+        <div className="text-[#b8860b] font-bold tracking-wide text-sm">REI Flywheel</div>
       </header>
       <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
     </div>
@@ -190,13 +190,13 @@ function Shell({ children }) {
 
 function StatCard({ label, value, icon: Icon, accent }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-md border border-slate-800 bg-slate-900/60 flex items-center justify-center text-amber-400">
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/60 p-4 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-md border border-[rgba(0,0,0,0.08)] bg-white/60 flex items-center justify-center text-[#b8860b]">
         <Icon className="w-4 h-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-        <p className={`text-xl font-bold mt-0.5 ${accent || 'text-white'}`}>{value}</p>
+        <p className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</p>
+        <p className={`text-xl font-bold mt-0.5 ${accent || 'text-[#1d1d1f]'}`}>{value}</p>
       </div>
     </div>
   );
@@ -204,8 +204,8 @@ function StatCard({ label, value, icon: Icon, accent }) {
 
 function Empty({ body }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/40 p-6 text-center">
-      <p className="text-sm text-slate-400">{body}</p>
+    <div className="rounded-lg border border-dashed border-[rgba(0,0,0,0.08)] bg-white/40 p-6 text-center">
+      <p className="text-sm text-[#6e6e73]">{body}</p>
     </div>
   );
 }

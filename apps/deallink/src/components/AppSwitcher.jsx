@@ -59,7 +59,7 @@ export default function AppSwitcher({ currentProduct = 'deallink', enabledProduc
         title="Switch app"
         aria-label="Switch app"
         aria-expanded={open}
-        className="p-1.5 rounded-md hover:bg-slate-800 transition-colors flex items-center justify-center"
+        className="p-1.5 rounded-md hover:bg-[rgba(0,0,0,0.06)] transition-colors flex items-center justify-center"
       >
         <LayoutGrid className="w-5 h-5" style={{ color: iconColor }} />
       </button>
@@ -70,7 +70,7 @@ export default function AppSwitcher({ currentProduct = 'deallink', enabledProduc
           className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl border border-slate-200 z-50 overflow-hidden"
         >
           <div className="px-4 py-2.5 border-b border-slate-100">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Switch app</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#86868b]">Switch app</p>
           </div>
           <div className="py-1.5">
             {visible.map((p) => {
@@ -88,17 +88,17 @@ export default function AppSwitcher({ currentProduct = 'deallink', enabledProduc
                   }`}
                 >
                   <div
-                    className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 text-white font-bold text-sm"
+                    className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 text-[#1d1d1f] font-bold text-sm"
                     style={{ backgroundColor: p.color }}
                   >
                     {p.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
+                      <p className="text-sm font-semibold text-[#1d1d1f] truncate">{p.name}</p>
                       {isCurrent && <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />}
                     </div>
-                    <p className="text-xs text-slate-500 truncate">{p.tagline}</p>
+                    <p className="text-xs text-[#86868b] truncate">{p.tagline}</p>
                   </div>
                 </button>
               );

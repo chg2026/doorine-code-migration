@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, Button, Input, Modal, Field, Select, Texta
 import { formatRelTime } from '../lib/utils.js';
 
 const STATUS_CFG = {
-  Pending:   { color: 'bg-amber-400/20 text-amber-300', icon: Clock },
+  Pending:   { color: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b]', icon: Clock },
   Accepted:  { color: 'bg-green-400/20 text-green-300', icon: CheckCircle2 },
   Rejected:  { color: 'bg-red-400/20 text-red-300',     icon: XCircle },
   Countered: { color: 'bg-blue-400/20 text-blue-300',   icon: MessageSquare },
@@ -38,8 +38,8 @@ export default function Offers() {
             <Card key={s} className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-xs">{s}</p>
-                  <p className="text-white text-2xl font-bold mt-1">{counts[s] || 0}</p>
+                  <p className="text-[#6e6e73] text-xs">{s}</p>
+                  <p className="text-[#1d1d1f] text-2xl font-bold mt-1">{counts[s] || 0}</p>
                 </div>
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${STATUS_CFG[s].color}`}><Icon className="w-4 h-4" /></div>
               </div>
@@ -51,32 +51,32 @@ export default function Offers() {
       <Card>
         <CardHeader><CardTitle>All offers</CardTitle></CardHeader>
         {offers.length === 0 ? (
-          <div className="px-5 py-12 text-center text-slate-500 text-sm">No offers yet.</div>
+          <div className="px-5 py-12 text-center text-[#86868b] text-sm">No offers yet.</div>
         ) : (
-          <div className="divide-y divide-slate-700">
+          <div className="divide-y divide-[rgba(0,0,0,0.08)]">
             {offers.map((o) => {
               const deal = o.dealId ? dealMap[o.dealId] : null;
               const cfg = STATUS_CFG[o.status] || STATUS_CFG.Pending;
               const Icon = cfg.icon;
               return (
-                <div key={o.id} className="px-5 py-4 hover:bg-slate-800/50 transition-colors flex items-center gap-4">
-                  <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-4 h-4 text-slate-400" />
+                <div key={o.id} className="px-5 py-4 hover:bg-[rgba(0,0,0,0.03)] transition-colors flex items-center gap-4">
+                  <div className="w-10 h-10 bg-[rgba(0,0,0,0.06)] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-4 h-4 text-[#6e6e73]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-white text-sm font-medium truncate">{deal ? deal.addr : '— deal removed —'}</p>
-                    <p className="text-slate-400 text-xs truncate flex items-center gap-1.5"><User className="w-3 h-3" /> {o.buyerName || 'Anonymous buyer'}</p>
+                    <p className="text-[#1d1d1f] text-sm font-medium truncate">{deal ? deal.addr : '— deal removed —'}</p>
+                    <p className="text-[#6e6e73] text-xs truncate flex items-center gap-1.5"><User className="w-3 h-3" /> {o.buyerName || 'Anonymous buyer'}</p>
                   </div>
                   <div className="text-right hidden md:block">
-                    <p className="text-white text-sm font-semibold">${Number(o.amount).toLocaleString()}</p>
-                    {deal && <p className="text-slate-500 text-xs">vs ${Number(deal.ask || 0).toLocaleString()} ask</p>}
+                    <p className="text-[#1d1d1f] text-sm font-semibold">${Number(o.amount).toLocaleString()}</p>
+                    {deal && <p className="text-[#86868b] text-xs">vs ${Number(deal.ask || 0).toLocaleString()} ask</p>}
                   </div>
                   <Select value={o.status} onChange={(e) => dispatch({ type: 'update_offer', id: o.id, patch: { status: e.target.value } })} className="w-32">
                     {STATUSES.map((s) => <option key={s}>{s}</option>)}
                   </Select>
                   <div className={`text-xs px-2 py-1 rounded-full font-medium hidden lg:flex items-center gap-1 ${cfg.color}`}><Icon className="w-3 h-3" />{o.status}</div>
-                  <span className="text-slate-500 text-xs hidden xl:block">{formatRelTime(o.createdAt)}</span>
-                  <button onClick={() => { if (confirm('Delete this offer?')) { dispatch({ type: 'remove_offer', id: o.id }); show('Offer deleted'); } }} className="text-slate-400 hover:text-red-400 transition-colors">
+                  <span className="text-[#86868b] text-xs hidden xl:block">{formatRelTime(o.createdAt)}</span>
+                  <button onClick={() => { if (confirm('Delete this offer?')) { dispatch({ type: 'remove_offer', id: o.id }); show('Offer deleted'); } }} className="text-[#6e6e73] hover:text-red-400 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

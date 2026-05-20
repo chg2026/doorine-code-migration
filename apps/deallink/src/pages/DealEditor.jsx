@@ -40,12 +40,12 @@ export default function DealEditor({ mode }) {
   React.useEffect(() => { if (mode === 'edit' && existing) setForm(existing); }, [mode, existing]);
 
   if (mode === 'edit' && !state.loaded) {
-    return <Layout><div className="py-32 text-center text-slate-400 text-xs font-mono">Loading deal…</div></Layout>;
+    return <Layout><div className="py-32 text-center text-[#6e6e73] text-xs font-mono">Loading deal…</div></Layout>;
   }
   if (mode === 'edit' && !existing) {
     return <Layout>
       <div className="py-32 text-center">
-        <p className="text-white text-lg">Deal not found</p>
+        <p className="text-[#1d1d1f] text-lg">Deal not found</p>
         <Link to="/admin"><Button variant="secondary" className="mt-4">Back to properties</Button></Link>
       </div>
     </Layout>;
@@ -90,8 +90,8 @@ export default function DealEditor({ mode }) {
     <Layout>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <Link to="/admin" className="text-slate-400 text-xs hover:text-amber-400 flex items-center gap-1.5"><ArrowLeft className="w-3 h-3" /> Properties</Link>
-          <h1 className="text-2xl font-bold text-white mt-2">{mode === 'new' ? 'New deal' : (form.addr || 'Edit deal')}</h1>
+          <Link to="/admin" className="text-[#6e6e73] text-xs hover:text-[#b8860b] flex items-center gap-1.5"><ArrowLeft className="w-3 h-3" /> Properties</Link>
+          <h1 className="text-2xl font-bold text-[#1d1d1f] mt-2">{mode === 'new' ? 'New deal' : (form.addr || 'Edit deal')}</h1>
         </div>
         <div className="flex gap-2">
           {mode === 'edit' && (
@@ -108,7 +108,7 @@ export default function DealEditor({ mode }) {
       )}
 
       {mode === 'edit' && existing && (
-        <div className="border-b border-slate-800 mb-5 flex items-center gap-6">
+        <div className="border-b border-[rgba(0,0,0,0.08)] mb-5 flex items-center gap-6">
           {[
             { k: 'overview', label: 'Overview' },
             { k: 'analysis', label: 'Deal analysis' },
@@ -121,13 +121,13 @@ export default function DealEditor({ mode }) {
                 key={t.k}
                 onClick={() => setTab(t.k)}
                 className={`relative pb-3 text-sm font-medium transition-colors ${
-                  active ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                  active ? 'text-[#1d1d1f]' : 'text-[#6e6e73] hover:text-[#3a3a3c]'
                 }`}
               >
                 {t.label}
                 <span
                   className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full ${
-                    active ? 'bg-amber-400' : 'bg-transparent'
+                    active ? 'bg-[#b8860b]' : 'bg-transparent'
                   }`}
                 />
               </button>
@@ -144,28 +144,28 @@ export default function DealEditor({ mode }) {
             {(mode !== 'edit' || tab === 'overview') && (<>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Address</h3>
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Address</h3>
               <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_80px] gap-3">
                 <Field label="Street"><Input value={form.addr} onChange={(e) => patch({ addr: e.target.value })} placeholder="2418 Wentworth Ave" /></Field>
                 <Field label="City"><Input value={form.city} onChange={(e) => patch({ city: e.target.value })} placeholder="Dallas" /></Field>
                 <Field label="State"><Input value={form.state} onChange={(e) => patch({ state: e.target.value.toUpperCase() })} maxLength={2} placeholder="TX" /></Field>
                 <Field label="ZIP"><Input value={form.zip} onChange={(e) => patch({ zip: e.target.value })} placeholder="75215" /></Field>
               </div>
-              <label className={`flex items-center gap-2 mt-3 text-xs ${hideStreetLocked ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400'}`}>
+              <label className={`flex items-center gap-2 mt-3 text-xs ${hideStreetLocked ? 'text-[#6e6e73] cursor-not-allowed' : 'text-[#6e6e73]'}`}>
                 <input
                   type="checkbox"
                   checked={!!form.hideStreet}
                   disabled={hideStreetLocked}
                   onChange={(e) => patch({ hideStreet: e.target.checked })}
-                  className="w-4 h-4 accent-amber-400 disabled:opacity-40"
+                  className="w-4 h-4 accent-[#b8860b] disabled:opacity-40"
                 />
                 Hide street number on public profile
-                {hideStreetLocked && <span className="text-amber-400 ml-1">(Free plan: 1 hidden deal max — upgrade for unlimited)</span>}
+                {hideStreetLocked && <span className="text-[#b8860b] ml-1">(Free plan: 1 hidden deal max — upgrade for unlimited)</span>}
               </label>
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Specs</h3>
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Specs</h3>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 <Field label="Type"><Select value={form.type} onChange={(e) => patch({ type: e.target.value })}><option>SFR</option><option>MF</option><option>DUP</option></Select></Field>
                 <Field label="Units"><Input type="number" min="1" value={form.units} onChange={(e) => patch({ units: e.target.value })} /></Field>
@@ -177,18 +177,18 @@ export default function DealEditor({ mode }) {
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Pricing & status</h3>
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Pricing & status</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Field label="Asking ($)"><Input type="number" min="0" step="1000" value={form.ask} onChange={(e) => patch({ ask: e.target.value })} placeholder="100000" /></Field>
                 <Field label="ARV ($)"><Input type="number" min="0" step="1000" value={form.arv} onChange={(e) => patch({ arv: e.target.value })} placeholder="150000" /></Field>
                 <Field label="Access"><Select value={form.access} onChange={(e) => patch({ access: e.target.value })}><option>Lockbox</option><option>Tenant</option><option>Call</option><option>Agent</option></Select></Field>
                 <Field label="Status"><Select value={form.status} onChange={(e) => patch({ status: e.target.value })}>{DEAL_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select></Field>
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-3">Spread: <b className={spread > 0 ? 'text-green-400' : 'text-red-400'}>${spread.toLocaleString()}</b></p>
+              <p className="text-xs text-[#6e6e73] font-mono mt-3">Spread: <b className={spread > 0 ? 'text-green-400' : 'text-red-400'}>${spread.toLocaleString()}</b></p>
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Description</h3>
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Description</h3>
               <Field label="Short description (1–2 lines, shown on the marketplace)">
                 <Textarea rows={2} value={form.description} onChange={(e) => patch({ description: e.target.value })} placeholder="Vacant SFR, cosmetic rehab, motivated seller." />
               </Field>
@@ -198,17 +198,17 @@ export default function DealEditor({ mode }) {
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Marketplace</h3>
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Marketplace</h3>
               <label className="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800 text-amber-400 focus:ring-amber-400"
+                  className="mt-1 h-4 w-4 rounded border-[rgba(0,0,0,0.10)] bg-[rgba(0,0,0,0.06)] text-[#b8860b] focus:ring-[#b8860b]"
                   checked={form.marketplaceVisible !== false}
                   onChange={(e) => patch({ marketplaceVisible: e.target.checked })}
                 />
                 <span>
-                  <span className="block text-sm text-white font-medium">Show on marketplace</span>
-                  <span className="block text-xs text-slate-400 mt-0.5">
+                  <span className="block text-sm text-[#1d1d1f] font-medium">Show on marketplace</span>
+                  <span className="block text-xs text-[#6e6e73] mt-0.5">
                     When on, this deal appears on the cross-wholesaler marketplace (provided your profile is opted in).
                   </span>
                 </span>
@@ -216,7 +216,7 @@ export default function DealEditor({ mode }) {
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Tags</h3>
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Tags</h3>
               <Field label="Tags (comma-sep)">
                 <Input
                   value={(form.tags || []).join(', ')}
@@ -227,8 +227,8 @@ export default function DealEditor({ mode }) {
             </section>
 
             <section>
-              <h3 className="text-white font-semibold text-sm mb-3">Photos</h3>
-              <p className="text-xs text-slate-500 mb-3">
+              <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Photos</h3>
+              <p className="text-xs text-[#86868b] mb-3">
                 Upload up to 12 photos. Drag to reorder — the first photo is your cover image
                 (shown as the thumbnail on your public profile and on the buyer-facing IM).
               </p>
@@ -291,17 +291,17 @@ export default function DealEditor({ mode }) {
           <Card>
             <CardHeader><CardTitle>Live preview</CardTitle></CardHeader>
             <CardBody>
-              <div className="rounded-lg overflow-hidden border border-slate-700">
-                <div className="h-32 bg-slate-800 flex items-center justify-center">
-                  {(form.photos?.[0] || form.photoUrl) ? <img src={form.photos?.[0] || form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-slate-600" />}
+              <div className="rounded-lg overflow-hidden border border-[rgba(0,0,0,0.08)]">
+                <div className="h-32 bg-[rgba(0,0,0,0.06)] flex items-center justify-center">
+                  {(form.photos?.[0] || form.photoUrl) ? <img src={form.photos?.[0] || form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-[#6e6e73]" />}
                 </div>
                 <div className="p-3">
-                  <div className="flex items-center justify-between"><p className="text-white text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
-                  <p className="text-slate-400 text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
-                  <p className="text-white font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-slate-400 font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
+                  <div className="flex items-center justify-between"><p className="text-[#1d1d1f] text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
+                  <p className="text-[#6e6e73] text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
+                  <p className="text-[#1d1d1f] font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-[#6e6e73] font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
                 </div>
               </div>
-              <p className="text-xs text-slate-500 mt-3">This is what buyers see on your public profile.</p>
+              <p className="text-xs text-[#86868b] mt-3">This is what buyers see on your public profile.</p>
             </CardBody>
           </Card>
         </div>
@@ -369,17 +369,17 @@ function _LegacyShareIMModal_unused({ open, onClose, deal, onSave, show }) {
               <label
                 key={t.key}
                 className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border cursor-pointer ${
-                  value ? 'border-amber-400/30 bg-amber-400/5' : 'border-slate-700 bg-slate-800/40'
+                  value ? 'border-[#b8860b]/30 bg-[#b8860b]/5' : 'border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.06)]/40'
                 }`}
               >
-                <span className="text-sm text-slate-200">{t.label}</span>
+                <span className="text-sm text-[#3a3a3c]">{t.label}</span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={value}
                   onClick={() => setCfg((c) => ({ ...c, [t.key]: !c[t.key] }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    value ? 'bg-amber-400' : 'bg-slate-700'
+                    value ? 'bg-[#b8860b]' : 'bg-[rgba(0,0,0,0.08)]'
                   }`}
                 >
                   <span
@@ -394,7 +394,7 @@ function _LegacyShareIMModal_unused({ open, onClose, deal, onSave, show }) {
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Shareable link</p>
+          <p className="text-xs uppercase tracking-wider text-[#86868b] mb-2">Shareable link</p>
           <div className="flex items-center gap-2">
             <Input value={shareUrl} readOnly onFocus={(e) => e.target.select()} className="font-mono text-xs" />
             <Button variant="secondary" onClick={copy} title="Copy link">
@@ -506,9 +506,9 @@ function deriveMetrics(s) {
 const STRATEGY_BADGE = {
   rental:     { label: 'Rental',      cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
   brrrr:      { label: 'BRRRR',       cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
-  flip:       { label: 'Fix & Flip',  cls: 'bg-amber-400/20 text-amber-300 border-amber-400/40' },
+  flip:       { label: 'Fix & Flip',  cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40' },
   multi:      { label: 'Multifamily', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
-  commercial: { label: 'Commercial',  cls: 'bg-slate-500/20 text-slate-300 border-slate-500/40' },
+  commercial: { label: 'Commercial',  cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40' },
 };
 
 function fmtSavedAt(iso) {
@@ -541,18 +541,18 @@ function DealAnalysisSection({ deal, onDelete }) {
   if (analyses.length === 0) {
     return (
       <section>
-        <h3 className="text-white font-semibold text-sm mb-3">Deal analysis</h3>
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
-          <p className="text-sm text-slate-400 mb-3">
+        <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Deal analysis</h3>
+        <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 p-4">
+          <p className="text-sm text-[#6e6e73] mb-3">
             No analysis saved yet.
           </p>
           <Link
             to={`/deal-analyzer/${deal.id}`}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-sm hover:border-amber-400 hover:text-amber-200"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#b8860b]/60 bg-white text-[#b8860b] text-sm hover:border-[#b8860b] hover:text-[#b8860b]"
           >
             <Calculator className="w-3.5 h-3.5" /> Run one in the Deal Analyzer
           </Link>
-          <p className="text-xs text-slate-500 mt-2">
+          <p className="text-xs text-[#86868b] mt-2">
             Opens the analyzer prefilled with this property's address, ask, and ARV.
           </p>
         </div>
@@ -563,13 +563,13 @@ function DealAnalysisSection({ deal, onDelete }) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-amber-400" /> Saved analyses
-          <span className="text-[11px] text-slate-500 font-normal">({analyses.length})</span>
+        <h3 className="text-[#1d1d1f] font-semibold text-sm flex items-center gap-2">
+          <Calculator className="w-4 h-4 text-[#b8860b]" /> Saved analyses
+          <span className="text-[11px] text-[#86868b] font-normal">({analyses.length})</span>
         </h3>
         <Link
           to={`/deal-analyzer/${deal.id}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400 text-slate-900 text-xs font-semibold hover:bg-amber-300"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#b8860b] text-white text-xs font-semibold hover:opacity-90"
         >
           <Calculator className="w-3.5 h-3.5" /> New analysis
         </Link>
@@ -597,7 +597,7 @@ function DealAnalysisSection({ deal, onDelete }) {
 function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
   const a = analysis;
   const strategy = a.strategy || (a.summary && a.summary.strategy) || 'rental';
-  const badge = STRATEGY_BADGE[strategy] || { label: strategy, cls: 'bg-slate-500/20 text-slate-300 border-slate-500/40' };
+  const badge = STRATEGY_BADGE[strategy] || { label: strategy, cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40' };
   const isFlip = strategy === 'flip';
 
   const m = deriveMetrics(a);
@@ -606,7 +606,7 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
   const previewTone = previewValue >= 0 ? 'text-emerald-300' : 'text-rose-300';
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 overflow-hidden">
+    <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3">
         <button
           onClick={onToggle}
@@ -616,19 +616,19 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
             {badge.label}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-slate-400 truncate">{fmtSavedAt(a.savedAt)}</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              <span className="text-slate-400">{previewLabel}:</span>{' '}
+            <p className="text-xs text-[#6e6e73] truncate">{fmtSavedAt(a.savedAt)}</p>
+            <p className="text-[11px] text-[#86868b] mt-0.5">
+              <span className="text-[#6e6e73]">{previewLabel}:</span>{' '}
               <span className={`font-mono font-semibold ${previewTone}`}>{fmtSignedUsd(previewValue)}</span>
             </p>
           </div>
           <ChevronRight
-            className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            className={`w-4 h-4 text-[#86868b] flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
           />
         </button>
         <button
           onClick={onDelete}
-          className="text-slate-500 hover:text-rose-300 p-1.5 rounded hover:bg-slate-800 flex-shrink-0"
+          className="text-[#86868b] hover:text-rose-300 p-1.5 rounded hover:bg-[rgba(0,0,0,0.06)] flex-shrink-0"
           title="Delete this analysis"
         >
           <Trash2 className="w-4 h-4" />
@@ -636,7 +636,7 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-1 border-t border-slate-800">
+        <div className="px-4 pb-4 pt-1 border-t border-[rgba(0,0,0,0.08)]">
           <SavedAnalysisReport analysis={a} deal={deal} />
         </div>
       )}
@@ -668,7 +668,7 @@ function SavedAnalysisReport({ analysis, deal }) {
         { label: 'Net Profit',        value: fmtSignedUsd(m.flipNetProfit), tone: tonePos(m.flipNetProfit) },
         { label: 'Total ROI',         value: fmtPct(m.flipROI),             tone: tonePos(m.flipROI) },
         { label: 'Annualized ROI',    value: fmtPct(m.flipAnnROI),          tone: tonePos(m.flipAnnROI) },
-        { label: 'Total Investment',  value: fmtUsd(m.flipInvestment),      tone: 'text-white' },
+        { label: 'Total Investment',  value: fmtUsd(m.flipInvestment),      tone: 'text-[#1d1d1f]' },
       ]
     : [
         { label: 'Monthly Cash Flow',     value: fmtSignedUsd(m.monthlyCashFlow), tone: tonePos(m.monthlyCashFlow) },
@@ -698,25 +698,25 @@ function SavedAnalysisReport({ analysis, deal }) {
   return (
     <section className="space-y-5">
       {/* ─── Header ──────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-400/[0.06] to-slate-900/40 p-5">
+      <div className="rounded-xl border border-[#b8860b]/30 bg-gradient-to-br from-[rgba(184,134,11,0.08)] to-white p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Calculator className="w-4 h-4 text-amber-400" />
-              <span className="text-[10px] uppercase tracking-wider text-amber-300 font-semibold">
+              <Calculator className="w-4 h-4 text-[#b8860b]" />
+              <span className="text-[10px] uppercase tracking-wider text-[#b8860b] font-semibold">
                 {strategyLabel} Analysis
               </span>
             </div>
-            <h3 className="text-white font-semibold text-base truncate">
+            <h3 className="text-[#1d1d1f] font-semibold text-base truncate">
               {addressLine || 'Untitled property'}
             </h3>
             {savedDate && (
-              <p className="text-xs text-slate-400 mt-1">Saved on {savedDate}</p>
+              <p className="text-xs text-[#6e6e73] mt-1">Saved on {savedDate}</p>
             )}
           </div>
           <Link
             to={`/deal-analyzer/${deal.id}`}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-amber-400 text-slate-900 text-xs font-semibold hover:bg-amber-300 flex-shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-[#b8860b] text-white text-xs font-semibold hover:opacity-90 flex-shrink-0"
           >
             <Calculator className="w-3.5 h-3.5" /> Re-run analysis
           </Link>
@@ -725,11 +725,11 @@ function SavedAnalysisReport({ analysis, deal }) {
 
       {/* ─── Key Metrics (2x2) ───────────────────────────────────── */}
       <div>
-        <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Key Metrics</h4>
+        <h4 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2">Key Metrics</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {keyMetrics.map((k) => (
-            <div key={k.label} className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
-              <p className="text-[11px] uppercase tracking-wider text-slate-500">{k.label}</p>
+            <div key={k.label} className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 p-4">
+              <p className="text-[11px] uppercase tracking-wider text-[#86868b]">{k.label}</p>
               <p className={`text-xl font-semibold mt-1 ${k.tone}`}>{k.value}</p>
             </div>
           ))}
@@ -738,14 +738,14 @@ function SavedAnalysisReport({ analysis, deal }) {
 
       {/* ─── Investment Summary ──────────────────────────────────── */}
       <div>
-        <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Investment Summary</h4>
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 divide-y divide-slate-800">
+        <h4 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2">Investment Summary</h4>
+        <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 divide-y divide-[rgba(0,0,0,0.08)]">
           {investmentRows.map((row) => (
             <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
-              <span className={`text-sm ${row.strong ? 'text-white font-semibold' : 'text-slate-300'}`}>
+              <span className={`text-sm ${row.strong ? 'text-[#1d1d1f] font-semibold' : 'text-[#3a3a3c]'}`}>
                 {row.label}
               </span>
-              <span className={`text-sm font-mono ${row.tone || (row.strong ? 'text-amber-300 font-semibold' : 'text-white')}`}>
+              <span className={`text-sm font-mono ${row.tone || (row.strong ? 'text-[#b8860b] font-semibold' : 'text-[#1d1d1f]')}`}>
                 {row.value}
               </span>
             </div>
@@ -756,25 +756,25 @@ function SavedAnalysisReport({ analysis, deal }) {
       {/* ─── Rehab Breakdown ─────────────────────────────────────── */}
       {rehabItems.length > 0 && (
         <div>
-          <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Rehab Breakdown</h4>
-          <div className="rounded-lg border border-slate-800 bg-slate-900/40 overflow-hidden">
-            <div className="grid grid-cols-12 px-4 py-2 bg-slate-900/60 border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+          <h4 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2">Rehab Breakdown</h4>
+          <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 overflow-hidden">
+            <div className="grid grid-cols-12 px-4 py-2 bg-white/60 border-b border-[rgba(0,0,0,0.08)] text-[10px] uppercase tracking-wider text-[#86868b] font-semibold">
               <div className="col-span-4">Category</div>
               <div className="col-span-6">Description</div>
               <div className="col-span-2 text-right">Cost</div>
             </div>
-            <div className="divide-y divide-slate-800">
+            <div className="divide-y divide-[rgba(0,0,0,0.08)]">
               {rehabItems.map((i, idx) => (
                 <div key={i.id || idx} className="grid grid-cols-12 px-4 py-2.5 text-sm">
-                  <div className="col-span-4 text-slate-300">{i.category || '—'}</div>
-                  <div className="col-span-6 text-slate-400">{i.description || '—'}</div>
-                  <div className="col-span-2 text-right font-mono text-white">{fmtUsd(Number(i.cost) || 0)}</div>
+                  <div className="col-span-4 text-[#3a3a3c]">{i.category || '—'}</div>
+                  <div className="col-span-6 text-[#6e6e73]">{i.description || '—'}</div>
+                  <div className="col-span-2 text-right font-mono text-[#1d1d1f]">{fmtUsd(Number(i.cost) || 0)}</div>
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-12 px-4 py-2.5 bg-slate-900/60 border-t border-slate-800">
-              <div className="col-span-10 text-sm text-white font-semibold">Total</div>
-              <div className="col-span-2 text-right text-sm font-mono text-amber-300 font-semibold">{fmtUsd(rehabTotal)}</div>
+            <div className="grid grid-cols-12 px-4 py-2.5 bg-white/60 border-t border-[rgba(0,0,0,0.08)]">
+              <div className="col-span-10 text-sm text-[#1d1d1f] font-semibold">Total</div>
+              <div className="col-span-2 text-right text-sm font-mono text-[#b8860b] font-semibold">{fmtUsd(rehabTotal)}</div>
             </div>
           </div>
         </div>
@@ -784,7 +784,7 @@ function SavedAnalysisReport({ analysis, deal }) {
       <div className="flex items-center gap-3 pt-1">
         <Link
           to={`/deal-analyzer/${deal.id}`}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-amber-400/60 bg-slate-900 text-amber-300 text-xs hover:border-amber-400 hover:text-amber-200"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#b8860b]/60 bg-white text-[#b8860b] text-xs hover:border-[#b8860b] hover:text-[#b8860b]"
         >
           <Calculator className="w-3.5 h-3.5" /> Re-run analysis
         </Link>
@@ -804,23 +804,23 @@ function DealAnalysisCallout({ deal }) {
 
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Deal analysis</p>
+      <p className="text-[10px] uppercase tracking-wider text-[#86868b] mb-2">Deal analysis</p>
       {runDate ? (
-        <div className="rounded-lg border-l-2 border-amber-400 bg-amber-400/[0.06] p-3 flex items-start gap-2">
-          <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Analysis was run on <span className="font-semibold text-amber-300">{runDate}</span>. Edit it anytime in the{' '}
-            <Link to={`/deal-analyzer/${deal.id}`} className="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+        <div className="rounded-lg border-l-2 border-[#b8860b] bg-[#b8860b]/[0.06] p-3 flex items-start gap-2">
+          <Info className="w-4 h-4 text-[#b8860b] flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-[#3a3a3c] leading-relaxed">
+            Analysis was run on <span className="font-semibold text-[#b8860b]">{runDate}</span>. Edit it anytime in the{' '}
+            <Link to={`/deal-analyzer/${deal.id}`} className="text-[#b8860b] hover:text-[#b8860b] underline underline-offset-2">
               Deal Analyzer
             </Link>.
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 flex items-start gap-2">
-          <Calculator className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-400 leading-relaxed">
+        <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 p-3 flex items-start gap-2">
+          <Calculator className="w-4 h-4 text-[#86868b] flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-[#6e6e73] leading-relaxed">
             No analysis saved yet.{' '}
-            <Link to={`/deal-analyzer/${deal.id}`} className="text-amber-300 hover:text-amber-200 underline underline-offset-2">
+            <Link to={`/deal-analyzer/${deal.id}`} className="text-[#b8860b] hover:text-[#b8860b] underline underline-offset-2">
               Run one in the Deal Analyzer
             </Link>.
           </p>
@@ -833,8 +833,8 @@ function DealAnalysisCallout({ deal }) {
 function SummaryStat({ label, value, tone }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`text-sm font-semibold mt-0.5 ${tone || 'text-white'}`}>{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</p>
+      <p className={`text-sm font-semibold mt-0.5 ${tone || 'text-[#1d1d1f]'}`}>{value}</p>
     </div>
   );
 }
@@ -893,10 +893,10 @@ function _LegacyIMSharePanel_unused({ deal, onChange, show }) {
 
   return (
     <section id="im-share-panel" className="rounded-lg p-3 -m-3 transition-shadow scroll-mt-6">
-      <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
-        <Share2 className="w-4 h-4 text-amber-400" /> Investment Memorandum
+      <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3 flex items-center gap-2">
+        <Share2 className="w-4 h-4 text-[#b8860b]" /> Investment Memorandum
       </h3>
-      <p className="text-xs text-slate-400 mb-3">
+      <p className="text-xs text-[#6e6e73] mb-3">
         Generate a shareable buyer-facing link for this deal. Buyers verify by SMS, then see the IM with only the fields you allow below.
       </p>
 
@@ -917,18 +917,18 @@ function _LegacyIMSharePanel_unused({ deal, onChange, show }) {
               href={shareUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-400/40"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-[rgba(0,0,0,0.08)] text-[#3a3a3c] hover:text-[#b8860b] hover:border-[#b8860b]/40"
               title="Open preview"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>
-          <p className="text-[11px] text-slate-500 font-mono">slug: {slug}</p>
+          <p className="text-[11px] text-[#86868b] font-mono">slug: {slug}</p>
         </div>
       )}
 
       <div className="mt-5">
-        <div className="text-xs uppercase tracking-wider text-slate-500 mb-2">Visibility on the IM page</div>
+        <div className="text-xs uppercase tracking-wider text-[#86868b] mb-2">Visibility on the IM page</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {IM_TOGGLES.map((t) => {
             const value = !!deal[t.key];
@@ -937,19 +937,19 @@ function _LegacyIMSharePanel_unused({ deal, onChange, show }) {
               <label
                 key={t.key}
                 className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md border ${
-                  value ? 'border-amber-400/30 bg-amber-400/5' : 'border-slate-700 bg-slate-800/40'
+                  value ? 'border-[#b8860b]/30 bg-[#b8860b]/5' : 'border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.06)]/40'
                 } ${isSaving ? 'opacity-60' : ''}`}
               >
-                <span className="text-sm text-slate-200">
+                <span className="text-sm text-[#3a3a3c]">
                   {t.label}
-                  {t.sensitive && <span className="ml-1.5 text-[10px] uppercase tracking-wider text-amber-400">sensitive</span>}
+                  {t.sensitive && <span className="ml-1.5 text-[10px] uppercase tracking-wider text-[#b8860b]">sensitive</span>}
                 </span>
                 <input
                   type="checkbox"
                   checked={value}
                   disabled={isSaving}
                   onChange={(e) => toggle(t.key, e.target.checked)}
-                  className="w-4 h-4 accent-amber-400"
+                  className="w-4 h-4 accent-[#b8860b]"
                 />
               </label>
             );
@@ -971,11 +971,11 @@ function _LegacyIMSharePanel_unused({ deal, onChange, show }) {
 // that's the next task.
 
 const CATEGORY_STYLES = {
-  Contract:   { cls: 'bg-amber-400/20 text-amber-300 border-amber-400/40',     Icon: FileBadge },
+  Contract:   { cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40',     Icon: FileBadge },
   Inspection: { cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30',           Icon: FileCheck2 },
   Photos:     { cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', Icon: FileImage },
   Title:      { cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30',  Icon: Scroll },
-  Other:      { cls: 'bg-slate-500/20 text-slate-300 border-slate-500/40',     Icon: FileText },
+  Other:      { cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40',     Icon: FileText },
 };
 
 function fmtBytes(n) {
@@ -1093,14 +1093,14 @@ function DealDocumentsSection({ deal, show }) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-          <FileText className="w-4 h-4 text-amber-400" /> Documents
-          <span className="text-[11px] text-slate-500 font-normal">({docs.length})</span>
+        <h3 className="text-[#1d1d1f] font-semibold text-sm flex items-center gap-2">
+          <FileText className="w-4 h-4 text-[#b8860b]" /> Documents
+          <span className="text-[11px] text-[#86868b] font-normal">({docs.length})</span>
         </h3>
         {!uploadOpen && (
           <button
             onClick={() => setUploadOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400 text-slate-900 text-xs font-semibold hover:bg-amber-300"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#b8860b] text-white text-xs font-semibold hover:opacity-90"
           >
             <Upload className="w-3.5 h-3.5" /> Upload document
           </button>
@@ -1108,14 +1108,14 @@ function DealDocumentsSection({ deal, show }) {
       </div>
 
       {uploadOpen && (
-        <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4 space-y-3">
+        <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/60 p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
             <Field label="File">
               <input
                 ref={fileRef}
                 type="file"
                 onChange={(e) => pickFile(e.target.files?.[0])}
-                className="block w-full text-sm text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-slate-800 file:text-slate-200 file:text-xs file:font-semibold hover:file:bg-slate-700"
+                className="block w-full text-sm text-[#3a3a3c] file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-[rgba(0,0,0,0.06)] file:text-[#3a3a3c] file:text-xs file:font-semibold hover:file:bg-[rgba(0,0,0,0.08)]"
               />
             </Field>
             <Field label="Category">
@@ -1141,12 +1141,12 @@ function DealDocumentsSection({ deal, show }) {
       )}
 
       {loading ? (
-        <div className="text-xs text-slate-500 font-mono py-6 text-center">Loading documents…</div>
+        <div className="text-xs text-[#86868b] font-mono py-6 text-center">Loading documents…</div>
       ) : docs.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 p-8 text-center">
-          <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-          <p className="text-sm text-slate-400">No documents yet.</p>
-          <p className="text-xs text-slate-500 mt-1">Upload contracts, inspections, photos, or title docs to keep them with this deal.</p>
+        <div className="rounded-lg border border-dashed border-[rgba(0,0,0,0.08)] bg-white/40 p-8 text-center">
+          <FileText className="w-8 h-8 text-[#6e6e73] mx-auto mb-2" />
+          <p className="text-sm text-[#6e6e73]">No documents yet.</p>
+          <p className="text-xs text-[#86868b] mt-1">Upload contracts, inspections, photos, or title docs to keep them with this deal.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -1156,26 +1156,26 @@ function DealDocumentsSection({ deal, show }) {
             return (
               <div
                 key={d.id}
-                className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 hover:border-slate-700"
+                className="flex items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3 hover:border-[rgba(0,0,0,0.08)]"
               >
                 <div className={`flex items-center justify-center w-9 h-9 rounded-md border ${style.cls}`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-white font-medium truncate">{d.name}</p>
+                    <p className="text-sm text-[#1d1d1f] font-medium truncate">{d.name}</p>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${style.cls} font-semibold uppercase tracking-wide`}>
                       {d.category}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">
+                  <p className="text-xs text-[#86868b] font-mono mt-0.5">
                     {fmtBytes(d.fileSizeBytes)} · {fmtDocDate(d.createdAt)}
                   </p>
                 </div>
                 <button
                   onClick={() => download(d)}
                   disabled={busyId === d.id}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-[#3a3a3c] hover:text-[#1d1d1f] hover:bg-[rgba(0,0,0,0.06)] disabled:opacity-50"
                   title="Download"
                 >
                   <Download className="w-3.5 h-3.5" /> Download
@@ -1274,7 +1274,7 @@ function DealIMSection({ deal, onSave, show }) {
 
   return (
     <section className="space-y-5">
-      <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-2">
+      <div className="flex items-center justify-between gap-4 border-b border-[rgba(0,0,0,0.08)] pb-2">
         <div className="flex items-center gap-6">
           {[
             { k: 'builder', label: 'Memo builder', Icon: FileSignature },
@@ -1287,14 +1287,14 @@ function DealIMSection({ deal, onSave, show }) {
                 key={s.k}
                 onClick={() => setSub(s.k)}
                 className={`relative pb-2 flex items-center gap-2 text-sm font-medium transition-colors ${
-                  active ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'
+                  active ? 'text-[#b8860b]' : 'text-[#6e6e73] hover:text-[#3a3a3c]'
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 {s.label}
                 <span
                   className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full ${
-                    active ? 'bg-amber-400' : 'bg-transparent'
+                    active ? 'bg-[#b8860b]' : 'bg-transparent'
                   }`}
                 />
               </button>
@@ -1367,7 +1367,7 @@ function ShareIMButton({ deal, onSave, show }) {
       </button>
       {error && <span className="text-[11px] text-red-400">{error}</span>}
       {slug && !error && (
-        <span className="text-[11px] text-slate-500 max-w-[280px] truncate" title={shareUrl}>
+        <span className="text-[11px] text-[#86868b] max-w-[280px] truncate" title={shareUrl}>
           {shareUrl}
         </span>
       )}
@@ -1419,9 +1419,9 @@ function IMLivePreview({ deal }) {
   const arvSpreadPct = ask > 0 ? (spread / ask) * 100 : 0;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-[#f5f5f7]/40 overflow-hidden">
       {/* Buyer-view banner so the wholesaler knows this is a preview. */}
-      <div className="bg-amber-400/10 border-b border-amber-400/20 px-4 py-2 flex items-center gap-2 text-xs text-amber-300">
+      <div className="bg-[rgba(184,134,11,0.10)] border-b border-[#b8860b]/20 px-4 py-2 flex items-center gap-2 text-xs text-[#b8860b]">
         <Eye className="w-3.5 h-3.5" />
         Buyer view — this is exactly what investors see.
       </div>
@@ -1429,10 +1429,10 @@ function IMLivePreview({ deal }) {
       <div className="p-6 space-y-6">
         {/* ─── Hero ───────────────────────────────────────────────────── */}
         <header className="space-y-1.5">
-          <h2 className="text-2xl font-bold text-white">
-            {addrLine} <span className="text-amber-400">— Investment Opportunity</span>
+          <h2 className="text-2xl font-bold text-[#1d1d1f]">
+            {addrLine} <span className="text-[#b8860b]">— Investment Opportunity</span>
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[#6e6e73]">
             {cityLine || 'Location pending'} · {specsLine}
           </p>
         </header>
@@ -1455,12 +1455,12 @@ function IMLivePreview({ deal }) {
                   return (
                     <div
                       key={i}
-                      className="aspect-video rounded-lg border border-slate-800 bg-slate-900 flex items-center justify-center overflow-hidden relative"
+                      className="aspect-video rounded-lg border border-[rgba(0,0,0,0.08)] bg-white flex items-center justify-center overflow-hidden relative"
                     >
                       {url ? (
                         <img src={url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-xs text-slate-600">
+                        <span className="text-xs text-[#6e6e73]">
                           {i === 0 ? 'Main photo' : `Photo ${i + 1}`}
                         </span>
                       )}
@@ -1474,7 +1474,7 @@ function IMLivePreview({ deal }) {
                 })}
               </div>
               {gallery.length === 0 && (
-                <p className="text-[11px] text-slate-500 mt-2">
+                <p className="text-[11px] text-[#86868b] mt-2">
                   Upload photos on the Overview tab to populate the gallery.
                 </p>
               )}
@@ -1484,42 +1484,42 @@ function IMLivePreview({ deal }) {
 
         {/* ─── Description ────────────────────────────────────────────── */}
         {cfg.sections.description && deal.description && (
-          <section className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3">
-            <p className="text-sm text-slate-200 leading-relaxed">{deal.description}</p>
+          <section className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3">
+            <p className="text-sm text-[#3a3a3c] leading-relaxed">{deal.description}</p>
           </section>
         )}
 
         {/* ─── Key metrics ────────────────────────────────────────────── */}
         {cfg.sections.dealNumbers && (
           <section>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Key metrics</p>
+            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">Key metrics</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cfg.fields.showAsking && (
-                <MetricTile label="Asking price" value={fmtUsd(ask)} tone="text-white" />
+                <MetricTile label="Asking price" value={fmtUsd(ask)} tone="text-[#1d1d1f]" />
               )}
               {cfg.fields.showArv && (
                 <MetricTile
                   label="ARV"
                   value={fmtUsd(arv)}
                   hint={ask > 0 ? `${arvSpreadPct.toFixed(0)}% spread` : null}
-                  tone="text-white"
+                  tone="text-[#1d1d1f]"
                 />
               )}
               {capRateNum != null && (
-                <MetricTile label="Cap rate" value={fmtPct(capRateNum)} tone="text-amber-400" />
+                <MetricTile label="Cap rate" value={fmtPct(capRateNum)} tone="text-[#b8860b]" />
               )}
               {metrics && (
                 <MetricTile label="Annual NOI" value={fmtUsd(metrics.noi)} tone="text-emerald-400" />
               )}
               {cfg.fields.showRepair && repair > 0 && (
-                <MetricTile label="Repair cost" value={fmtUsd(repair)} tone="text-white" />
+                <MetricTile label="Repair cost" value={fmtUsd(repair)} tone="text-[#1d1d1f]" />
               )}
               {cfg.fields.showMao && mao > 0 && (
-                <MetricTile label="MAO" value={fmtUsd(mao)} tone="text-amber-400" />
+                <MetricTile label="MAO" value={fmtUsd(mao)} tone="text-[#b8860b]" />
               )}
             </div>
             {!metrics && (cfg.fields.showRepair || cfg.fields.showMao) && (
-              <p className="text-[11px] text-slate-500 mt-2">
+              <p className="text-[11px] text-[#86868b] mt-2">
                 Select a saved analysis on the Memo builder tab to populate cap rate, NOI, repair, and MAO.
               </p>
             )}
@@ -1574,14 +1574,14 @@ function IMLivePreview({ deal }) {
         {/* ─── Deal analysis (full breakdown) ─────────────────────────── */}
         {cfg.sections.dealAnalysis && metrics && (
           <section>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">
+            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">
               Deal analysis · {STRATEGY_LABELS[selectedAnalysis?.strategy] || 'Scenario'}
             </p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <MetricTile label="Monthly cash flow" value={fmtSignedUsd(metrics.monthlyCashFlow)} tone={metrics.monthlyCashFlow >= 0 ? 'text-emerald-400' : 'text-red-400'} />
               <MetricTile label="Annual cash flow" value={fmtSignedUsd(metrics.monthlyCashFlow * 12)} tone={metrics.monthlyCashFlow >= 0 ? 'text-emerald-400' : 'text-red-400'} />
-              <MetricTile label="P&I / mo" value={fmtUsd(metrics.piti)} tone="text-white" />
-              <MetricTile label="Cash to close" value={fmtUsd(metrics.totalCash)} tone="text-white" />
+              <MetricTile label="P&I / mo" value={fmtUsd(metrics.piti)} tone="text-[#1d1d1f]" />
+              <MetricTile label="Cash to close" value={fmtUsd(metrics.totalCash)} tone="text-[#1d1d1f]" />
             </div>
           </section>
         )}
@@ -1589,22 +1589,22 @@ function IMLivePreview({ deal }) {
         {/* ─── Rehab breakdown ────────────────────────────────────────── */}
         {cfg.sections.rehabBreakdown && metrics && Array.isArray(metrics.items) && metrics.items.length > 0 && (
           <section>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Rehab breakdown</p>
-            <div className="rounded-lg border border-slate-800 overflow-hidden">
+            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">Rehab breakdown</p>
+            <div className="rounded-lg border border-[rgba(0,0,0,0.08)] overflow-hidden">
               <table className="w-full text-sm">
                 <tbody>
                   {metrics.items.map((it, i) => {
                     const safe = it && typeof it === 'object' ? it : {};
                     return (
-                      <tr key={i} className={i % 2 ? 'bg-slate-900/40' : ''}>
-                        <td className="px-3 py-2 text-slate-300">{safe.label || safe.name || `Item ${i + 1}`}</td>
-                        <td className="px-3 py-2 text-right text-slate-200 font-mono">{fmtUsd(Number(safe.cost) || 0)}</td>
+                      <tr key={i} className={i % 2 ? 'bg-white/40' : ''}>
+                        <td className="px-3 py-2 text-[#3a3a3c]">{safe.label || safe.name || `Item ${i + 1}`}</td>
+                        <td className="px-3 py-2 text-right text-[#3a3a3c] font-mono">{fmtUsd(Number(safe.cost) || 0)}</td>
                       </tr>
                     );
                   })}
-                  <tr className="bg-amber-400/5 border-t border-amber-400/20">
-                    <td className="px-3 py-2 text-amber-300 font-semibold">Total rehab</td>
-                    <td className="px-3 py-2 text-right text-amber-300 font-semibold font-mono">{fmtUsd(metrics.rehab)}</td>
+                  <tr className="bg-[#b8860b]/5 border-t border-[#b8860b]/20">
+                    <td className="px-3 py-2 text-[#b8860b] font-semibold">Total rehab</td>
+                    <td className="px-3 py-2 text-right text-[#b8860b] font-semibold font-mono">{fmtUsd(metrics.rehab)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1615,9 +1615,9 @@ function IMLivePreview({ deal }) {
         {/* ─── Notes ──────────────────────────────────────────────────── */}
         {cfg.sections.notes && deal.notes && (
           <section>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Notes</p>
-            <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3">
-              <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{deal.notes}</p>
+            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">Notes</p>
+            <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3">
+              <p className="text-sm text-[#3a3a3c] whitespace-pre-wrap leading-relaxed">{deal.notes}</p>
             </div>
           </section>
         )}
@@ -1625,10 +1625,10 @@ function IMLivePreview({ deal }) {
         {/* ─── Documents (placeholder until per-doc IM toggle ships) ──── */}
         {cfg.sections.documents && (
           <section>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Documents</p>
-            <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 px-4 py-5 text-center">
-              <FileText className="w-5 h-5 text-slate-600 mx-auto mb-2" />
-              <p className="text-xs text-slate-400">
+            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">Documents</p>
+            <div className="rounded-lg border border-dashed border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-5 text-center">
+              <FileText className="w-5 h-5 text-[#6e6e73] mx-auto mb-2" />
+              <p className="text-xs text-[#6e6e73]">
                 Per-document visibility ships with the next update — once you opt files in, they'll show here for buyers.
               </p>
             </div>
@@ -1638,17 +1638,17 @@ function IMLivePreview({ deal }) {
         {/* ─── Wholesaler contact ─────────────────────────────────────── */}
         {cfg.sections.wholesalerContact && (
           <section>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Wholesaler contact</p>
-            <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 flex items-center gap-3">
+            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">Wholesaler contact</p>
+            <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3 flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-full bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-amber-300 text-sm font-semibold shrink-0"
+                className="w-10 h-10 rounded-full bg-[#b8860b]/15 border border-[#b8860b]/30 flex items-center justify-center text-[#b8860b] text-sm font-semibold shrink-0"
                 style={profile.avatarUrl ? { background: `center/cover no-repeat url(${profile.avatarUrl})`, border: 'none' } : {}}
               >
                 {!profile.avatarUrl && (profile.name || profile.handle || 'W').slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 text-sm">
-                <p className="text-white font-medium truncate">{profile.name || profile.handle || 'Wholesaler'}</p>
-                <p className="text-xs text-slate-400 truncate">
+                <p className="text-[#1d1d1f] font-medium truncate">{profile.name || profile.handle || 'Wholesaler'}</p>
+                <p className="text-xs text-[#6e6e73] truncate">
                   {profile.handle ? `@${profile.handle}` : ''}{profile.bio ? ` · ${profile.bio}` : ''}
                 </p>
               </div>
@@ -1662,10 +1662,10 @@ function IMLivePreview({ deal }) {
 
 function MetricTile({ label, value, hint, tone }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`text-lg font-semibold mt-1 font-mono ${tone || 'text-white'}`}>{value}</p>
-      {hint && <p className="text-[10px] text-slate-500 mt-0.5">{hint}</p>}
+    <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 px-4 py-3">
+      <p className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</p>
+      <p className={`text-lg font-semibold mt-1 font-mono ${tone || 'text-[#1d1d1f]'}`}>{value}</p>
+      {hint && <p className="text-[10px] text-[#86868b] mt-0.5">{hint}</p>}
     </div>
   );
 }
@@ -1674,19 +1674,19 @@ function DetailTable({ title, rows }) {
   const toneCls = {
     good: 'text-emerald-400',
     bad:  'text-red-400',
-    warn: 'text-amber-400',
-    muted: 'text-slate-500',
+    warn: 'text-[#b8860b]',
+    muted: 'text-[#86868b]',
   };
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{title}</p>
-      <div className="rounded-lg border border-slate-800 overflow-hidden">
+      <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">{title}</p>
+      <div className="rounded-lg border border-[rgba(0,0,0,0.08)] overflow-hidden">
         <table className="w-full text-sm">
           <tbody>
             {rows.map(([label, value, tone], i) => (
-              <tr key={i} className={i % 2 ? 'bg-slate-900/40' : ''}>
-                <td className="px-3 py-2 text-slate-400">{label}</td>
-                <td className={`px-3 py-2 text-right font-mono ${tone ? toneCls[tone] : 'text-slate-200'}`}>{value}</td>
+              <tr key={i} className={i % 2 ? 'bg-white/40' : ''}>
+                <td className="px-3 py-2 text-[#6e6e73]">{label}</td>
+                <td className={`px-3 py-2 text-right font-mono ${tone ? toneCls[tone] : 'text-[#3a3a3c]'}`}>{value}</td>
               </tr>
             ))}
           </tbody>
@@ -1753,7 +1753,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
 
       {/* ─── Public link ───────────────────────────────────────────────── */}
       <div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Public link</p>
+        <p className="text-xs uppercase tracking-wider text-[#86868b] mb-2">Public link</p>
         <div className="flex items-center gap-2">
           <Input value={shareUrl} readOnly onFocus={(e) => e.target.select()} className="font-mono text-xs" />
           <Button variant="secondary" onClick={copyLink} title="Copy link">
@@ -1765,14 +1765,14 @@ function IMMemoBuilder({ deal, onSave, show }) {
               href={shareUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-400/40"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-[rgba(0,0,0,0.08)] text-[#3a3a3c] hover:text-[#b8860b] hover:border-[#b8860b]/40"
               title="Open preview"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
           ) : (
             <span
-              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-800 text-slate-600 cursor-not-allowed"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-[rgba(0,0,0,0.08)] text-[#6e6e73] cursor-not-allowed"
               title="The public IM page hasn't shipped yet — coming with the next sub-task."
               aria-disabled="true"
             >
@@ -1781,7 +1781,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
           )}
         </div>
         {!previewLive && (
-          <p className="text-[11px] text-slate-500 mt-1.5">
+          <p className="text-[11px] text-[#86868b] mt-1.5">
             The public IM page goes live with the next update — copy the link now to share once it ships.
           </p>
         )}
@@ -1789,12 +1789,12 @@ function IMMemoBuilder({ deal, onSave, show }) {
 
       {/* ─── Choose analysis ───────────────────────────────────────────── */}
       <div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Choose analysis</p>
+        <p className="text-xs uppercase tracking-wider text-[#86868b] mb-2">Choose analysis</p>
         {analyses.length === 0 ? (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-5 text-center">
-            <Calculator className="w-5 h-5 text-slate-500 mx-auto mb-2" />
-            <p className="text-sm text-slate-300">No saved analyses yet</p>
-            <p className="text-xs text-slate-500 mt-1">
+          <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.06)]/40 px-4 py-5 text-center">
+            <Calculator className="w-5 h-5 text-[#86868b] mx-auto mb-2" />
+            <p className="text-sm text-[#3a3a3c]">No saved analyses yet</p>
+            <p className="text-xs text-[#86868b] mt-1">
               Save an analysis on the Deal analysis tab to feature it on the IM.
             </p>
           </div>
@@ -1812,37 +1812,37 @@ function IMMemoBuilder({ deal, onSave, show }) {
                   disabled={isSaving}
                   className={`w-full text-left rounded-lg border px-4 py-3 transition-all ${
                     selected
-                      ? 'border-amber-400/60 bg-amber-400/5 ring-1 ring-amber-400/40'
-                      : 'border-slate-700 bg-slate-800/40 hover:border-slate-600'
+                      ? 'border-[#b8860b]/60 bg-[#b8860b]/5 ring-1 ring-[#b8860b]/40'
+                      : 'border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.06)]/40 hover:border-[rgba(0,0,0,0.10)]'
                   } ${isSaving ? 'opacity-60' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm text-white font-medium">
+                      <p className="text-sm text-[#1d1d1f] font-medium">
                         {head?.strategy || 'Analysis'}
-                        {head?.when && <span className="text-slate-400 font-normal ml-2">· {head.when}</span>}
+                        {head?.when && <span className="text-[#6e6e73] font-normal ml-2">· {head.when}</span>}
                       </p>
                       {head?.metrics && (
-                        <p className="text-xs text-slate-400 font-mono mt-1">
+                        <p className="text-xs text-[#6e6e73] font-mono mt-1">
                           CF: <span className={head.metrics.monthlyCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}>
                             {fmtSignedUsd(head.metrics.monthlyCashFlow)}/mo
                           </span>
-                          {' · '}Cap: <span className="text-slate-200">{fmtPct(head.metrics.cap)}</span>
-                          {' · '}ARV: <span className="text-slate-200">{fmtUsd(Number(a.arv) || 0)}</span>
+                          {' · '}Cap: <span className="text-[#3a3a3c]">{fmtPct(head.metrics.cap)}</span>
+                          {' · '}ARV: <span className="text-[#3a3a3c]">{fmtUsd(Number(a.arv) || 0)}</span>
                         </p>
                       )}
                     </div>
                     <span
                       aria-hidden
                       className={`mt-0.5 w-4 h-4 shrink-0 rounded-full border-2 ${
-                        selected ? 'border-amber-400 bg-amber-400' : 'border-slate-600'
+                        selected ? 'border-[#b8860b] bg-[#b8860b]' : 'border-[rgba(0,0,0,0.10)]'
                       }`}
                     />
                   </div>
                 </button>
               );
             })}
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-[#86868b] mt-1">
               Click again to deselect — the IM will skip the analysis section.
             </p>
           </div>
@@ -1851,7 +1851,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
 
       {/* ─── Sections to include ───────────────────────────────────────── */}
       <div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Sections to include</p>
+        <p className="text-xs uppercase tracking-wider text-[#86868b] mb-2">Sections to include</p>
         <div className="space-y-2">
           {IM_SECTIONS.map((s) => {
             const value = !!cfg.sections[s.key];
@@ -1868,7 +1868,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
                 {/* Inline sub-toggles for "Deal numbers" — fine-grained
                     control over which dollar amounts appear on the IM. */}
                 {s.key === 'dealNumbers' && value && (
-                  <div className="mt-3 pl-3 border-l-2 border-amber-400/30 space-y-1.5">
+                  <div className="mt-3 pl-3 border-l-2 border-[#b8860b]/30 space-y-1.5">
                     {IM_NUMBER_FIELDS.map((f) => {
                       const fv = !!cfg.fields[f.key];
                       const fSaving = saving === `fields.${f.key}`;
@@ -1877,10 +1877,10 @@ function IMMemoBuilder({ deal, onSave, show }) {
                           key={f.key}
                           className={`flex items-center justify-between gap-3 py-1 ${fSaving ? 'opacity-60' : ''}`}
                         >
-                          <span className="text-xs text-slate-300">
+                          <span className="text-xs text-[#3a3a3c]">
                             {f.label}
                             {f.sensitive && (
-                              <span className="ml-2 text-[9px] uppercase tracking-wider text-amber-400">sensitive</span>
+                              <span className="ml-2 text-[9px] uppercase tracking-wider text-[#b8860b]">sensitive</span>
                             )}
                           </span>
                           <input
@@ -1888,7 +1888,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
                             checked={fv}
                             disabled={fSaving}
                             onChange={(e) => patchCfg(`fields.${f.key}`, e.target.checked)}
-                            className="w-4 h-4 accent-amber-400"
+                            className="w-4 h-4 accent-[#b8860b]"
                           />
                         </label>
                       );
@@ -1903,7 +1903,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
 
       {/* ─── Privacy ───────────────────────────────────────────────────── */}
       <div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Privacy</p>
+        <p className="text-xs uppercase tracking-wider text-[#86868b] mb-2">Privacy</p>
         <SectionToggleRow
           title="Show street number"
           desc="When off, the address is shown as &quot;— Wow Ave&quot; until a buyer requests details."
@@ -1920,13 +1920,13 @@ function SectionToggleRow({ title, desc, value, disabled, onToggle, children }) 
   return (
     <div
       className={`rounded-lg border px-4 py-3 transition-colors ${
-        value ? 'border-amber-400/30 bg-amber-400/5' : 'border-slate-700 bg-slate-800/40'
+        value ? 'border-[#b8860b]/30 bg-[#b8860b]/5' : 'border-[rgba(0,0,0,0.08)] bg-[rgba(0,0,0,0.06)]/40'
       } ${disabled ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm text-white font-medium">{title}</p>
-          {desc && <p className="text-xs text-slate-400 mt-0.5">{desc}</p>}
+          <p className="text-sm text-[#1d1d1f] font-medium">{title}</p>
+          {desc && <p className="text-xs text-[#6e6e73] mt-0.5">{desc}</p>}
         </div>
         <button
           type="button"
@@ -1935,7 +1935,7 @@ function SectionToggleRow({ title, desc, value, disabled, onToggle, children }) 
           disabled={disabled}
           onClick={onToggle}
           className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            value ? 'bg-amber-400' : 'bg-slate-700'
+            value ? 'bg-[#b8860b]' : 'bg-[rgba(0,0,0,0.08)]'
           }`}
         >
           <span

@@ -32,29 +32,29 @@ export default function AdminLeads() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Name</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell">Contact</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden md:table-cell">Type</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Deal</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider hidden lg:table-cell">When</th>
+                <tr className="border-b border-[rgba(0,0,0,0.08)]">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider">Name</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider hidden sm:table-cell">Contact</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider hidden md:table-cell">Type</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider">Deal</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase tracking-wider hidden lg:table-cell">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-[rgba(0,0,0,0.08)]">
                 {leads.map((l) => {
                   const deal = l.dealId ? dealMap[l.dealId] : null;
                   return (
-                    <tr key={l.id} className="hover:bg-slate-800/50">
-                      <td className="px-5 py-4 text-white text-sm font-medium">{[l.first, l.last].filter(Boolean).join(' ') || '—'}</td>
+                    <tr key={l.id} className="hover:bg-[rgba(0,0,0,0.03)]">
+                      <td className="px-5 py-4 text-[#1d1d1f] text-sm font-medium">{[l.first, l.last].filter(Boolean).join(' ') || '—'}</td>
                       <td className="px-5 py-4 hidden sm:table-cell">
                         <div className="space-y-1">
-                          {l.email && <div className="text-slate-300 text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 text-slate-500" /> {l.email}</div>}
-                          {l.phone && <div className="text-slate-400 text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 text-slate-500" /> {l.phone}</div>}
+                          {l.email && <div className="text-[#3a3a3c] text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 text-[#86868b]" /> {l.email}</div>}
+                          {l.phone && <div className="text-[#6e6e73] text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 text-[#86868b]" /> {l.phone}</div>}
                         </div>
                       </td>
-                      <td className="px-5 py-4 hidden md:table-cell text-slate-300 text-xs">{l.buyerType || '—'}</td>
-                      <td className="px-5 py-4 text-sm">{deal ? <Link className="text-amber-400 hover:underline" to={`/admin/deal/${deal.id}`}>{deal.addr}</Link> : <span className="text-slate-500">Buyer list</span>}</td>
-                      <td className="px-5 py-4 hidden lg:table-cell text-slate-500 text-xs font-mono">{formatRelTime(l.createdAt)}</td>
+                      <td className="px-5 py-4 hidden md:table-cell text-[#3a3a3c] text-xs">{l.buyerType || '—'}</td>
+                      <td className="px-5 py-4 text-sm">{deal ? <Link className="text-[#b8860b] hover:underline" to={`/admin/deal/${deal.id}`}>{deal.addr}</Link> : <span className="text-[#86868b]">Buyer list</span>}</td>
+                      <td className="px-5 py-4 hidden lg:table-cell text-[#86868b] text-xs font-mono">{formatRelTime(l.createdAt)}</td>
                     </tr>
                   );
                 })}

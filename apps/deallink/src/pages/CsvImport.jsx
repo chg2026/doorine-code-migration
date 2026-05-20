@@ -102,27 +102,27 @@ export default function CsvImport() {
       <Layout>
         <Header step={1} />
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4 max-w-2xl mx-auto">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[#6e6e73]">
             New to bulk import? Download a starter CSV with the exact column headers we expect.
           </p>
           <button
             type="button"
             onClick={downloadTemplate}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-900 text-sm font-semibold hover:bg-amber-300"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#b8860b] text-white text-sm font-semibold hover:opacity-90"
           >
             <Download className="w-4 h-4" /> Download CSV template
           </button>
         </div>
         <div className="flex items-center justify-center py-4">
           <label
-            className={`relative cursor-pointer w-full max-w-2xl border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${over ? 'border-amber-400 bg-amber-400/5' : 'border-slate-700 hover:border-slate-500'}`}
+            className={`relative cursor-pointer w-full max-w-2xl border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${over ? 'border-[#b8860b] bg-[#b8860b]/5' : 'border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.12)]'}`}
             onDragOver={(e) => { e.preventDefault(); setOver(true); }}
             onDragLeave={() => setOver(false)}
             onDrop={(e) => { e.preventDefault(); setOver(false); handleFile(e.dataTransfer.files[0]); }}
           >
-            <Upload className="w-10 h-10 mx-auto text-slate-500 mb-3" />
-            <p className="text-white font-semibold">Drop CSV here or click to browse</p>
-            <p className="text-slate-400 text-xs mt-1">Up to 500 rows · max 10 MB</p>
+            <Upload className="w-10 h-10 mx-auto text-[#86868b] mb-3" />
+            <p className="text-[#1d1d1f] font-semibold">Drop CSV here or click to browse</p>
+            <p className="text-[#6e6e73] text-xs mt-1">Up to 500 rows · max 10 MB</p>
             <div className="flex gap-2 justify-center mt-4 flex-wrap">
               <Button variant="secondary" type="button">Browse files</Button>
               <Button variant="secondary" type="button" onClick={(e) => { e.preventDefault(); useSample(); }}><Copy className="w-3 h-3" /> Use sample</Button>
@@ -146,24 +146,24 @@ export default function CsvImport() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Your column</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">REI Flywheel field</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Sample value</th>
+                <tr className="border-b border-[rgba(0,0,0,0.08)]">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">Your column</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">REI Flywheel field</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">Sample value</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-[rgba(0,0,0,0.08)]">
                 {headers.map((h, idx) => {
                   const sample = (dataRows[0] && dataRows[0][idx]) || '—';
                   return (
                     <tr key={h}>
-                      <td className="px-5 py-3 text-white font-mono text-xs">{h}</td>
+                      <td className="px-5 py-3 text-[#1d1d1f] font-mono text-xs">{h}</td>
                       <td className="px-5 py-3 w-64">
                         <Select value={mapping[h] || '__ignore'} onChange={(e) => setMapping({ ...mapping, [h]: e.target.value })}>
                           {FIELDS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
                         </Select>
                       </td>
-                      <td className="px-5 py-3 text-slate-400 font-mono text-xs truncate max-w-[200px]">{sample}</td>
+                      <td className="px-5 py-3 text-[#6e6e73] font-mono text-xs truncate max-w-[200px]">{sample}</td>
                     </tr>
                   );
                 })}
@@ -189,37 +189,37 @@ export default function CsvImport() {
     nav('/admin');
   }
   const ICONS = { ok: CheckCircle2, warn: AlertCircle, err: XCircle, dup: AlertCircle };
-  const COLORS = { ok: 'text-green-400', warn: 'text-amber-400', err: 'text-red-400', dup: 'text-slate-400' };
+  const COLORS = { ok: 'text-green-400', warn: 'text-[#b8860b]', err: 'text-red-400', dup: 'text-[#6e6e73]' };
   const LABELS = { ok: 'Ready', warn: 'Warning', err: 'Error', dup: 'Duplicate' };
 
   return (
     <Layout>
       <Header step={3} filename={filename} onBack={() => setStep(2)} onImport={doImport} importCount={importable.length} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        {[['Ready', summary.ok, 'text-green-400'], ['Warnings', summary.warn, 'text-amber-400'], ['Errors', summary.err, 'text-red-400'], ['Duplicates', summary.dup, 'text-slate-400']].map(([l, n, c]) => (
-          <Card key={l} className="p-4"><p className="text-slate-400 text-xs uppercase">{l}</p><p className={`text-2xl font-bold mt-1 ${c}`}>{n}</p></Card>
+        {[['Ready', summary.ok, 'text-green-400'], ['Warnings', summary.warn, 'text-[#b8860b]'], ['Errors', summary.err, 'text-red-400'], ['Duplicates', summary.dup, 'text-[#6e6e73]']].map(([l, n, c]) => (
+          <Card key={l} className="p-4"><p className="text-[#6e6e73] text-xs uppercase">{l}</p><p className={`text-2xl font-bold mt-1 ${c}`}>{n}</p></Card>
         ))}
       </div>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead><tr className="border-b border-slate-700">
-              <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Address</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">ZIP</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Ask / ARV</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase">Issue</th>
+            <thead><tr className="border-b border-[rgba(0,0,0,0.08)]">
+              <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">Status</th>
+              <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">Address</th>
+              <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">ZIP</th>
+              <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">Ask / ARV</th>
+              <th className="text-left px-5 py-3 text-xs font-medium text-[#6e6e73] uppercase">Issue</th>
             </tr></thead>
-            <tbody className="divide-y divide-slate-700">
+            <tbody className="divide-y divide-[rgba(0,0,0,0.08)]">
               {preview.map((r) => {
                 const Icon = ICONS[r.status];
                 return (
                   <tr key={r.i} className={r.status === 'err' || r.status === 'dup' ? 'opacity-60' : ''}>
                     <td className="px-5 py-3"><span className={`inline-flex items-center gap-1.5 text-xs font-medium uppercase ${COLORS[r.status]}`}><Icon className="w-3 h-3" />{LABELS[r.status]}</span></td>
-                    <td className="px-5 py-3 text-white text-sm">{r.obj.addr || '—'}</td>
-                    <td className="px-5 py-3 text-slate-400 text-xs font-mono">{r.obj.zip || '—'}</td>
-                    <td className="px-5 py-3 text-white text-xs font-mono">{r.obj.ask ? `$${Number(r.obj.ask).toLocaleString()}` : '—'} / <span className="text-slate-400">{r.obj.arv ? `$${Number(r.obj.arv).toLocaleString()}` : '—'}</span></td>
-                    <td className="px-5 py-3 text-xs font-mono text-slate-400">{r.issue || '—'}</td>
+                    <td className="px-5 py-3 text-[#1d1d1f] text-sm">{r.obj.addr || '—'}</td>
+                    <td className="px-5 py-3 text-[#6e6e73] text-xs font-mono">{r.obj.zip || '—'}</td>
+                    <td className="px-5 py-3 text-[#1d1d1f] text-xs font-mono">{r.obj.ask ? `$${Number(r.obj.ask).toLocaleString()}` : '—'} / <span className="text-[#6e6e73]">{r.obj.arv ? `$${Number(r.obj.arv).toLocaleString()}` : '—'}</span></td>
+                    <td className="px-5 py-3 text-xs font-mono text-[#6e6e73]">{r.issue || '—'}</td>
                   </tr>
                 );
               })}
@@ -236,11 +236,11 @@ function Header({ step, filename, count, onBack, onNext, onImport, importCount }
   return (
     <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
       <div>
-        <Link to="/admin" className="text-slate-400 text-xs hover:text-amber-400 flex items-center gap-1.5"><ArrowLeft className="w-3 h-3" /> Properties</Link>
-        <h1 className="text-2xl font-bold text-white mt-2">
+        <Link to="/admin" className="text-[#6e6e73] text-xs hover:text-[#b8860b] flex items-center gap-1.5"><ArrowLeft className="w-3 h-3" /> Properties</Link>
+        <h1 className="text-2xl font-bold text-[#1d1d1f] mt-2">
           {step === 1 ? 'Bulk import' : step === 2 ? 'Match your columns' : 'Review & confirm'}
         </h1>
-        {filename && <p className="text-slate-400 text-xs mt-1 font-mono">{filename}{count != null ? ` · ${count} rows` : ''} · Step {step}/3</p>}
+        {filename && <p className="text-[#6e6e73] text-xs mt-1 font-mono">{filename}{count != null ? ` · ${count} rows` : ''} · Step {step}/3</p>}
       </div>
       <div className="flex gap-2">
         {step >= 2 && <Button variant="secondary" onClick={onBack}>Back</Button>}

@@ -1,0 +1,49 @@
+Go through every file in apps/deallink/src/ and replace all remaining dark Tailwind slate classes with the new light design system. This is a full light-mode migration sweep. Use the mapping below, and use judgment when context is ambiguous.
+
+COLOR MAPPING:
+
+Backgrounds:
+  bg-slate-950       → bg-[#f5f5f7]
+  bg-slate-900       → bg-white  (use bg-[#f5f5f7] if it's a full-page wrapper, bg-white if it's a card or panel)
+  bg-slate-800       → bg-[rgba(0,0,0,0.06)]
+  bg-slate-800/50    → bg-[rgba(0,0,0,0.03)]
+  bg-slate-700       → bg-[rgba(0,0,0,0.08)]
+  hover:bg-slate-900 → hover:bg-[rgba(0,0,0,0.04)]
+  hover:bg-slate-800 → hover:bg-[rgba(0,0,0,0.06)]
+  hover:bg-slate-700 → hover:bg-[rgba(0,0,0,0.06)]
+
+Borders:
+  border-slate-700   → border-[rgba(0,0,0,0.08)]
+  border-slate-800   → border-[rgba(0,0,0,0.08)]
+  border-slate-900   → border-[rgba(0,0,0,0.10)]
+  divide-slate-700   → divide-[rgba(0,0,0,0.08)]
+  divide-slate-800   → divide-[rgba(0,0,0,0.08)]
+
+Text:
+  text-white         → text-[#1d1d1f]  (EXCEPTION: leave text-white if the element sits on a dark/colored background like a gold button, badge, or avatar circle)
+  text-slate-100     → text-[#1d1d1f]
+  text-slate-200     → text-[#3a3a3c]
+  text-slate-300     → text-[#3a3a3c]
+  text-slate-400     → text-[#6e6e73]
+  text-slate-500     → text-[#86868b]
+  hover:text-white   → hover:text-[#1d1d1f]
+  hover:text-slate-300 → hover:text-[#3a3a3c]
+
+Amber/accent — unify all amber to the new dark gold:
+  text-amber-400     → text-[#b8860b]
+  text-amber-300     → text-[#b8860b]
+  bg-amber-400       → bg-[#b8860b]  (EXCEPTION: leave bg-amber-400 on avatar circles and icon squares that already have text-white on them — just change to bg-[#b8860b])
+  hover:bg-amber-300 → hover:opacity-90
+  bg-amber-400/10    → bg-[rgba(184,134,11,0.10)]
+  bg-amber-400/20    → bg-[rgba(184,134,11,0.10)]
+  border-amber-400   → border-[#b8860b]
+  focus:border-amber-400 → focus:border-[#b8860b]
+  ring-amber-400     → ring-[#b8860b]
+
+Keep unchanged:
+  bg-black/60  bg-black/70  (modal/overlay backdrops)
+  text-green-400  text-green-300  text-blue-400  text-red-400  text-red-500  (status colors — keep as-is)
+  bg-green-*  bg-blue-*  bg-red-*  (status colors)
+  Any color applied to public-facing pages: PublicProfile.jsx, IMDeal.jsx, Landing.jsx — leave those files completely untouched.
+
+Only edit files inside apps/deallink/. Do not touch any other folder.

@@ -102,7 +102,7 @@ export default function Layout({ children }) {
       <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.10)]">
         <Link to="/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-[#b8860b] rounded-lg flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
+            <Building2 className="w-5 h-5 text-[#1d1d1f]" />
           </div>
           <span className="text-[#1d1d1f] font-bold text-lg tracking-tight">REI <span className="text-[#b8860b]">Flywheel</span></span>
         </Link>

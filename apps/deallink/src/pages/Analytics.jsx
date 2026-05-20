@@ -16,11 +16,11 @@ function StatCard({ label, value, sub, icon: Icon }) {
     <Card className="p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-slate-400 text-xs uppercase tracking-wider">{label}</p>
-          <p className="text-white text-2xl font-bold mt-2">{value}</p>
-          {sub && <p className="text-slate-500 text-xs mt-1">{sub}</p>}
+          <p className="text-[#6e6e73] text-xs uppercase tracking-wider">{label}</p>
+          <p className="text-[#1d1d1f] text-2xl font-bold mt-2">{value}</p>
+          {sub && <p className="text-[#86868b] text-xs mt-1">{sub}</p>}
         </div>
-        <div className="w-9 h-9 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center"><Icon className="w-4 h-4" /></div>
+        <div className="w-9 h-9 rounded-lg bg-[rgba(184,134,11,0.10)] text-[#b8860b] flex items-center justify-center"><Icon className="w-4 h-4" /></div>
       </div>
     </Card>
   );
@@ -101,7 +101,7 @@ export default function Analytics() {
           <CardHeader><CardTitle>Deals by type</CardTitle></CardHeader>
           <div className="p-5 h-72">
             {byType.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-500 text-sm">No data yet</div>
+              <div className="h-full flex items-center justify-center text-[#86868b] text-sm">No data yet</div>
             ) : (
               <ResponsiveContainer>
                 <PieChart>
@@ -120,7 +120,7 @@ export default function Analytics() {
         <CardHeader><CardTitle>Activity trend (last 6 months)</CardTitle></CardHeader>
         <div className="p-5 h-72">
           {trend.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-slate-500 text-sm">No data yet</div>
+            <div className="h-full flex items-center justify-center text-[#86868b] text-sm">No data yet</div>
           ) : (
             <ResponsiveContainer>
               <LineChart data={trend}>

@@ -28,14 +28,14 @@ export default function GodMode() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Hot markets</CardTitle><span className="text-xs text-amber-400 flex items-center gap-1.5"><Activity className="w-3 h-3" /> Live</span></CardHeader>
-          <div className="divide-y divide-slate-700">
+          <CardHeader><CardTitle>Hot markets</CardTitle><span className="text-xs text-[#b8860b] flex items-center gap-1.5"><Activity className="w-3 h-3" /> Live</span></CardHeader>
+          <div className="divide-y divide-[rgba(0,0,0,0.08)]">
             {markets.map((m) => (
-              <div key={m.name} className="px-5 py-3 flex items-center gap-4 hover:bg-slate-800/30">
-                <div className={`w-2 h-8 rounded-full ${m.hot ? 'bg-amber-400' : 'bg-slate-600'}`} />
+              <div key={m.name} className="px-5 py-3 flex items-center gap-4 hover:bg-[rgba(0,0,0,0.06)]/30">
+                <div className={`w-2 h-8 rounded-full ${m.hot ? 'bg-[#b8860b]' : 'bg-[rgba(0,0,0,0.10)]'}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium flex items-center gap-1.5"><MapPin className="w-3 h-3 text-slate-500" />{m.name}</p>
-                  <p className="text-slate-500 text-xs mt-0.5">{m.deals} active deals · avg ARV ${m.avgArv}k</p>
+                  <p className="text-[#1d1d1f] text-sm font-medium flex items-center gap-1.5"><MapPin className="w-3 h-3 text-[#86868b]" />{m.name}</p>
+                  <p className="text-[#86868b] text-xs mt-0.5">{m.deals} active deals · avg ARV ${m.avgArv}k</p>
                 </div>
                 <span className={`text-xs font-mono font-bold flex items-center gap-1 ${m.trend.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}><TrendingUp className="w-3 h-3" /> {m.trend}</span>
               </div>
@@ -44,15 +44,15 @@ export default function GodMode() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Off-market signals</CardTitle><Eye className="w-4 h-4 text-amber-400" /></CardHeader>
+          <CardHeader><CardTitle>Off-market signals</CardTitle><Eye className="w-4 h-4 text-[#b8860b]" /></CardHeader>
           <div className="p-5 space-y-3">
             {signals.map((s, i) => (
-              <div key={i} className="p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <div key={i} className="p-3 bg-[rgba(0,0,0,0.03)] border border-[rgba(0,0,0,0.08)] rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-amber-400 text-xs font-bold uppercase">{s.kind}</span>
-                  <span className="text-slate-500 text-xs">{s.ts}</span>
+                  <span className="text-[#b8860b] text-xs font-bold uppercase">{s.kind}</span>
+                  <span className="text-[#86868b] text-xs">{s.ts}</span>
                 </div>
-                <p className="text-white text-sm mt-1">{s.addr}</p>
+                <p className="text-[#1d1d1f] text-sm mt-1">{s.addr}</p>
               </div>
             ))}
           </div>

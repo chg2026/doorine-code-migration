@@ -53,57 +53,57 @@ export default function Marketplace() {
       <div className="flex gap-2 flex-wrap mb-6">
         {['All', ...types].map((t) => (
           <button key={t} onClick={() => setFilter(t)}
-            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${filter === t ? 'bg-amber-400 text-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'}`}>
+            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${filter === t ? 'bg-[#b8860b] text-white' : 'bg-[rgba(0,0,0,0.06)] text-[#6e6e73] border border-[rgba(0,0,0,0.08)] hover:text-[#1d1d1f]'}`}>
             {t}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <Card className="text-center py-16 text-slate-400 font-mono text-xs">Loading marketplace…</Card>
+        <Card className="text-center py-16 text-[#6e6e73] font-mono text-xs">Loading marketplace…</Card>
       ) : error ? (
         <Card className="text-center py-16 text-red-400 text-sm">{error}</Card>
       ) : filtered.length === 0 ? (
         <Card className="text-center py-16">
-          <Globe className="w-10 h-10 mx-auto text-slate-600" />
-          <p className="text-white font-semibold mt-4">No deals on the marketplace yet</p>
-          <p className="text-slate-400 text-sm mt-2">{optedIn ? 'Add deals to your inventory and they\'ll show up here.' : 'Opt in to be the first to share.'}</p>
+          <Globe className="w-10 h-10 mx-auto text-[#6e6e73]" />
+          <p className="text-[#1d1d1f] font-semibold mt-4">No deals on the marketplace yet</p>
+          <p className="text-[#6e6e73] text-sm mt-2">{optedIn ? 'Add deals to your inventory and they\'ll show up here.' : 'Opt in to be the first to share.'}</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map((d) => (
-            <Card key={d.id} className="overflow-hidden hover:border-slate-500 transition-colors group">
-              <div className="relative h-40 bg-slate-800 flex items-center justify-center">
+            <Card key={d.id} className="overflow-hidden hover:border-[rgba(0,0,0,0.12)] transition-colors group">
+              <div className="relative h-40 bg-[rgba(0,0,0,0.06)] flex items-center justify-center">
                 {d.photoUrl
                   ? <img src={d.photoUrl} alt={d.addr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  : <Building2 className="w-12 h-12 text-slate-600" />}
+                  : <Building2 className="w-12 h-12 text-[#6e6e73]" />}
                 <div className="absolute top-3 left-3"><StatusBadge status={d.status} /></div>
               </div>
               <div className="p-4">
-                <p className="text-white font-semibold text-sm truncate">{d.addr}</p>
-                <p className="text-slate-400 text-xs mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{[d.city, d.state].filter(Boolean).join(', ')} · {d.type}</p>
-                <div className="flex items-center gap-3 text-slate-400 text-xs mt-2">
+                <p className="text-[#1d1d1f] font-semibold text-sm truncate">{d.addr}</p>
+                <p className="text-[#6e6e73] text-xs mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{[d.city, d.state].filter(Boolean).join(', ')} · {d.type}</p>
+                <div className="flex items-center gap-3 text-[#6e6e73] text-xs mt-2">
                   {d.beds > 0 && <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{d.beds}</span>}
                   {d.baths > 0 && <span className="flex items-center gap-1"><Bath className="w-3 h-3" />{d.baths}</span>}
                   {d.sqft > 0 && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{Number(d.sqft).toLocaleString()} sqft</span>}
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-700 flex items-center justify-between">
+                <div className="mt-3 pt-3 border-t border-[rgba(0,0,0,0.08)] flex items-center justify-between">
                   <div>
-                    <p className="text-white font-bold text-lg">${Number(d.ask || 0).toLocaleString()}</p>
+                    <p className="text-[#1d1d1f] font-bold text-lg">${Number(d.ask || 0).toLocaleString()}</p>
                     <p className="text-green-400 text-xs">ARV ${Number(d.arv || 0).toLocaleString()}</p>
                   </div>
                   {d.seller?.handle ? (
-                    <a href={`/p/${d.seller.handle}/${d.id}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold px-3 py-2 rounded-lg text-xs transition-colors">
+                    <a href={`/p/${d.seller.handle}/${d.id}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-[#b8860b] hover:opacity-90 text-white font-semibold px-3 py-2 rounded-lg text-xs transition-colors">
                       <Zap className="w-3 h-3" /> View
                     </a>
                   ) : null}
                 </div>
                 {d.seller && (
-                  <div className="mt-3 pt-3 border-t border-slate-700 flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-white text-[10px] font-bold">{d.seller.initials || initialsOf(d.seller.name || d.seller.handle)}</div>
+                  <div className="mt-3 pt-3 border-t border-[rgba(0,0,0,0.08)] flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[rgba(0,0,0,0.08)] flex items-center justify-center text-[#1d1d1f] text-[10px] font-bold">{d.seller.initials || initialsOf(d.seller.name || d.seller.handle)}</div>
                     <div className="min-w-0">
-                      <p className="text-slate-300 text-xs font-medium truncate">@{d.seller.handle}</p>
-                      <p className="text-slate-500 text-[10px] truncate">{d.seller.city || d.seller.name || ''}</p>
+                      <p className="text-[#3a3a3c] text-xs font-medium truncate">@{d.seller.handle}</p>
+                      <p className="text-[#86868b] text-[10px] truncate">{d.seller.city || d.seller.name || ''}</p>
                     </div>
                   </div>
                 )}

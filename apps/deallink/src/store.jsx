@@ -268,7 +268,7 @@ export function useToast() {
     timer.current = setTimeout(() => setMsg(null), 2400);
   }, []);
   const node = msg ? (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-slate-700 text-white text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] text-[#1d1d1f] text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in">
       {msg}
     </div>
   ) : null;

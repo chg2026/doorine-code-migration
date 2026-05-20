@@ -18,7 +18,7 @@ export function CardBody({ className, ...props }) {
 }
 
 const btnVariants = {
-  primary:   'text-white hover:opacity-90 font-semibold',
+  primary:   'text-[#1d1d1f] hover:opacity-90 font-semibold',
   secondary: 'bg-white hover:bg-[rgba(0,0,0,0.04)] text-[#1d1d1f] border border-[rgba(0,0,0,0.12)]',
   ghost:     'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-[rgba(0,0,0,0.06)]',
   danger:    'bg-red-500/90 hover:bg-red-500 text-white',
@@ -88,8 +88,8 @@ export function PageHeader({ title, subtitle, actions }) {
   return (
     <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">{title}</h1>
-        {subtitle && <p className="text-slate-400 text-sm mt-1">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-[#1d1d1f]">{title}</h1>
+        {subtitle && <p className="text-[#6e6e73] text-sm mt-1">{subtitle}</p>}
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
     </div>

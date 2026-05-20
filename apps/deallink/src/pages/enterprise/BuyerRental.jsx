@@ -19,17 +19,17 @@ export default function BuyerRental() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {lists.map((l) => (
-          <Card key={l.name} className="p-5 hover:border-slate-500 transition-colors">
+          <Card key={l.name} className="p-5 hover:border-[rgba(0,0,0,0.12)] transition-colors">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-white font-semibold">{l.name}</p>
-                <p className="text-slate-400 text-xs mt-1">{l.buyers} verified buyers</p>
+                <p className="text-[#1d1d1f] font-semibold">{l.name}</p>
+                <p className="text-[#6e6e73] text-xs mt-1">{l.buyers} verified buyers</p>
               </div>
-              <span className="flex items-center gap-1 bg-amber-400/20 text-amber-300 px-2 py-1 rounded-full text-xs font-bold"><Star className="w-3 h-3 fill-current" /> {l.rating}</span>
+              <span className="flex items-center gap-1 bg-[rgba(184,134,11,0.10)] text-[#b8860b] px-2 py-1 rounded-full text-xs font-bold"><Star className="w-3 h-3 fill-current" /> {l.rating}</span>
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-700 grid grid-cols-2 gap-4">
-              <div><p className="text-slate-500 text-xs flex items-center gap-1"><Clock className="w-3 h-3" /> Avg close</p><p className="text-white font-mono font-semibold mt-1">{l.avgClose}</p></div>
-              <div><p className="text-slate-500 text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> Per blast</p><p className="text-amber-400 font-mono font-semibold mt-1">${l.price}</p></div>
+            <div className="mt-4 pt-4 border-t border-[rgba(0,0,0,0.08)] grid grid-cols-2 gap-4">
+              <div><p className="text-[#86868b] text-xs flex items-center gap-1"><Clock className="w-3 h-3" /> Avg close</p><p className="text-[#1d1d1f] font-mono font-semibold mt-1">{l.avgClose}</p></div>
+              <div><p className="text-[#86868b] text-xs flex items-center gap-1"><DollarSign className="w-3 h-3" /> Per blast</p><p className="text-[#b8860b] font-mono font-semibold mt-1">${l.price}</p></div>
             </div>
             <Button className="w-full mt-4">Rent for one blast</Button>
           </Card>

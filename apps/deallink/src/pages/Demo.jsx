@@ -92,7 +92,7 @@ export default function Demo() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
       <DemoBanner phase={phase} setPhase={setPhase} />
 
       <div className="overflow-hidden">
@@ -137,19 +137,19 @@ export default function Demo() {
 function DemoBanner({ phase, setPhase }) {
   return (
     <div
-      className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 border-b border-slate-800"
+      className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 border-b border-[rgba(0,0,0,0.08)]"
       style={{ height: 44, background: '#1c1c1c' }}
     >
       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-        <span className="text-amber-400 text-[10px] sm:text-[11px] font-mono tracking-widest uppercase whitespace-nowrap">
+        <span className="text-[#b8860b] text-[10px] sm:text-[11px] font-mono tracking-widest uppercase whitespace-nowrap">
           Interactive demo
         </span>
-        <div className="hidden sm:flex items-center gap-1 rounded-md border border-slate-700 p-0.5 bg-slate-900/60">
+        <div className="hidden sm:flex items-center gap-1 rounded-md border border-[rgba(0,0,0,0.08)] p-0.5 bg-white/60">
           <button
             type="button"
             onClick={() => setPhase('buyer')}
             className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors ${
-              phase === 'buyer' ? 'bg-amber-400 text-slate-900' : 'text-slate-400 hover:text-white'
+              phase === 'buyer' ? 'bg-[#b8860b] text-white' : 'text-[#6e6e73] hover:text-[#1d1d1f]'
             }`}
           >
             Buyer view
@@ -158,7 +158,7 @@ function DemoBanner({ phase, setPhase }) {
             type="button"
             onClick={() => setPhase('leads')}
             className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors ${
-              phase === 'leads' ? 'bg-amber-400 text-slate-900' : 'text-slate-400 hover:text-white'
+              phase === 'leads' ? 'bg-[#b8860b] text-white' : 'text-[#6e6e73] hover:text-[#1d1d1f]'
             }`}
           >
             Wholesaler view
@@ -167,7 +167,7 @@ function DemoBanner({ phase, setPhase }) {
       </div>
       <Link
         to="/onboarding"
-        className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-900 hover:bg-slate-100"
+        className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1d1d1f] hover:bg-slate-100"
       >
         Claim your handle →
       </Link>
@@ -189,24 +189,24 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
   const featured = DEALS.find((d) => d.featured);
   const nonFeatured = filteredDeals.filter((d) => !d.featured || filter !== 'All');
   return (
-    <div className="min-h-[calc(100vh-44px)] bg-slate-50 text-slate-900 py-6 px-4 sm:py-10">
+    <div className="min-h-[calc(100vh-44px)] bg-slate-50 text-[#1d1d1f] py-6 px-4 sm:py-10">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Profile header */}
         <div className="px-6 pt-8 pb-6 text-center border-b border-slate-100">
-          <div className="w-20 h-20 mx-auto rounded-full bg-amber-400 flex items-center justify-center text-slate-900 font-bold text-2xl shadow">
+          <div className="w-20 h-20 mx-auto rounded-full bg-[#b8860b] flex items-center justify-center text-white font-bold text-2xl shadow">
             {PROFILE.initials}
           </div>
-          <div className="text-xs font-mono text-slate-500 mt-3">@{PROFILE.handle}</div>
-          <div className="text-lg font-semibold text-slate-900 mt-1">{PROFILE.name}</div>
-          <p className="text-sm text-slate-600 mt-2 max-w-md mx-auto">{PROFILE.bio}</p>
-          <div className="flex items-center justify-center gap-4 mt-4 text-xs text-slate-500">
-            <span><span className="font-semibold text-slate-900">{DEALS.length}</span> active deals</span>
-            <span className="text-slate-300">·</span>
+          <div className="text-xs font-mono text-[#86868b] mt-3">@{PROFILE.handle}</div>
+          <div className="text-lg font-semibold text-[#1d1d1f] mt-1">{PROFILE.name}</div>
+          <p className="text-sm text-[#6e6e73] mt-2 max-w-md mx-auto">{PROFILE.bio}</p>
+          <div className="flex items-center justify-center gap-4 mt-4 text-xs text-[#86868b]">
+            <span><span className="font-semibold text-[#1d1d1f]">{DEALS.length}</span> active deals</span>
+            <span className="text-[#3a3a3c]">·</span>
             <span>Cleveland, OH</span>
           </div>
           <button
             type="button"
-            className="mt-5 inline-flex items-center gap-2 rounded-md bg-slate-900 text-white px-4 py-2 text-sm font-medium hover:bg-slate-800"
+            className="mt-5 inline-flex items-center gap-2 rounded-md bg-white text-[#1d1d1f] px-4 py-2 text-sm font-medium hover:bg-[rgba(0,0,0,0.06)]"
           >
             Join buyer list
           </button>
@@ -215,7 +215,7 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
         {/* Featured */}
         {featured && filter === 'All' && (
           <div className="px-6 pt-6">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-amber-600 mb-2">Featured</div>
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#b8860b] mb-2">Featured</div>
             <DealCard deal={featured} onClick={() => setSelectedDeal(featured)} featured />
           </div>
         )}
@@ -230,8 +230,8 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
                 onClick={() => setFilter(t)}
                 className={`px-2.5 py-1 rounded-full text-[11px] font-medium border ${
                   filter === t
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                    ? 'bg-white text-[#1d1d1f] border-[rgba(0,0,0,0.10)]'
+                    : 'bg-white text-[#6e6e73] border-slate-200 hover:border-[rgba(0,0,0,0.20)]'
                 }`}
               >
                 {t}
@@ -242,12 +242,12 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
             <button
               type="button"
               onClick={() => setView('cards')}
-              className={`px-2 py-0.5 text-[11px] rounded ${view === 'cards' ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}
+              className={`px-2 py-0.5 text-[11px] rounded ${view === 'cards' ? 'bg-slate-100 text-[#1d1d1f]' : 'text-[#86868b]'}`}
             >Cards</button>
             <button
               type="button"
               onClick={() => setView('table')}
-              className={`px-2 py-0.5 text-[11px] rounded ${view === 'table' ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}
+              className={`px-2 py-0.5 text-[11px] rounded ${view === 'table' ? 'bg-slate-100 text-[#1d1d1f]' : 'text-[#86868b]'}`}
             >Table</button>
           </div>
         </div>
@@ -260,13 +260,13 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
                 <DealCard key={d.id} deal={d} onClick={() => setSelectedDeal(d)} />
               ))}
               {nonFeatured.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-6">No deals match this filter.</p>
+                <p className="text-sm text-[#86868b] text-center py-6">No deals match this filter.</p>
               )}
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider text-[#86868b]">
                   <th className="text-left py-2 font-medium">Address</th>
                   <th className="text-left py-2 font-medium">Type</th>
                   <th className="text-right py-2 font-medium">Ask</th>
@@ -281,10 +281,10 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
                     className="border-b border-slate-100 cursor-pointer hover:bg-slate-50"
                   >
                     <td className="py-2.5">
-                      <div className="font-medium text-slate-900">{d.addr}</div>
-                      <div className="text-xs text-slate-500">{d.city} {d.zip}</div>
+                      <div className="font-medium text-[#1d1d1f]">{d.addr}</div>
+                      <div className="text-xs text-[#86868b]">{d.city} {d.zip}</div>
                     </td>
-                    <td className="py-2.5 text-slate-600">{d.type} {d.beds}/{d.baths}</td>
+                    <td className="py-2.5 text-[#6e6e73]">{d.type} {d.beds}/{d.baths}</td>
                     <td className="py-2.5 text-right font-semibold">{fmt(d.ask)}</td>
                     <td className="py-2.5 text-right text-emerald-700">{fmt(d.arv)}</td>
                   </tr>
@@ -295,7 +295,7 @@ function ProfileView({ filter, setFilter, filteredDeals, view, setView, setSelec
         </div>
       </div>
 
-      <p className="text-center text-[11px] text-slate-400 font-mono mt-6">
+      <p className="text-center text-[11px] text-[#6e6e73] font-mono mt-6">
         doorine.com/r/{PROFILE.handle}
       </p>
     </div>
@@ -308,24 +308,24 @@ function DealCard({ deal, onClick, featured }) {
       type="button"
       onClick={onClick}
       className={`w-full text-left rounded-xl border ${
-        featured ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-white hover:border-slate-300'
+        featured ? 'border-[#b8860b] bg-[rgba(184,134,11,0.06)]' : 'border-slate-200 bg-white hover:border-[rgba(0,0,0,0.20)]'
       } p-4 transition-colors`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-slate-900">{deal.addr}</span>
+            <span className="font-semibold text-[#1d1d1f]">{deal.addr}</span>
             {deal.new && <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">New</span>}
             {deal.status === 'Pending' && <span className="text-[9px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Pending</span>}
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">{deal.city}, OH {deal.zip}</div>
-          <div className="text-xs text-slate-600 mt-2">
+          <div className="text-xs text-[#86868b] mt-0.5">{deal.city}, OH {deal.zip}</div>
+          <div className="text-xs text-[#6e6e73] mt-2">
             {deal.type} · {deal.beds}bd / {deal.baths}ba · {deal.sqft.toLocaleString()} sf · {deal.occupancy}
           </div>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-[10px] uppercase tracking-wider text-slate-400">Ask</div>
-          <div className="text-lg font-bold text-slate-900">{fmt(deal.ask)}</div>
+          <div className="text-[10px] uppercase tracking-wider text-[#6e6e73]">Ask</div>
+          <div className="text-lg font-bold text-[#1d1d1f]">{fmt(deal.ask)}</div>
           <div className="text-[11px] text-emerald-700 mt-0.5">ARV {fmt(deal.arv)}</div>
         </div>
       </div>
@@ -336,29 +336,29 @@ function DealCard({ deal, onClick, featured }) {
 function DealDetailView({ deal, onBack, onInterested }) {
   const spread = deal.arv - deal.ask - deal.repair;
   return (
-    <div className="min-h-[calc(100vh-44px)] bg-slate-50 text-slate-900 pb-28">
+    <div className="min-h-[calc(100vh-44px)] bg-slate-50 text-[#1d1d1f] pb-28">
       <div className="max-w-2xl mx-auto py-6 px-4 sm:py-10">
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-slate-500 hover:text-slate-900 mb-4 inline-flex items-center gap-1"
+          className="text-xs text-[#86868b] hover:text-[#1d1d1f] mb-4 inline-flex items-center gap-1"
         >
           ← Back to @{PROFILE.handle}
         </button>
 
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="h-44 bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-400 text-sm">
+          <div className="h-44 bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-[#6e6e73] text-sm">
             (property photo)
           </div>
           <div className="px-6 pt-5 pb-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-xl font-bold text-slate-900">{deal.addr}</h1>
-                <p className="text-sm text-slate-500 mt-0.5">{deal.city}, OH {deal.zip}</p>
+                <h1 className="text-xl font-bold text-[#1d1d1f]">{deal.addr}</h1>
+                <p className="text-sm text-[#86868b] mt-0.5">{deal.city}, OH {deal.zip}</p>
               </div>
               <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider text-slate-400">Asking</div>
-                <div className="text-2xl font-bold text-slate-900">{fmt(deal.ask)}</div>
+                <div className="text-[10px] uppercase tracking-wider text-[#6e6e73]">Asking</div>
+                <div className="text-2xl font-bold text-[#1d1d1f]">{fmt(deal.ask)}</div>
               </div>
             </div>
 
@@ -378,8 +378,8 @@ function DealDetailView({ deal, onBack, onInterested }) {
             </div>
 
             <div className="mt-6 border-t border-slate-100 pt-4">
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">Notes</div>
-              <p className="text-sm text-slate-700 leading-relaxed">{deal.notes}</p>
+              <div className="text-[10px] uppercase tracking-wider text-[#6e6e73] mb-1.5">Notes</div>
+              <p className="text-sm text-[#3a3a3c] leading-relaxed">{deal.notes}</p>
             </div>
           </div>
         </div>
@@ -390,7 +390,7 @@ function DealDetailView({ deal, onBack, onInterested }) {
           <button
             type="button"
             onClick={onInterested}
-            className="w-full rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold py-3 text-sm shadow-sm"
+            className="w-full rounded-lg bg-[#b8860b] hover:opacity-90 text-white font-semibold py-3 text-sm shadow-sm"
           >
             I'm interested →
           </button>
@@ -403,12 +403,12 @@ function DealDetailView({ deal, onBack, onInterested }) {
 function Stat({ label, value, accent }) {
   const accentClass = {
     emerald: 'text-emerald-700',
-    amber:   'text-amber-700',
-    slate:   'text-slate-900',
+    amber:   'text-[#b8860b]',
+    slate:   'text-[#1d1d1f]',
   }[accent];
   return (
     <div className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
-      <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-[#6e6e73]">{label}</div>
       <div className={`text-base font-bold ${accentClass}`}>{value}</div>
     </div>
   );
@@ -417,8 +417,8 @@ function Stat({ label, value, accent }) {
 function SpecRow({ k, v }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-slate-500">{k}</span>
-      <span className="text-slate-900 font-medium">{v}</span>
+      <span className="text-[#86868b]">{k}</span>
+      <span className="text-[#1d1d1f] font-medium">{v}</span>
     </div>
   );
 }
@@ -474,29 +474,29 @@ function LeadFormModal({ open, onClose, deal, onSubmit }) {
 
 function LeadsPanel({ leads, newLeadId, onBack }) {
   return (
-    <div className="min-h-[calc(100vh-44px)] bg-slate-950 text-slate-100 py-8 px-4 sm:py-12">
+    <div className="min-h-[calc(100vh-44px)] bg-[#f5f5f7] text-[#1d1d1f] py-8 px-4 sm:py-12">
       <div className="max-w-4xl mx-auto">
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-slate-400 hover:text-amber-400 inline-flex items-center gap-1 mb-4"
+          className="text-xs text-[#6e6e73] hover:text-[#b8860b] inline-flex items-center gap-1 mb-4"
         >
           ← Buyer view
         </button>
 
-        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 mb-6 text-sm text-amber-100">
+        <div className="rounded-2xl border border-[#b8860b]/30 bg-[#b8860b]/5 px-4 py-3 mb-6 text-sm text-[#b8860b]">
           That buyer just landed here. Every "I'm interested" submission shows up in this inbox — tied to the deal,
           with contact info ready to go.
         </div>
 
         <div>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="text-lg font-semibold text-white">Leads inbox</h2>
-            <span className="text-xs text-slate-500 font-mono">{leads.length} total</span>
+            <h2 className="text-lg font-semibold text-[#1d1d1f]">Leads inbox</h2>
+            <span className="text-xs text-[#86868b] font-mono">{leads.length} total</span>
           </div>
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="bg-white/60 border border-[rgba(0,0,0,0.08)] rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-900 text-[10px] uppercase tracking-wider text-slate-400">
+              <thead className="bg-white text-[10px] uppercase tracking-wider text-[#6e6e73]">
                 <tr>
                   <th className="text-left px-4 py-2.5 font-medium">Name</th>
                   <th className="text-left px-4 py-2.5 font-medium hidden sm:table-cell">Email</th>
@@ -506,28 +506,28 @@ function LeadsPanel({ leads, newLeadId, onBack }) {
                   <th className="text-left px-4 py-2.5 font-medium">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-[rgba(0,0,0,0.08)]">
                 {leads.map((l) => {
                   const isNew = l.id === newLeadId;
                   return (
                     <tr
                       key={l.id}
                       className={isNew
-                        ? 'bg-amber-400/10 border-l-4 border-l-amber-400'
-                        : 'hover:bg-slate-900/40'}
+                        ? 'bg-[rgba(184,134,11,0.10)] border-l-4 border-l-[#b8860b]'
+                        : 'hover:bg-white/40'}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-white">{l.name}</span>
-                          {isNew && <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded">New</span>}
+                          <span className="font-medium text-[#1d1d1f]">{l.name}</span>
+                          {isNew && <span className="text-[9px] font-bold uppercase tracking-wider bg-[#b8860b] text-white px-1.5 py-0.5 rounded">New</span>}
                         </div>
-                        <div className="sm:hidden text-xs text-slate-400 mt-0.5">{l.email}</div>
+                        <div className="sm:hidden text-xs text-[#6e6e73] mt-0.5">{l.email}</div>
                       </td>
-                      <td className="px-4 py-3 text-slate-300 hidden sm:table-cell">{l.email}</td>
-                      <td className="px-4 py-3 text-slate-300 font-mono text-xs hidden md:table-cell">{l.phone}</td>
+                      <td className="px-4 py-3 text-[#3a3a3c] hidden sm:table-cell">{l.email}</td>
+                      <td className="px-4 py-3 text-[#3a3a3c] font-mono text-xs hidden md:table-cell">{l.phone}</td>
                       <td className="px-4 py-3"><TypeChip type={l.type} /></td>
-                      <td className="px-4 py-3 text-slate-300 text-xs">{dealLabel(l.dealId)}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{l.when}</td>
+                      <td className="px-4 py-3 text-[#3a3a3c] text-xs">{dealLabel(l.dealId)}</td>
+                      <td className="px-4 py-3 text-[#86868b] text-xs">{l.when}</td>
                     </tr>
                   );
                 })}
@@ -536,15 +536,15 @@ function LeadsPanel({ leads, newLeadId, onBack }) {
           </div>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-center">
-          <p className="text-amber-400 text-[10px] font-mono uppercase tracking-widest">Your turn</p>
-          <h3 className="text-white text-2xl font-bold mt-2">Ready to start capturing your own leads?</h3>
-          <p className="text-slate-400 text-sm mt-2 max-w-md mx-auto">
+        <div className="mt-10 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white p-6 text-center">
+          <p className="text-[#b8860b] text-[10px] font-mono uppercase tracking-widest">Your turn</p>
+          <h3 className="text-[#1d1d1f] text-2xl font-bold mt-2">Ready to start capturing your own leads?</h3>
+          <p className="text-[#6e6e73] text-sm mt-2 max-w-md mx-auto">
             Claim your handle, post your inventory once, and every interested buyer lands in your inbox just like this.
           </p>
           <Link
             to="/onboarding"
-            className="inline-flex items-center gap-2 mt-5 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold px-4 py-2 text-sm"
+            className="inline-flex items-center gap-2 mt-5 rounded-md bg-[#b8860b] hover:opacity-90 text-white font-semibold px-4 py-2 text-sm"
           >
             Claim your handle →
           </Link>
@@ -559,9 +559,9 @@ function TypeChip({ type }) {
     'Cash':       'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
     'Hard money': 'bg-violet-500/15 text-violet-300 border-violet-500/30',
     'Agent':      'bg-sky-500/15 text-sky-300 border-sky-500/30',
-    'JV partner': 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-    'Other':      'bg-slate-500/15 text-slate-300 border-slate-500/30',
-  }[type] || 'bg-slate-500/15 text-slate-300 border-slate-500/30';
+    'JV partner': 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/30',
+    'Other':      'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/30',
+  }[type] || 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/30';
   return (
     <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border ${styles}`}>
       {type}

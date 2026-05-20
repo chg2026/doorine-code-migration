@@ -241,10 +241,10 @@ export default function PhotoUploader({
         className={[
           'rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors cursor-pointer select-none',
           dropzoneDisabled
-            ? 'border-slate-800 bg-slate-900/30 cursor-not-allowed opacity-60'
+            ? 'border-[rgba(0,0,0,0.08)] bg-white/30 cursor-not-allowed opacity-60'
             : dragOver
               ? 'border-yellow-400 bg-yellow-400/5'
-              : 'border-slate-700 bg-slate-900/40 hover:border-slate-600 hover:bg-slate-900/60',
+              : 'border-[rgba(0,0,0,0.08)] bg-white/40 hover:border-[rgba(0,0,0,0.10)] hover:bg-white/60',
         ].join(' ')}
         role="button"
         tabIndex={0}
@@ -256,12 +256,12 @@ export default function PhotoUploader({
         }}
       >
         <Upload className="w-6 h-6 mx-auto mb-2" style={{ color: GOLD }} />
-        <p className="text-sm text-slate-200 font-medium">
+        <p className="text-sm text-[#3a3a3c] font-medium">
           {dropzoneDisabled
             ? `Photo limit reached (${max})`
             : 'Drop photos here, or click to browse'}
         </p>
-        <p className="text-[11px] text-slate-500 mt-1">
+        <p className="text-[11px] text-[#86868b] mt-1">
           JPG, PNG, or WebP · up to {(maxBytes / 1024 / 1024).toFixed(0)} MB ·{' '}
           {urls.length}/{max} used
         </p>
@@ -288,7 +288,7 @@ export default function PhotoUploader({
                 'flex items-center gap-3 rounded-md border px-3 py-2 text-xs',
                 p.error
                   ? 'border-red-900/50 bg-red-900/10 text-red-300'
-                  : 'border-slate-800 bg-slate-900/50 text-slate-300',
+                  : 'border-[rgba(0,0,0,0.08)] bg-white/50 text-[#3a3a3c]',
               ].join(' ')}
             >
               {p.error ? (
@@ -302,7 +302,7 @@ export default function PhotoUploader({
               {p.error ? (
                 <span className="text-red-400 shrink-0">{p.error}</span>
               ) : (
-                <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden shrink-0">
+                <div className="w-24 h-1.5 bg-[rgba(0,0,0,0.06)] rounded-full overflow-hidden shrink-0">
                   <div
                     className="h-full transition-all"
                     style={{ width: `${p.progress}%`, background: GOLD }}
@@ -331,8 +331,8 @@ export default function PhotoUploader({
                         ref={dragProvided.innerRef}
                         {...dragProvided.draggableProps}
                         className={[
-                          'relative aspect-video rounded-lg overflow-hidden border bg-slate-900 group',
-                          snapshot.isDragging ? 'ring-2' : 'border-slate-800',
+                          'relative aspect-video rounded-lg overflow-hidden border bg-white group',
+                          snapshot.isDragging ? 'ring-2' : 'border-[rgba(0,0,0,0.08)]',
                         ].join(' ')}
                         style={{
                           ...dragProvided.draggableProps.style,

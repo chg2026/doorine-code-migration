@@ -130,37 +130,37 @@ export default function Billing() {
     <Layout>
       <div className="max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">Billing</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-[#1d1d1f]">Billing</h1>
+          <p className="text-sm text-[#6e6e73] mt-1">
             Manage your REI Flywheel subscription and payment plan.
           </p>
         </div>
 
         {/* ─── Current plan ─────────────────────────────────────────── */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 mb-6">
+        <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-6 mb-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Current plan</p>
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <p className="text-[10px] uppercase tracking-wider text-[#86868b] mb-1">Current plan</p>
+              <h2 className="text-xl font-semibold text-[#1d1d1f] flex items-center gap-2">
                 {currentPlan.label}
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#b8860b]/15 text-[#b8860b] border border-[#b8860b]/30">
                   active
                 </span>
               </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                <span className="text-white font-semibold">{currentPlan.price}</span>{' '}
-                <span className="text-slate-500">/ {currentPlan.cadence}</span>
+              <p className="text-[#6e6e73] text-sm mt-1">
+                <span className="text-[#1d1d1f] font-semibold">{currentPlan.price}</span>{' '}
+                <span className="text-[#86868b]">/ {currentPlan.cadence}</span>
               </p>
             </div>
             {authLoading && (
-              <p className="text-xs text-slate-500 font-mono">Loading plan…</p>
+              <p className="text-xs text-[#86868b] font-mono">Loading plan…</p>
             )}
           </div>
 
           <ul className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
             {currentPlan.features.map((f) => (
-              <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
-                <Check className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <li key={f} className="flex items-start gap-2 text-sm text-[#3a3a3c]">
+                <Check className="w-4 h-4 text-[#b8860b] flex-shrink-0 mt-0.5" />
                 <span>{f}</span>
               </li>
             ))}
@@ -203,14 +203,14 @@ export default function Billing() {
 
         {/* ─── Team-plan management ─────────────────────────────────── */}
         {isTeam && (
-          <div className="rounded-xl border border-amber-400/40 bg-gradient-to-br from-amber-400/[0.06] to-slate-900/40 p-6">
+          <div className="rounded-xl border border-[#b8860b]/40 bg-gradient-to-br from-[rgba(184,134,11,0.08)] to-white p-6">
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0">
-                <Users className="w-5 h-5 text-slate-900" />
+              <div className="w-9 h-9 rounded-lg bg-[#b8860b] flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 text-[#1d1d1f]" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white">You're on the Team plan</h3>
-                <p className="text-sm text-slate-400 mt-0.5">
+                <h3 className="text-lg font-semibold text-[#1d1d1f]">You're on the Team plan</h3>
+                <p className="text-sm text-[#6e6e73] mt-0.5">
                   Update payment details, invoices, or cancel from the secure customer portal.
                 </p>
               </div>
@@ -218,7 +218,7 @@ export default function Billing() {
             <button
               onClick={openPortal}
               disabled={!!busyPlan}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold text-sm hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#b8860b] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               <Settings className="w-4 h-4" />
               {busyPlan === 'portal' ? 'Opening portal…' : 'Manage subscription'}
@@ -236,39 +236,39 @@ function PlanCard({ planKey, icon: Icon, highlight, onUpgrade, busy, disabled })
     <div
       className={`rounded-xl p-6 flex flex-col ${
         highlight
-          ? 'border border-amber-400/50 bg-gradient-to-br from-amber-400/[0.08] to-slate-900/40'
-          : 'border border-slate-800 bg-slate-900/40'
+          ? 'border border-[#b8860b]/50 bg-gradient-to-br from-[rgba(184,134,11,0.08)] to-white'
+          : 'border border-[rgba(0,0,0,0.08)] bg-white/40'
       }`}
     >
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-5 h-5 text-slate-900" />
+        <div className="w-9 h-9 rounded-lg bg-[#b8860b] flex items-center justify-center flex-shrink-0">
+          <Icon className="w-5 h-5 text-[#1d1d1f]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-[#1d1d1f] flex items-center gap-2">
             {p.label}
             {highlight && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 font-medium">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(184,134,11,0.10)] text-[#b8860b] border border-[#b8860b]/30 font-medium">
                 MOST POWER
               </span>
             )}
           </h3>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-sm text-[#6e6e73] mt-0.5">
             {planKey === 'personal'
               ? 'For solo wholesalers ready to scale.'
               : 'For teams collaborating across deals.'}
           </p>
         </div>
         <p className="text-right">
-          <span className="text-2xl font-bold text-white">{p.price}</span>
-          <span className="block text-[11px] text-slate-500">{p.cadence}</span>
+          <span className="text-2xl font-bold text-[#1d1d1f]">{p.price}</span>
+          <span className="block text-[11px] text-[#86868b]">{p.cadence}</span>
         </p>
       </div>
 
       <ul className="grid grid-cols-1 gap-2 mb-5 flex-1">
         {p.features.map((f) => (
-          <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
-            <Check className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <li key={f} className="flex items-start gap-2 text-sm text-[#3a3a3c]">
+            <Check className="w-4 h-4 text-[#b8860b] flex-shrink-0 mt-0.5" />
             <span>{f}</span>
           </li>
         ))}
@@ -277,12 +277,12 @@ function PlanCard({ planKey, icon: Icon, highlight, onUpgrade, busy, disabled })
       <button
         onClick={onUpgrade}
         disabled={busy || disabled}
-        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold text-sm hover:bg-amber-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#b8860b] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       >
         <CreditCard className="w-4 h-4" />
         {busy ? 'Starting checkout…' : `Upgrade to ${p.label}`}
       </button>
-      <p className="text-[11px] text-slate-500 mt-3 text-center">
+      <p className="text-[11px] text-[#86868b] mt-3 text-center">
         Secure checkout. Cancel anytime.
       </p>
     </div>

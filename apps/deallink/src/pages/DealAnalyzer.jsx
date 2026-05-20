@@ -37,7 +37,7 @@ export default function DealAnalyzer() {
 
   // Wait for the store to hydrate before deciding the deal is missing.
   if (!state.loaded) {
-    return <Layout><div className="py-32 text-center text-xs text-slate-500 font-mono">Loading…</div></Layout>;
+    return <Layout><div className="py-32 text-center text-xs text-[#86868b] font-mono">Loading…</div></Layout>;
   }
 
   const deal = state.deals.find((d) => d.id === dealId);
@@ -45,8 +45,8 @@ export default function DealAnalyzer() {
     return (
       <Layout>
         <div className="py-24 text-center">
-          <p className="text-slate-300 mb-3">That property isn't in your list.</p>
-          <Link to="/deal-analyzer" className="text-amber-400 text-sm hover:underline">Pick a property to analyze →</Link>
+          <p className="text-[#3a3a3c] mb-3">That property isn't in your list.</p>
+          <Link to="/deal-analyzer" className="text-[#b8860b] text-sm hover:underline">Pick a property to analyze →</Link>
         </div>
       </Layout>
     );
@@ -237,19 +237,19 @@ function Analyzer({ deal }) {
       <div className="-m-4 md:-m-6 p-4 md:p-6">
         <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <Link to="/deal-analyzer" className="text-slate-500 hover:text-slate-200" title="Pick a different property">
+            <Link to="/deal-analyzer" className="text-[#86868b] hover:text-[#3a3a3c]" title="Pick a different property">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             {deal.photoUrl ? (
-              <img src={deal.photoUrl} alt="" className="w-12 h-12 rounded-lg object-cover border border-slate-800 flex-shrink-0" />
+              <img src={deal.photoUrl} alt="" className="w-12 h-12 rounded-lg object-cover border border-[rgba(0,0,0,0.08)] flex-shrink-0" />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-800 flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-5 h-5 text-slate-500" />
+              <div className="w-12 h-12 rounded-lg bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-5 h-5 text-[#86868b]" />
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="text-2xl font-semibold text-white truncate">{deal.addr || 'Untitled property'}</h1>
-              <p className="text-xs text-slate-500 truncate">
+              <h1 className="text-2xl font-semibold text-[#1d1d1f] truncate">{deal.addr || 'Untitled property'}</h1>
+              <p className="text-xs text-[#86868b] truncate">
                 {[deal.city, deal.state || deal.zip].filter(Boolean).join(', ')}
                 {deal.type ? ` · ${deal.type}` : ''}
                 {deal.beds ? ` · ${deal.beds}bd` : ''}{deal.baths ? `/${deal.baths}ba` : ''}
@@ -258,13 +258,13 @@ function Analyzer({ deal }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/deal-analyzer" className="px-3 py-2 text-xs rounded-md border border-slate-700 text-slate-300 hover:text-white hover:border-slate-600 flex items-center gap-1.5">
+            <Link to="/deal-analyzer" className="px-3 py-2 text-xs rounded-md border border-[rgba(0,0,0,0.08)] text-[#3a3a3c] hover:text-[#1d1d1f] hover:border-[rgba(0,0,0,0.10)] flex items-center gap-1.5">
               <Repeat2 className="w-3.5 h-3.5" /> Switch property
             </Link>
             <button
               onClick={saveAnalysis}
               disabled={saving}
-              className="px-4 py-2 text-sm rounded-md bg-amber-500 text-slate-950 font-medium hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+              className="px-4 py-2 text-sm rounded-md bg-[#b8860b] text-white font-medium hover:bg-[#b8860b] disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
             >
               <Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save Deal'}
             </button>
@@ -282,7 +282,7 @@ function Analyzer({ deal }) {
                 className={`px-4 py-2 text-sm rounded-md border flex items-center gap-2 transition ${
                   active
                     ? 'bg-sky-500/15 border-sky-500/60 text-sky-300'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    : 'bg-white border-[rgba(0,0,0,0.08)] text-[#6e6e73] hover:text-[#3a3a3c] hover:border-[rgba(0,0,0,0.08)]'
                 }`}
               >
                 <Icon className="w-4 h-4" /> {label}
@@ -291,7 +291,7 @@ function Analyzer({ deal }) {
           })}
         </div>
 
-        <div className="border-b border-slate-800 mb-5">
+        <div className="border-b border-[rgba(0,0,0,0.08)] mb-5">
           <div className="flex items-center gap-1">
             {SUBTABS.map(({ k, label }) => {
               const active = subtab === k;
@@ -301,8 +301,8 @@ function Analyzer({ deal }) {
                   onClick={() => setSubtab(k)}
                   className={`px-5 py-2.5 text-sm border-b-2 -mb-px transition ${
                     active
-                      ? 'border-amber-400 text-white'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
+                      ? 'border-[#b8860b] text-[#1d1d1f]'
+                      : 'border-transparent text-[#86868b] hover:text-[#3a3a3c]'
                   }`}
                 >
                   {label}
@@ -384,27 +384,27 @@ function RehabEstimator({ override, setOverride, items, setItems }) {
   const total = items.reduce((s, i) => s + (i.cost || 0), 0);
   const addItem = () => setItems([...items, { id: `r${Date.now()}`, category: 'Other', description: '', cost: 0 }]);
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40">
-      <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40">
+      <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.08)] flex items-center justify-between">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-slate-500">Rehab Estimator</p>
-          <p className="text-2xl font-semibold text-white mt-0.5">{fmt(override || total)}</p>
+          <p className="text-[11px] uppercase tracking-wider text-[#86868b]">Rehab Estimator</p>
+          <p className="text-2xl font-semibold text-[#1d1d1f] mt-0.5">{fmt(override || total)}</p>
         </div>
-        <button onClick={addItem} className="px-3 py-1.5 text-xs rounded-md border border-slate-700 hover:border-slate-600 text-slate-200 flex items-center gap-1.5">
+        <button onClick={addItem} className="px-3 py-1.5 text-xs rounded-md border border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.10)] text-[#3a3a3c] flex items-center gap-1.5">
           <Plus className="w-3.5 h-3.5" /> Add Item
         </button>
       </div>
       <div className="p-5 space-y-4">
         <div>
-          <label className="block text-xs text-slate-400 mb-1.5">Total Rehab (manual override)</label>
+          <label className="block text-xs text-[#6e6e73] mb-1.5">Total Rehab (manual override)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#86868b] text-sm">$</span>
             <input type="number" value={override} onChange={(e) => setOverride(Number(e.target.value) || 0)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-md py-2 pl-7 pr-3 text-sm text-slate-100 focus:outline-none focus:border-amber-500/60" />
+              className="w-full bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] rounded-md py-2 pl-7 pr-3 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#b8860b]/60" />
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Or use line items below for detailed estimate</p>
+          <p className="text-[11px] text-[#86868b] mt-1">Or use line items below for detailed estimate</p>
         </div>
-        <div className="grid grid-cols-12 gap-2 text-[11px] text-slate-500 uppercase tracking-wider px-1">
+        <div className="grid grid-cols-12 gap-2 text-[11px] text-[#86868b] uppercase tracking-wider px-1">
           <div className="col-span-4">Category</div>
           <div className="col-span-5">Description</div>
           <div className="col-span-2">Cost</div>
@@ -414,26 +414,26 @@ function RehabEstimator({ override, setOverride, items, setItems }) {
           <div key={it.id} className="grid grid-cols-12 gap-2 items-center">
             <select value={it.category}
               onChange={(e) => setItems(items.map((x) => x.id === it.id ? { ...x, category: e.target.value } : x))}
-              className="col-span-4 bg-slate-950 border border-slate-800 rounded-md py-1.5 px-2 text-sm text-slate-100">
+              className="col-span-4 bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] rounded-md py-1.5 px-2 text-sm text-[#1d1d1f]">
               {['Flooring', 'Interior Paint', 'Kitchen', 'Bathroom', 'Roof', 'HVAC', 'Electrical', 'Plumbing', 'Other'].map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
             <input value={it.description}
               onChange={(e) => setItems(items.map((x) => x.id === it.id ? { ...x, description: e.target.value } : x))}
-              className="col-span-5 bg-slate-950 border border-slate-800 rounded-md py-1.5 px-2 text-sm text-slate-100" />
+              className="col-span-5 bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] rounded-md py-1.5 px-2 text-sm text-[#1d1d1f]" />
             <input type="number" value={it.cost}
               onChange={(e) => setItems(items.map((x) => x.id === it.id ? { ...x, cost: Number(e.target.value) || 0 } : x))}
-              className="col-span-2 bg-slate-950 border border-slate-800 rounded-md py-1.5 px-2 text-sm text-slate-100" />
+              className="col-span-2 bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] rounded-md py-1.5 px-2 text-sm text-[#1d1d1f]" />
             <button onClick={() => setItems(items.filter((x) => x.id !== it.id))}
-              className="col-span-1 text-slate-500 hover:text-rose-400 flex justify-center">
+              className="col-span-1 text-[#86868b] hover:text-rose-400 flex justify-center">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         ))}
-        <div className="border-t border-slate-800 pt-3 flex items-center justify-between text-sm">
-          <span className="text-slate-400">Total Estimate</span>
-          <span className="text-white font-semibold">{fmt(total)}</span>
+        <div className="border-t border-[rgba(0,0,0,0.08)] pt-3 flex items-center justify-between text-sm">
+          <span className="text-[#6e6e73]">Total Estimate</span>
+          <span className="text-[#1d1d1f] font-semibold">{fmt(total)}</span>
         </div>
       </div>
     </div>
@@ -443,8 +443,8 @@ function RehabEstimator({ override, setOverride, items, setItems }) {
 function RentalResults({ m, purchasePrice }) {
   const onePct = purchasePrice > 0 ? ((m.grossYr / 12) / purchasePrice) * 100 : 0;
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h3 className="text-sm font-medium text-slate-100 mb-4">Key Metrics</h3>
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
+      <h3 className="text-sm font-medium text-[#1d1d1f] mb-4">Key Metrics</h3>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Kpi label="Monthly Cash Flow" value={fmtSigned(m.cashFlowYr / 12)} sub={`${fmtSigned(m.cashFlowYr)}/yr`} tone={m.cashFlowYr >= 0 ? 'ok' : 'bad'} />
         <Kpi label="Cash-on-Cash Return" value={fmtPct(m.coc)} tone={m.coc >= 8 ? 'good' : m.coc >= 0 ? 'ok' : 'bad'} />
@@ -461,12 +461,12 @@ function RentalResults({ m, purchasePrice }) {
 }
 
 function Kpi({ label, value, sub, tone }) {
-  const toneText = tone === 'good' ? 'text-emerald-300' : tone === 'bad' ? 'text-rose-300' : 'text-amber-300';
+  const toneText = tone === 'good' ? 'text-emerald-300' : tone === 'bad' ? 'text-rose-300' : 'text-[#b8860b]';
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
+    <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-[#f5f5f7]/40 p-4">
+      <p className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</p>
       <p className={`text-2xl font-semibold mt-1 ${toneText}`}>{value}</p>
-      {sub && <p className="text-[11px] text-slate-500 mt-1">{sub}</p>}
+      {sub && <p className="text-[11px] text-[#86868b] mt-1">{sub}</p>}
     </div>
   );
 }
@@ -476,7 +476,7 @@ function RuleRow({ label, value, pass }) {
   const valTone = pass ? 'text-emerald-300' : 'text-rose-300';
   return (
     <div className={`flex items-center justify-between rounded-md border ${tone} px-3 py-2 text-sm`}>
-      <span className="flex items-center gap-2 text-slate-300">
+      <span className="flex items-center gap-2 text-[#3a3a3c]">
         {pass ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
         {label}
       </span>
@@ -487,14 +487,14 @@ function RuleRow({ label, value, pass }) {
 
 function InvestmentSummary({ m }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h3 className="text-sm font-medium text-slate-100 mb-3">Investment Summary</h3>
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
+      <h3 className="text-sm font-medium text-[#1d1d1f] mb-3">Investment Summary</h3>
       <Row label="Total Cash Invested" value={fmt(m.totalCash)} />
       <Row label="Loan Amount" value={fmt(m.loan)} />
       <Row label="Monthly Mortgage" value={fmt(m.piti)} />
       <Row label="Gross Rent Multiplier" value={`${m.grm.toFixed(1)}x`} />
       <Row label="Operating Expenses" value={`${fmt(m.opex / 12)}/mo`} />
-      <div className="border-t border-slate-800 mt-2 pt-2">
+      <div className="border-t border-[rgba(0,0,0,0.08)] mt-2 pt-2">
         <Row label="Projected Sale Proceeds (5yr)" value={fmt(m.projSale)} accent />
         <Row label="Total Return" value={fmt(m.totalReturn)} accent />
       </div>
@@ -514,22 +514,22 @@ function ExpenseBreakdown({ m }) {
   const max = Math.max(...items.map((i) => i.val), 1);
   const total = items.reduce((s, i) => s + i.val, 0);
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h3 className="text-sm font-medium text-slate-100 mb-4">Monthly Expense Breakdown</h3>
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
+      <h3 className="text-sm font-medium text-[#1d1d1f] mb-4">Monthly Expense Breakdown</h3>
       <div className="space-y-2">
         {items.map((it) => (
           <div key={it.label} className="grid grid-cols-12 items-center gap-3 text-sm">
-            <span className="col-span-4 text-slate-400">{it.label}</span>
-            <div className="col-span-6 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-              <div className="h-full bg-amber-500/70" style={{ width: `${Math.min(100, (it.val / max) * 100)}%` }} />
+            <span className="col-span-4 text-[#6e6e73]">{it.label}</span>
+            <div className="col-span-6 h-1.5 rounded-full bg-[rgba(0,0,0,0.06)] overflow-hidden">
+              <div className="h-full bg-[rgba(184,134,11,0.10)]" style={{ width: `${Math.min(100, (it.val / max) * 100)}%` }} />
             </div>
-            <span className="col-span-2 text-right text-slate-200">{fmt(it.val)}</span>
+            <span className="col-span-2 text-right text-[#3a3a3c]">{fmt(it.val)}</span>
           </div>
         ))}
       </div>
-      <div className="border-t border-slate-800 mt-3 pt-3 flex items-center justify-between text-sm">
-        <span className="text-slate-300 font-medium">Total</span>
-        <span className="text-white font-semibold">{fmt(total)}</span>
+      <div className="border-t border-[rgba(0,0,0,0.08)] mt-3 pt-3 flex items-center justify-between text-sm">
+        <span className="text-[#3a3a3c] font-medium">Total</span>
+        <span className="text-[#1d1d1f] font-semibold">{fmt(total)}</span>
       </div>
     </div>
   );
@@ -539,9 +539,9 @@ function Projection({ m }) {
   const yrs = m.years;
   const max = Math.max(...yrs.map((y) => y.propValue));
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h3 className="text-sm font-medium text-slate-100 mb-4">5-Year Projection</h3>
-      <div className="h-44 relative border-l border-b border-slate-800">
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
+      <h3 className="text-sm font-medium text-[#1d1d1f] mb-4">5-Year Projection</h3>
+      <div className="h-44 relative border-l border-b border-[rgba(0,0,0,0.08)]">
         <svg viewBox="0 0 500 160" className="w-full h-full" preserveAspectRatio="none">
           <polyline fill="none" stroke="rgb(245 158 11 / 0.9)" strokeWidth="2"
             points={yrs.map((y, i) => `${i * 125},${160 - (y.propValue / max) * 140}`).join(' ')} />
@@ -549,12 +549,12 @@ function Projection({ m }) {
             points={`0,160 ${yrs.map((y, i) => `${i * 125},${160 - (y.propValue / max) * 140}`).join(' ')} 500,160`} />
         </svg>
       </div>
-      <div className="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
+      <div className="flex justify-between text-[10px] text-[#86868b] mt-1 px-1">
         {yrs.map((y) => <span key={y.year}>Y {y.year}</span>)}
       </div>
       <table className="w-full mt-4 text-sm">
         <thead>
-          <tr className="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-800">
+          <tr className="text-[10px] uppercase tracking-wider text-[#86868b] border-b border-[rgba(0,0,0,0.08)]">
             <th className="py-2 text-left font-normal">Year</th>
             <th className="py-2 text-right font-normal">Cash Flow</th>
             <th className="py-2 text-right font-normal">NOI</th>
@@ -563,11 +563,11 @@ function Projection({ m }) {
         </thead>
         <tbody>
           {yrs.map((y) => (
-            <tr key={y.year} className="border-b border-slate-800/60">
-              <td className="py-1.5 text-slate-300">{y.year}</td>
+            <tr key={y.year} className="border-b border-[rgba(0,0,0,0.08)]/60">
+              <td className="py-1.5 text-[#3a3a3c]">{y.year}</td>
               <td className={`py-1.5 text-right ${y.cashFlow < 0 ? 'text-rose-300' : 'text-emerald-300'}`}>{fmtSigned(y.cashFlow)}</td>
-              <td className="py-1.5 text-right text-slate-300">{fmt(y.noi)}</td>
-              <td className="py-1.5 text-right text-slate-200">{fmt(y.propValue)}</td>
+              <td className="py-1.5 text-right text-[#3a3a3c]">{fmt(y.noi)}</td>
+              <td className="py-1.5 text-right text-[#3a3a3c]">{fmt(y.propValue)}</td>
             </tr>
           ))}
         </tbody>
@@ -578,13 +578,13 @@ function Projection({ m }) {
 
 function BrrrAnalysis({ m }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h3 className="text-sm font-medium text-slate-100 mb-3">BRRRR Analysis</h3>
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
+      <h3 className="text-sm font-medium text-[#1d1d1f] mb-3">BRRRR Analysis</h3>
       <Row label="Refi Loan Amount" value={fmt(m.refiLoan)} />
       <Row label="Cash Out Received" value={fmtSigned(m.cashOut)} tone={m.cashOut < 0 ? 'bad' : 'good'} />
       <Row label="Cash Left in Deal" value={fmt(m.cashLeft)} />
       <Row label="New Mortgage" value={`${fmt(m.newPiti)}/mo`} />
-      <div className="border-t border-slate-800 mt-2 pt-2">
+      <div className="border-t border-[rgba(0,0,0,0.08)] mt-2 pt-2">
         <Row label="CoC After Refinance" value={fmtPct(m.cocAfterRefi)} tone={m.cocAfterRefi >= 8 ? 'good' : 'bad'} />
         <Row label="Equity Created" value={fmtSigned(m.equityCreated)} tone={m.equityCreated < 0 ? 'bad' : 'good'} />
       </div>
@@ -595,8 +595,8 @@ function BrrrAnalysis({ m }) {
 function FlipResults({ m, arv, purchasePrice }) {
   return (
     <>
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-        <h3 className="text-sm font-medium text-slate-100 mb-4">Fix & Flip Analysis</h3>
+      <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
+        <h3 className="text-sm font-medium text-[#1d1d1f] mb-4">Fix & Flip Analysis</h3>
         <div className="grid grid-cols-2 gap-3">
           <Kpi label="Net Profit" value={fmtSigned(m.flipNetProfit)} tone={m.flipNetProfit >= 0 ? 'good' : 'bad'} />
           <Kpi label="Total ROI" value={fmtPct(m.flipROI)} tone={m.flipROI >= 0 ? 'good' : 'bad'} />
@@ -604,13 +604,13 @@ function FlipResults({ m, arv, purchasePrice }) {
           <Kpi label="Total Investment" value={fmt(m.flipInvestment)} tone="ok" />
         </div>
       </div>
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+      <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
         <Row label="ARV" value={fmt(arv)} />
         <Row label="Purchase Price" value={fmt(purchasePrice)} />
         <Row label="Rehab Costs" value={fmt(m.rehab)} />
         <Row label="Closing Costs" value={fmt(m.closingBuy)} />
         <Row label="Holding Costs" value={fmt(m.holdingTotal)} />
-        <div className="border-t border-slate-800 mt-2 pt-2">
+        <div className="border-t border-[rgba(0,0,0,0.08)] mt-2 pt-2">
           <Row label="Max Allowable Offer (70% Rule)" value={fmtSigned(m.mao)} accent tone={m.mao < 0 ? 'bad' : 'good'} />
         </div>
       </div>
@@ -624,26 +624,26 @@ function Comps() {
     { addr: '201 Elm Dr', beds: '3bd/2ba', sqft: '1,800 sqft', ppsf: '$155/sqft', date: '2024-10-15', price: 280000 },
   ];
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-medium text-slate-100">Comparable Sales (Comps)</h3>
-          <p className="text-[11px] text-slate-500">Avg: $288K · $172/sqft</p>
+          <h3 className="text-sm font-medium text-[#1d1d1f]">Comparable Sales (Comps)</h3>
+          <p className="text-[11px] text-[#86868b]">Avg: $288K · $172/sqft</p>
         </div>
-        <button className="px-3 py-1.5 text-xs rounded-md border border-slate-700 hover:border-slate-600 text-slate-200 flex items-center gap-1.5">
+        <button className="px-3 py-1.5 text-xs rounded-md border border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.10)] text-[#3a3a3c] flex items-center gap-1.5">
           <Plus className="w-3.5 h-3.5" /> Add Comp
         </button>
       </div>
       <div className="space-y-2">
         {comps.map((c) => (
-          <div key={c.addr} className="flex items-center justify-between border-t border-slate-800 pt-2 text-sm">
+          <div key={c.addr} className="flex items-center justify-between border-t border-[rgba(0,0,0,0.08)] pt-2 text-sm">
             <div>
-              <p className="text-slate-200 flex items-center gap-2"><Home className="w-3.5 h-3.5 text-amber-400" /> {c.addr}</p>
-              <p className="text-[11px] text-slate-500 ml-5">{c.beds} · {c.sqft} · {c.ppsf} · {c.date}</p>
+              <p className="text-[#3a3a3c] flex items-center gap-2"><Home className="w-3.5 h-3.5 text-[#b8860b]" /> {c.addr}</p>
+              <p className="text-[11px] text-[#86868b] ml-5">{c.beds} · {c.sqft} · {c.ppsf} · {c.date}</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-slate-100 font-medium">{fmt(c.price)}</span>
-              <button className="text-slate-500 hover:text-rose-400"><Trash2 className="w-4 h-4" /></button>
+              <span className="text-[#1d1d1f] font-medium">{fmt(c.price)}</span>
+              <button className="text-[#86868b] hover:text-rose-400"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>
         ))}
@@ -654,9 +654,9 @@ function Comps() {
 
 function Card({ title, children }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40">
-      <div className="px-5 py-3 border-b border-slate-800">
-        <h3 className="text-sm font-medium text-slate-100">{title}</h3>
+    <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40">
+      <div className="px-5 py-3 border-b border-[rgba(0,0,0,0.08)]">
+        <h3 className="text-sm font-medium text-[#1d1d1f]">{title}</h3>
       </div>
       <div className="p-5 grid grid-cols-2 gap-4">{children}</div>
     </div>
@@ -666,12 +666,12 @@ function Card({ title, children }) {
 function Field({ label, value, onChange, prefix, suffix, step }) {
   return (
     <label className="block">
-      <span className="block text-xs text-slate-400 mb-1.5">{label}</span>
+      <span className="block text-xs text-[#6e6e73] mb-1.5">{label}</span>
       <div className="relative">
-        {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{prefix}</span>}
+        {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#86868b] text-sm">{prefix}</span>}
         <input type="number" step={step ?? 1} value={value} onChange={(e) => onChange(Number(e.target.value) || 0)}
-          className={`w-full bg-slate-950 border border-slate-800 rounded-md py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500/60 ${prefix ? 'pl-7' : 'pl-3'} ${suffix ? 'pr-12' : 'pr-3'}`} />
-        {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">{suffix}</span>}
+          className={`w-full bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] rounded-md py-2 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#b8860b]/60 ${prefix ? 'pl-7' : 'pl-3'} ${suffix ? 'pr-12' : 'pr-3'}`} />
+        {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#86868b] text-sm">{suffix}</span>}
       </div>
     </label>
   );
@@ -680,8 +680,8 @@ function Field({ label, value, onChange, prefix, suffix, step }) {
 function Divider({ label }) {
   return (
     <div className="col-span-2 flex items-center gap-3 mt-2">
-      <span className="text-[10px] uppercase tracking-wider text-slate-500">{label}</span>
-      <div className="flex-1 h-px bg-slate-800" />
+      <span className="text-[10px] uppercase tracking-wider text-[#86868b]">{label}</span>
+      <div className="flex-1 h-px bg-[rgba(0,0,0,0.06)]" />
     </div>
   );
 }
@@ -690,8 +690,8 @@ function Row({ label, value, accent, tone }) {
   const toneCls = tone === 'bad' ? 'text-rose-300' : tone === 'good' ? 'text-emerald-300' : '';
   return (
     <div className={`flex items-center justify-between py-1.5 text-sm ${accent ? 'font-medium' : ''}`}>
-      <span className="text-slate-400">{label}</span>
-      <span className={`${accent ? 'text-amber-300' : 'text-slate-200'} ${toneCls}`}>{value}</span>
+      <span className="text-[#6e6e73]">{label}</span>
+      <span className={`${accent ? 'text-[#b8860b]' : 'text-[#3a3a3c]'} ${toneCls}`}>{value}</span>
     </div>
   );
 }
@@ -719,18 +719,18 @@ function PropertySelector({ deals, loaded }) {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">Deal Analyzer</h1>
-        <p className="text-sm text-slate-400 mt-1">Choose a property to analyze</p>
+        <h1 className="text-2xl font-semibold text-[#1d1d1f]">Deal Analyzer</h1>
+        <p className="text-sm text-[#6e6e73] mt-1">Choose a property to analyze</p>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-5">
         <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6e6e73]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by address, city, ZIP..."
-            className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
+            className="w-full bg-white border border-[rgba(0,0,0,0.08)] rounded-lg pl-9 pr-3 py-2.5 text-sm text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#b8860b]/60"
           />
         </div>
       </div>
@@ -742,8 +742,8 @@ function PropertySelector({ deals, loaded }) {
             onClick={() => setFilter(s)}
             className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
               filter === s
-                ? 'bg-amber-400 text-slate-900'
-                : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'
+                ? 'bg-[#b8860b] text-white'
+                : 'bg-[rgba(0,0,0,0.06)] text-[#6e6e73] border border-[rgba(0,0,0,0.08)] hover:text-[#1d1d1f]'
             }`}
           >
             {s} {s !== 'All' ? counts[s] || 0 : deals.length}
@@ -752,27 +752,27 @@ function PropertySelector({ deals, loaded }) {
       </div>
 
       {!loaded ? (
-        <div className="py-24 text-center text-xs text-slate-500 font-mono">Loading properties…</div>
+        <div className="py-24 text-center text-xs text-[#86868b] font-mono">Loading properties…</div>
       ) : deals.length === 0 ? (
         <div className="py-20 text-center max-w-md mx-auto">
-          <div className="inline-flex w-12 h-12 rounded-full bg-slate-800 items-center justify-center mb-4">
-            <Search className="w-5 h-5 text-slate-500" />
+          <div className="inline-flex w-12 h-12 rounded-full bg-[rgba(0,0,0,0.06)] items-center justify-center mb-4">
+            <Search className="w-5 h-5 text-[#86868b]" />
           </div>
-          <p className="text-slate-200 font-medium mb-1">No properties yet</p>
-          <p className="text-sm text-slate-400 mb-6">
+          <p className="text-[#3a3a3c] font-medium mb-1">No properties yet</p>
+          <p className="text-sm text-[#6e6e73] mb-6">
             Add your first deal in Properties to start analyzing deals.
           </p>
           <Link
             to="/admin/deal/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-300"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#b8860b] text-white font-semibold hover:opacity-90"
           >
             Add your first property
           </Link>
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-slate-300 mb-2">No matches.</p>
-          <p className="text-xs text-slate-500">Try a different filter or search.</p>
+          <p className="text-[#3a3a3c] mb-2">No matches.</p>
+          <p className="text-xs text-[#86868b]">Try a different filter or search.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -782,19 +782,19 @@ function PropertySelector({ deals, loaded }) {
               <Link
                 key={d.id}
                 to={`/deal-analyzer/${d.id}`}
-                className="block rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-900/70 hover:border-slate-700 transition-colors px-4 py-4"
+                className="block rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 hover:bg-white/70 hover:border-[rgba(0,0,0,0.08)] transition-colors px-4 py-4"
               >
                 <div className="flex items-center gap-4">
                   {d.photoUrl ? (
-                    <img src={d.photoUrl} alt="" className="w-14 h-14 rounded-lg object-cover border border-slate-800 flex-shrink-0" />
+                    <img src={d.photoUrl} alt="" className="w-14 h-14 rounded-lg object-cover border border-[rgba(0,0,0,0.08)] flex-shrink-0" />
                   ) : (
-                    <div className="w-14 h-14 rounded-lg bg-slate-800 border border-slate-800 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-5 h-5 text-slate-500" />
+                    <div className="w-14 h-14 rounded-lg bg-[rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.08)] flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-[#86868b]" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-white text-sm font-semibold truncate">{d.addr || '—'}</p>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">
+                    <p className="text-[#1d1d1f] text-sm font-semibold truncate">{d.addr || '—'}</p>
+                    <p className="text-xs text-[#6e6e73] truncate mt-0.5">
                       {[d.city, d.state || d.zip].filter(Boolean).join(', ')}
                       {d.type ? ` · ${d.type}` : ''}
                       {d.beds ? ` · ${d.beds}bd` : ''}{d.baths ? ` / ${d.baths}ba` : ''}
@@ -802,12 +802,12 @@ function PropertySelector({ deals, loaded }) {
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-white text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
+                    <p className="text-[#1d1d1f] text-sm font-semibold">${Number(d.ask || 0).toLocaleString()}</p>
                     {d.arv > 0 && (
                       <p className="text-emerald-400 text-xs mt-0.5">ARV: ${Number(d.arv).toLocaleString()}</p>
                     )}
                     {spread != null && spread !== 0 && (
-                      <p className="text-slate-500 text-[10px] mt-0.5">{spread}% spread</p>
+                      <p className="text-[#86868b] text-[10px] mt-0.5">{spread}% spread</p>
                     )}
                     {d.status && (
                       <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] border border-emerald-500/30">
