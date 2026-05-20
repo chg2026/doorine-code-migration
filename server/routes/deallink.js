@@ -385,7 +385,7 @@ router.get('/offers', async (req, res) => {
 // ─── IM SHARE LINK ────────────────────────────────────────────────────────
 
 router.post('/deals/:id/im/share', (req, res) => {
-  res.json({ url: `https://doorine.com/im/${req.params.id}` })
+  res.json({ slug: `https://doorine.com/im/${req.params.id}` })
 })
 
 // ─── MARKETPLACE ─────────────────────────────────────────────────────────
