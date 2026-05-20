@@ -23,7 +23,8 @@ export default function Signup() {
   // Email state
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [fullName, setFullName] = React.useState('');
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
 
   // Phone state
   const [phone, setPhone] = React.useState('');
@@ -54,7 +55,7 @@ export default function Signup() {
   async function submitEmail(e) {
     e.preventDefault();
     resetMessages();
-    if (!email.trim() || !password || !fullName.trim()) {
+    if (!email.trim() || !password || !firstName.trim()) {
       setError('Name, email, and password are required.');
       return;
     }
@@ -67,7 +68,8 @@ export default function Signup() {
       const { data } = await axios.post(`${API_BASE}/auth/signup`, {
         email: email.trim(),
         password,
-        full_name: fullName.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         product_code: 'deallink',
       });
       if (data?.error === 'already_registered') {
@@ -195,7 +197,10 @@ export default function Signup() {
 
               {method === 'email' ? (
                 <form onSubmit={submitEmail} className="mt-6 space-y-4">
-                  <Field label="Full name"><Input value={fullName} onChange={(e) => { setFullName(e.target.value); resetMessages(); }} placeholder="Jordan Rodriguez" autoFocus disabled={submitting} /></Field>
+                  <div className="flex gap-3">
+                    <div className="flex-1"><Field label="First name"><Input value={firstName} onChange={(e) => { setFirstName(e.target.value); resetMessages(); }} placeholder="Jordan" autoFocus disabled={submitting} required /></Field></div>
+                    <div className="flex-1"><Field label="Last name"><Input value={lastName} onChange={(e) => { setLastName(e.target.value); resetMessages(); }} placeholder="Rodriguez" disabled={submitting} /></Field></div>
+                  </div>
                   <Field label="Email"><Input type="email" value={email} onChange={(e) => { setEmail(e.target.value); resetMessages(); }} placeholder="you@email.com" disabled={submitting} /></Field>
                   <Field label="Password"><Input type="password" value={password} onChange={(e) => { setPassword(e.target.value); resetMessages(); }} placeholder="At least 8 characters" disabled={submitting} /></Field>
                   {error && <p className="text-sm text-red-400">{error}</p>}
