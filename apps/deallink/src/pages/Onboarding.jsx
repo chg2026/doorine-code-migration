@@ -33,7 +33,10 @@ export default function Onboarding() {
 
   // Step 1
   const [handle, setHandle] = React.useState((profile.handle || '').replace(/\.deals$/, ''));
-  const [name, setName] = React.useState(profile.name || authFullName || '');
+  const initialFull = (profile.name || authFullName || '').trim();
+  const initialParts = initialFull ? initialFull.split(/\s+/) : [];
+  const [firstName, setFirstName] = React.useState(initialParts[0] || '');
+  const [lastName, setLastName] = React.useState(initialParts.slice(1).join(' ') || '');
   const [email, setEmail] = React.useState(profile.email || authEmail || '');
 
   // Step 2
@@ -51,7 +54,12 @@ export default function Onboarding() {
 
   React.useEffect(() => {
     if (!email && authEmail) setEmail(authEmail);
-    if (!name && authFullName) { setName(authFullName); setDisplayName(authFullName); }
+    if (!firstName && !lastName && authFullName) {
+      const parts = authFullName.trim().split(/\s+/);
+      setFirstName(parts[0] || '');
+      setLastName(parts.slice(1).join(' ') || '');
+      setDisplayName(authFullName);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authEmail, authFullName]);
 
@@ -63,14 +71,15 @@ export default function Onboarding() {
     if (!handle.trim()) { show('Pick a handle to continue'); return; }
     setBusy(true);
     try {
-      const initials = (name || handle).split(/\s+|\./).filter(Boolean).slice(0, 2)
+      const name = [firstName, lastName].filter(Boolean).join(' ').trim() || handle;
+      const initials = name.split(/\s+|\./).filter(Boolean).slice(0, 2)
         .map((w) => w[0].toUpperCase()).join('') || handle[0].toUpperCase();
       await dispatch({
         type: 'update_profile',
         patch: {
           handle: handle.trim().toLowerCase() + '.deals',
           email: email.trim(),
-          name: name.trim() || handle,
+          name,
           initials,
           onboarding: { ...(profile.onboarding || {}), claimed: true },
         },
@@ -149,7 +158,8 @@ export default function Onboarding() {
         {step === 1 && (
           <Step1
             handle={handle} setHandle={setHandle}
-            name={name} setName={setName}
+            firstName={firstName} setFirstName={setFirstName}
+            lastName={lastName} setLastName={setLastName}
             email={email} setEmail={setEmail}
             emailLocked={emailLocked}
             authFullName={authFullName} authEmail={authEmail}
@@ -303,7 +313,7 @@ function GhostButton({ children, onClick, type = 'button' }) {
 }
 
 // ─── STEP 1 — claim handle ───────────────────────────────────────────────
-function Step1({ handle, setHandle, name, setName, email, setEmail, emailLocked, authFullName, authEmail, onContinue, busy }) {
+function Step1({ handle, setHandle, firstName, setFirstName, lastName, setLastName, email, setEmail, emailLocked, authFullName, authEmail, onContinue, busy }) {
   const [checking] = React.useState(false);
   const available = handle.trim().length >= 2;
   return (
@@ -329,9 +339,18 @@ function Step1({ handle, setHandle, name, setName, email, setEmail, emailLocked,
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <NeuField label="Your name">
-          <NeuInput value={name} onChange={(e) => setName(e.target.value)} placeholder="J Rodriguez" />
-        </NeuField>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <NeuField label="First name">
+              <NeuInput value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" required />
+            </NeuField>
+          </div>
+          <div style={{ flex: 1 }}>
+            <NeuField label="Last name">
+              <NeuInput value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Rodriguez" />
+            </NeuField>
+          </div>
+        </div>
         {!emailLocked && (
           <NeuField label="Email">
             <NeuInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" required />

@@ -1,0 +1,43 @@
+In apps/deallink/src/pages/Onboarding.jsx, make these targeted changes:
+
+CHANGE 1 — Replace the single name state with two fields (around line 14):
+Replace:
+  const [name, setName] = React.useState(state.profile.name || '');
+With:
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
+
+CHANGE 2 — Update the claim function to join the two fields before dispatching.
+Find this line inside the claim function:
+  const initials = (name || handle).split(/\s+|\./).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || handle[0].toUpperCase();
+Replace it with:
+  const name = [firstName, lastName].filter(Boolean).join(' ').trim() || handle;
+  const initials = name.split(/\s+|\./).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || handle[0].toUpperCase();
+
+CHANGE 3 — Update the ClaimStep call to pass the two new props instead of name/setName.
+Find:
+  if (step === 'claim') return <ClaimStep handle={handle} setHandle={setHandle} email={email} setEmail={setEmail} name={name} setName={setName} onSubmit={claim} toast={node} />;
+Replace with:
+  if (step === 'claim') return <ClaimStep handle={handle} setHandle={setHandle} email={email} setEmail={setEmail} firstName={firstName} setFirstName={setFirstName} lastName={lastName} setLastName={setLastName} onSubmit={claim} toast={node} />;
+
+CHANGE 4 — Update the ClaimStep function signature and replace the "Your name" input with two side-by-side fields.
+Find the ClaimStep function signature:
+  function ClaimStep({ handle, setHandle, email, setEmail, name, setName, onSubmit, toast }) {
+Replace with:
+  function ClaimStep({ handle, setHandle, email, setEmail, firstName, setFirstName, lastName, setLastName, onSubmit, toast }) {
+
+Then find this block inside ClaimStep:
+  <Field label="Your name">
+    <input value={name} onChange={(e) => setName(e.target.value)} placeholder="J Rodriguez" />
+  </Field>
+Replace with:
+  <div style={{ display: 'flex', gap: 8 }}>
+    <Field label="First name">
+      <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" required />
+    </Field>
+    <Field label="Last name">
+      <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Rodriguez" />
+    </Field>
+  </div>
+
+Do not change anything else in the file. Only edit files inside apps/deallink/. Do not touch any other folder.
