@@ -54,21 +54,38 @@ export default function AdminProfile() {
     setUploading(true);
     try {
       const ext = file.name.split('.').pop() || 'jpg';
-      const path = `profiles/${form.handle || 'user'}/avatar-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage
+      const path = `profiles/${form.handle || state.profile.handle || 'user'}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
         .from('deal-photos')
         .upload(path, file, { upsert: true, contentType: file.type });
-      if (error) throw error;
+      if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from('deal-photos').getPublicUrl(path);
-      setField('avatarUrl', urlData.publicUrl);
-      show('Photo uploaded');
-      // Auto-save so the store and server update immediately
-      setTimeout(() => save(), 100);
+      const newAvatarUrl = urlData.publicUrl;
+      // Update local form state for immediate preview
+      setField('avatarUrl', newAvatarUrl);
+      // Save directly to server — bypass form state closure by passing newAvatarUrl explicitly
+      const updated = await DealLinkAPI.patchProfile({
+        handle: form.handle || state.profile.handle || '',
+        avatarUrl: newAvatarUrl,
+        bio: form.bio || '',
+        backgroundType: theme.tone,
+        backgroundValue: theme.accent,
+        socialLinks: form.socialLinks || {},
+        name: form.name || '',
+        marketplaceOptIn: !!form.marketplaceOptIn,
+        onboarding: form.onboarding || {},
+        tone: theme.tone,
+        accentColor: theme.accent,
+        radius: theme.radius,
+        gradientEnabled: !!theme.gradient,
+      });
+      dispatch({ type: 'set_profile', profile: updated });
+      show('Photo saved to profile');
     } catch (err) {
-      show(err?.message || 'Upload failed');
+      show(err?.message || 'Upload failed — check that you are signed in');
     } finally {
       setUploading(false);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   }
 
