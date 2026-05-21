@@ -435,7 +435,7 @@ function ChgCalculatorFrame({ deal, strategy, onSave }) {
     addr:     encodeURIComponent(deal.addr || ''),
   });
 
-  const src = `/chg-calculator.html?${params.toString()}`;
+  const src = `https://chg.doorine.com/underwriting-calc.html?${params.toString()}`;
 
   return (
     <div style={{
