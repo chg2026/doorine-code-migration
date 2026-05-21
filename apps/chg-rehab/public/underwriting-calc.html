@@ -28,15 +28,15 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
 /* ── NAV BAR ── */
 .nav{height:48px;background:rgba(27,58,92,0.97);backdrop-filter:blur(20px);display:flex;align-items:center;padding:0 20px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,0.08);}
 .nav-brand{color:#fff;font-size:15px;font-weight:700;letter-spacing:-0.02em;margin-right:10px;}
-.nav-brand em{color:#7EB5E6;font-weight:400;font-style:normal;}
+.nav-brand em{color:#A8C4D0;font-weight:400;font-style:normal;}
 .nav-divider{width:0.5px;height:18px;background:rgba(255,255,255,0.18);margin:0 10px;}
 .nav-links{display:flex;height:48px;}
 .nl{height:48px;padding:0 13px;border:none;background:transparent;color:rgba(255,255,255,0.55);font-size:12px;font-family:var(--font);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:-0.01em;}
 .nl:hover{color:#fff;}
-.nl.active{color:#fff;border-bottom-color:#7EB5E6;font-weight:500;}
+.nl.active{color:#fff;border-bottom-color:#A8C4D0;font-weight:500;}
 .nl.dim{opacity:0.3;cursor:default;}
 .nav-r{margin-left:auto;display:flex;align-items:center;}
-.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7EB5E6,#4A90D9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#A8C4D0,#5B8FA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
 
 /* ── DEAL BAR ── */
 .deal-bar{background:var(--surface);border-bottom:0.5px solid var(--b1);padding:9px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
@@ -259,7 +259,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
 .pl-card-price{font-size:13px;font-weight:700;color:var(--t1);}
 .pl-card-metric{font-size:10px;color:var(--t3);margin-top:2px;}
 .pl-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:0.5px solid var(--b1);}
-.pl-avatar{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#7EB5E6,#4A90D9);color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.pl-avatar{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#A8C4D0,#5B8FA8);color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .pl-days{font-size:9px;color:var(--t3);}
 /* Rehab Manager */
 .rm-tabs{display:flex;background:var(--surface);border-bottom:0.5px solid var(--b1);flex-shrink:0;padding:0 20px;gap:2px;}
@@ -1708,7 +1708,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
       <button class="pl-filter-tab" onclick="setContactFilter('contractor',this)" data-role="contractor">Contractors</button>
     </div>
     <div id="ct-list">
-      <div class="ct-card" data-role="team" onclick="alert('Contact details — coming next sprint')"><div class="ct-av" style="background:linear-gradient(135deg,#7EB5E6,#4A90D9);">NL</div><div class="ct-info"><div class="ct-name">Nicole L.</div><div class="ct-role">Acquisitions Manager · CHG</div></div><div class="ct-contact">office@goldbridgerei.com</div></div>
+      <div class="ct-card" data-role="team" onclick="alert('Contact details — coming next sprint')"><div class="ct-av" style="background:linear-gradient(135deg,#A8C4D0,#5B8FA8);">NL</div><div class="ct-info"><div class="ct-name">Nicole L.</div><div class="ct-role">Acquisitions Manager · CHG</div></div><div class="ct-contact">office@goldbridgerei.com</div></div>
       <div class="ct-card" data-role="team" onclick="alert('Contact details — coming next sprint')"><div class="ct-av" style="background:linear-gradient(135deg,#FF9F0A,#FF6B00);">RG</div><div class="ct-info"><div class="ct-name">Roey G.</div><div class="ct-role">CEO · CHG Software</div></div><div class="ct-contact">(216) 555-0142</div></div>
       <div class="ct-card" data-role="lender" onclick="alert('Contact details — coming next sprint')"><div class="ct-av" style="background:linear-gradient(135deg,#34C759,#1A6B35);">JM</div><div class="ct-info"><div class="ct-name">James Martinez</div><div class="ct-role">Hard money lender · First Capital</div></div><div class="ct-contact">james@firstcap.com</div></div>
       <div class="ct-card" data-role="agent" onclick="alert('Contact details — coming next sprint')"><div class="ct-av" style="background:linear-gradient(135deg,#FF3B30,#8C1515);">SR</div><div class="ct-info"><div class="ct-name">Sarah Reynolds</div><div class="ct-role">Real estate agent · ReMax</div></div><div class="ct-contact">(813) 555-0198</div></div>
@@ -2659,7 +2659,7 @@ function updateCashFlowChart(annualCFs,tied,rentGrowthPct){
       labels,
       datasets:[
         {type:'bar',label:'Annual CF',data:barData,backgroundColor:isPos?'rgba(52,199,89,0.72)':'rgba(255,59,48,0.72)',borderRadius:5,barPercentage:0.55,categoryPercentage:0.7,yAxisID:'y'},
-        {type:'line',label:'Cumulative',data:cumData,borderColor:isPos?'#0071E3':'#FF3B30',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:isPos?'#0071E3':'#FF3B30',tension:0.35,yAxisID:'y2'}
+        {type:'line',label:'Cumulative',data:cumData,borderColor:isPos?'#1F4D5C':'#FF3B30',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:isPos?'#1F4D5C':'#FF3B30',tension:0.35,yAxisID:'y2'}
       ]
     },
     options:{

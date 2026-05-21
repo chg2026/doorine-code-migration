@@ -49,7 +49,7 @@ export default function PmLedToggle({
         cursor: pending ? "wait" : "pointer",
         background: pmLed ? "var(--blue-bg)" : "var(--bg-secondary)",
         color: pmLed ? "var(--blue-txt)" : "var(--text-secondary)",
-        borderColor: pmLed ? "rgba(24,95,165,0.4)" : "var(--border-mid)",
+        borderColor: pmLed ? "rgba(31,77,92,0.4)" : "var(--border-mid)",
       }}
     >
       <span
