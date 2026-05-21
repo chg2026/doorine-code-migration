@@ -578,6 +578,43 @@
   // ── Save button ──────────────────────────────────────────────
   $('save-btn').addEventListener('click', function () {
     var r = compute();
+
+    // Deal structure breakdown — bars + donut share the same cost components.
+    var breakdown = [
+      { label: 'Purchase',         amount: r.purchase,            color: '#3B82F6' },
+      { label: 'Rehab',            amount: r.rehab,               color: '#EF4444' },
+      { label: 'Closing',          amount: r.closing,             color: '#FBBF24' },
+      { label: 'Holding',          amount: r.holding,             color: '#A78BFA' },
+      { label: 'Cost of sale',     amount: r.costOfSale,          color: '#F472B6' },
+      { label: 'Projected profit', amount: Math.max(0, r.profit), color: '#10B981' }
+    ];
+
+    // ARV sensitivity — bear (−10%), base, bull (+10%).
+    function senCase(pct, label) {
+      var s = compute({ arv: r.arv * (1 + pct) });
+      var pctOfSale = s.arv > 0 ? (s.profit / s.arv) * 100 : 0;
+      return { label: label, deltaPct: pct, salePrice: s.arv, profit: s.profit, profitPctOfSale: pctOfSale };
+    }
+    var sensitivity = {
+      bear: senCase(-0.10, 'Bear case'),
+      base: senCase( 0.00, 'Base case'),
+      bull: senCase( 0.10, 'Bull case')
+    };
+
+    // Doomsday stress test — rehab +/-10% with inverse ARV move, plus
+    // baseline. Mirrors `renderDoom()` exactly (including the +$2,000 rehab
+    // surprise applied to all three cases) so saved/public values match the
+    // bars the user saw on screen.
+    function doomCase(pct, label) {
+      var s = compute({ rehab: r.rehab * (1 + pct) + 2000, arv: r.arv * (1 - pct) });
+      return { label: label, deltaPct: pct, profit: s.profit, allIn: s.allIn };
+    }
+    var doomsday = {
+      low:  doomCase(-0.10, 'Best case'),
+      base: doomCase( 0.00, 'Baseline'),
+      high: doomCase( 0.10, 'Worst case')
+    };
+
     var payload = {
       type: 'chg-calc-save',
       strategy: 'flip-extra',
@@ -600,7 +637,10 @@
         npv:        r.npv,
         costOfSale: r.costOfSale,
         allIn:      r.allIn,
-      }
+      },
+      breakdown:   breakdown,
+      sensitivity: sensitivity,
+      doomsday:    doomsday,
     };
     try { window.parent.postMessage(payload, '*'); } catch (e) {}
     var btn = $('save-btn');

@@ -9,6 +9,7 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Lock, ArrowLeft, ArrowRight, Building2, MapPin, Bed, Bath, Ruler, KeyRound, ShieldCheck, Hammer, BarChart3, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
+import FlipExtraVisuals, { isFlipExtra } from '../components/FlipExtraVisuals.jsx';
 
 const IM_API_BASE = 'https://rei-code-dev.replit.app/api/deallink/im';
 const BUYER_STORAGE_KEY = 'dl.im.buyer';
@@ -552,10 +553,20 @@ function Step3Verify({ deal, value, onChange, onBack, onVerify, submitting }) {
 
 // ─── Full deal report (after verification) ───────────────────────────────
 function FullDealReport({ deal, dealId, buyer, onDashboard }) {
-  const cfg = deal.im_config || deal.imConfig || { show_photos: true, show_analyzer: true, show_rehab: true };
-  const showPhotos   = cfg.show_photos   !== false;
-  const showAnalyzer = cfg.show_analyzer !== false;
-  const showRehab    = cfg.show_rehab    !== false;
+  // The IM memo builder writes a nested shape (`cfg.sections.<key>` /
+  // `cfg.fields.<key>`); the legacy renderer used flat `cfg.show_*` keys.
+  // Support both so old and new memos both render correctly.
+  const cfg = deal.im_config || deal.imConfig || {};
+  const sections = (cfg && typeof cfg.sections === 'object' && cfg.sections) || {};
+  const showPhotos   = cfg.show_photos   !== false && sections.photos          !== false;
+  const showAnalyzer = cfg.show_analyzer !== false && sections.dealAnalysis    !== false;
+  const showRehab    = cfg.show_rehab    !== false && sections.rehabBreakdown  !== false;
+  // Fix & Flip+ advanced viz toggles default ON for deal structure and
+  // sensitivity, OFF for the doomsday stress test (matches the memo
+  // builder defaults in DealEditor.jsx IM_SECTIONS).
+  const showFlipExtraStructure   = sections.flipExtraDealStructure !== false;
+  const showFlipExtraSensitivity = sections.flipExtraSensitivity   !== false;
+  const showFlipExtraStress      = sections.flipExtraStressTest    === true;
 
   const wholesaler = deal.wholesaler || {};
   const spread = (deal.arv != null && deal.ask != null) ? Number(deal.arv) - Number(deal.ask) : null;
@@ -567,6 +578,7 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
   const metrics = deriveMetrics(analyzer);
   const strategy = analyzer?.strategy || 'rental';
   const isFlip = strategy === 'flip';
+  const flipExtra = isFlipExtra(analyzer);
 
   const rehabItems = (metrics?.items || []).filter((i) => i && (i.category || i.description || Number(i.cost)));
   const rehabTotal = rehabItems.reduce((sum, i) => sum + (Number(i.cost) || 0), 0);
@@ -625,8 +637,26 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
         </div>
       </section>
 
-      {/* Analyzer */}
-      {showAnalyzer && (
+      {/* Analyzer — Fix & Flip+ uses dedicated visualizations */}
+      {flipExtra && (showAnalyzer || showFlipExtraStructure || showFlipExtraSensitivity || showFlipExtraStress) && (
+        <section>
+          <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2 flex items-center gap-2">
+            <BarChart3 className="w-3.5 h-3.5 text-[#b8860b]" /> Deal analysis · Fix &amp; Flip+
+          </h3>
+          <FlipExtraVisuals
+            analysis={analyzer}
+            show={{
+              keyMetrics:    showAnalyzer,
+              dealStructure: showFlipExtraStructure,
+              sensitivity:   showFlipExtraSensitivity,
+              stressTest:    showFlipExtraStress,
+            }}
+          />
+        </section>
+      )}
+
+      {/* Analyzer — rental / flip / etc. */}
+      {!flipExtra && showAnalyzer && (
         <section>
           <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2 flex items-center gap-2">
             <BarChart3 className="w-3.5 h-3.5 text-[#b8860b]" /> Deal analysis
@@ -678,8 +708,8 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
         </section>
       )}
 
-      {/* Rehab line items */}
-      {showRehab && (
+      {/* Rehab line items — skipped for flip-extra (no items array). */}
+      {showRehab && !flipExtra && (
         <section>
           <h3 className="text-[10px] uppercase tracking-wider text-[#86868b] font-semibold mb-2 flex items-center gap-2">
             <Hammer className="w-3.5 h-3.5 text-[#b8860b]" /> Rehab estimate
