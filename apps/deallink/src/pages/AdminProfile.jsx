@@ -62,6 +62,8 @@ export default function AdminProfile() {
       const { data: urlData } = supabase.storage.from('deal-photos').getPublicUrl(path);
       setField('avatarUrl', urlData.publicUrl);
       show('Photo uploaded');
+      // Auto-save so the store and server update immediately
+      setTimeout(() => save(), 100);
     } catch (err) {
       show(err?.message || 'Upload failed');
     } finally {

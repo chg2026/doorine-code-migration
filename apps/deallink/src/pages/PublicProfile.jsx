@@ -190,13 +190,19 @@ export default function PublicProfile() {
             }} />
             Join buyer list
           </button>
-          <div style={{
-            padding: '10px 18px', borderRadius: 999,
-            background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 10),
-            fontSize: 12, color: tone.mute, letterSpacing: 0.4,
-          }}>
+          <a
+            href={`https://doorine.com/r/${profile.handle}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: '10px 18px', borderRadius: 999,
+              background: tone.base, boxShadow: neuOut(tone.base, tone.dark, 0.85, 10),
+              fontSize: 12, color: tone.mute, letterSpacing: 0.4,
+              textDecoration: 'none', display: 'inline-block',
+            }}
+          >
             Join <span style={{ color: tone.ink, fontWeight: 600 }}>@{profile.handle}</span> on REI Flywheel
-          </div>
+          </a>
         </div>
         </div>
       </div>
