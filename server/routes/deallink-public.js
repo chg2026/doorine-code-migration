@@ -62,6 +62,8 @@ function publicProfile(p) {
     accent_color: p.accent_color,
     radius: p.radius,
     gradient_enabled: p.gradient_enabled,
+    avatar_url: p.avatar_url || null,
+    social_links: p.social_links || {},
   }
 }
 
