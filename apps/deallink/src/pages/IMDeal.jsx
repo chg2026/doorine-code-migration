@@ -369,8 +369,8 @@ function Step0Preview({ deal, onUnlock }) {
       )}
       <div className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white overflow-hidden">
         <div className="aspect-[16/9] bg-gradient-to-br from-[#f5f5f7] to-white flex items-center justify-center relative">
-          {deal.photo_url ? (
-            <img src={deal.photo_url} alt="" className="w-full h-full object-cover blur-sm opacity-60" />
+          {(deal.photo_url || deal.photos?.[0]) ? (
+            <img src={deal.photo_url || deal.photos[0]} alt="" className="w-full h-full object-cover blur-sm opacity-60" />
           ) : (
             <Building2 className="w-16 h-16 text-[#86868b]" />
           )}
