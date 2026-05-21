@@ -19,7 +19,6 @@ export default async function Home() {
         </ul>
         <div className="lp-nav-right">
           <a className="lp-btn-ghost" href="/login">Sign in</a>
-          <a className="lp-btn-cta" href="/login">Request demo</a>
         </div>
       </nav>
 
@@ -31,7 +30,6 @@ export default async function Home() {
           <p className="lp-hero-sub">CHG is the end-to-end operating system for real estate rehab businesses — from first underwrite to final close. Manage deals, projects, contractors, and capital all in one place.</p>
           <div className="lp-hero-btns">
             <a className="lp-btn-hero" href="/login">Get started →</a>
-            <a className="lp-btn-hero-ghost" href="/login">Watch demo</a>
           </div>
           <div className="lp-hero-stats">
             <div><div className="lp-hero-stat-num">$14.2M</div><div className="lp-hero-stat-label">Portfolio ARV tracked</div></div>
@@ -188,8 +186,7 @@ export default async function Home() {
         <div className="lp-cta-h">Ready to run your rehab <em>business like a business?</em></div>
         <p className="lp-cta-p">Join operators across the country who use CHG to underwrite faster, build smarter, and close more deals.</p>
         <div className="lp-cta-btns">
-          <a className="lp-btn-cta-lg" href="/login">Request a demo →</a>
-          <a className="lp-btn-cta-ghost" href="/login">Sign in</a>
+          <a className="lp-btn-cta-lg" href="/login">Get started →</a>
         </div>
       </div>
 
