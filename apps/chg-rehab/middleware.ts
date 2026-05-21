@@ -19,6 +19,7 @@ type ProfileFlags = {
 };
 
 const PUBLIC_PATHS = [
+  "/",
   "/login",
   "/phone-auth",
   "/api/auth/login",
