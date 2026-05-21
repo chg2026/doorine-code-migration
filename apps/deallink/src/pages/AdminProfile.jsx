@@ -4,6 +4,7 @@ import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { DealLinkAPI } from '../lib/deallink-api.js';
 import { initialsOf } from '../lib/utils.js';
+import { supabase } from '../lib/supabase.js';
 import {
   NEU_FONT, TONES, TONE_ORDER, ACCENTS, DEFAULT_THEME,
   neuOut, neuIn, neuBg, shade, hex,
@@ -44,6 +45,30 @@ export default function AdminProfile() {
   const [theme, setTheme] = React.useState(() => readTheme(state.profile));
   const [saving, setSaving] = React.useState(false);
   const initialized = React.useRef(false);
+  const fileInputRef = React.useRef(null);
+  const [uploading, setUploading] = React.useState(false);
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `profiles/${form.handle || 'user'}/avatar-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('deal-photos')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('deal-photos').getPublicUrl(path);
+      setField('avatarUrl', urlData.publicUrl);
+      show('Photo uploaded');
+    } catch (err) {
+      show(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
 
   // Hydrate the form ONCE from the store the first time the profile is
   // available. Subsequent store changes (e.g. our own dispatch after save,
@@ -73,7 +98,7 @@ export default function AdminProfile() {
         theme: { radius: theme.radius, gradient: theme.gradient },
       };
       const updated = await DealLinkAPI.patchProfile({
-        handle: state.profile.handle || form.handle || '',
+        handle: form.handle || state.profile.handle || '',
         avatarUrl: form.avatarUrl || '',
         bio: form.bio || '',
         backgroundType: theme.tone,
@@ -137,6 +162,33 @@ export default function AdminProfile() {
                     onChange={(e) => setField('avatarUrl', e.target.value)}
                     placeholder="https://example.com/photo.jpg"
                   />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handlePhotoUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    style={{
+                      marginTop: 8,
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border-2)',
+                      background: 'var(--bone)',
+                      color: 'var(--quill)',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: uploading ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {uploading ? 'Uploading…' : '↑ Upload from computer'}
+                  </button>
                 </div>
               </div>
             </NeuCard>
@@ -150,7 +202,12 @@ export default function AdminProfile() {
                 </div>
                 <div>
                   <Label>Handle</Label>
-                  <NeuInput value={form.handle} readOnly prefix="doorine.com/r/" />
+                  <NeuInput
+                    value={form.handle || ''}
+                    onChange={(e) => setField('handle', e.target.value.toLowerCase().replace(/[^a-z0-9.\-]/g, '').slice(0, 40))}
+                    prefix="doorine.com/r/"
+                    placeholder="yourname"
+                  />
                 </div>
                 {form.handle && (
                   <ShareableLinkRow handle={form.handle} show={show} />

@@ -1,0 +1,80 @@
+In apps/deallink/src/pages/AdminProfile.jsx, make these two targeted changes:
+
+CHANGE 1 — Make handle editable.
+
+A) Find line 153:
+  <NeuInput value={form.handle} readOnly prefix="doorine.com/r/" />
+Replace with:
+  <NeuInput
+    value={form.handle || ''}
+    onChange={(e) => setField('handle', e.target.value.toLowerCase().replace(/[^a-z0-9.\-]/g, '').slice(0, 40))}
+    prefix="doorine.com/r/"
+    placeholder="yourname"
+  />
+
+B) In the save() function, find:
+  handle: state.profile.handle || form.handle || '',
+Replace with:
+  handle: form.handle || state.profile.handle || '',
+
+CHANGE 2 — Add photo upload from computer.
+
+A) Add this import at the top of the file with the other imports:
+  import { supabase } from '../lib/supabase.js';
+
+B) Inside the AdminProfile component, after the existing state declarations, add:
+  const fileInputRef = React.useRef(null);
+  const [uploading, setUploading] = React.useState(false);
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `profiles/${form.handle || 'user'}/avatar-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('deal-photos')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('deal-photos').getPublicUrl(path);
+      setField('avatarUrl', urlData.publicUrl);
+      show('Photo uploaded');
+    } catch (err) {
+      show(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
+
+C) Find the Profile photo section. It currently has a NeuInput for the Image URL. After that NeuInput, add:
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept="image/*"
+    style={{ display: 'none' }}
+    onChange={handlePhotoUpload}
+  />
+  <button
+    type="button"
+    onClick={() => fileInputRef.current?.click()}
+    disabled={uploading}
+    style={{
+      marginTop: 8,
+      width: '100%',
+      padding: '8px 12px',
+      borderRadius: 8,
+      border: '1px solid var(--border-2)',
+      background: 'var(--bone)',
+      color: 'var(--quill)',
+      fontSize: 12,
+      fontWeight: 500,
+      cursor: uploading ? 'not-allowed' : 'pointer',
+      fontFamily: 'inherit',
+    }}
+  >
+    {uploading ? 'Uploading…' : '↑ Upload from computer'}
+  </button>
+
+Do not change anything else. Only edit files inside apps/deallink/. Do not touch any other folder.
