@@ -1,0 +1,184 @@
+Two changes. Both inside apps/deallink/ only.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CHANGE 1 — apps/deallink/public/chg-calculator.html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Add this script block just before the closing </body> tag. Do not touch anything else in the file:
+
+<script>
+// ── REI Flywheel: URL param pre-fill + save-to-deal ─────────────────────
+(function () {
+  function fmt(n) {
+    // format a raw number as comma-separated string for the calculator inputs
+    return n ? Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }) : null;
+  }
+  function setInput(id, val) {
+    var el = document.getElementById(id);
+    if (el && val !== null) { el.value = val; }
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var params = new URLSearchParams(window.location.search);
+    var purchase = fmt(params.get('purchase'));
+    var arv      = fmt(params.get('arv'));
+    var rehab    = fmt(params.get('rehab'));
+    var addr     = params.get('addr') || '';
+
+    // Pre-fill shared assumption panel
+    setInput('ap-price', purchase);
+    setInput('ap-rehab', rehab);
+    // Pre-fill Flip ARV
+    setInput('f-arv', arv);
+
+    // Update deal bar address if present
+    if (addr) {
+      var nameEl = document.getElementById('calc-name');
+      if (nameEl) nameEl.textContent = decodeURIComponent(addr);
+    }
+
+    // Trigger recalculations
+    if (purchase || rehab) { try { recalc(); } catch(e){} }
+    if (arv)               { try { recalcFlip(); } catch(e){} }
+    if (purchase || rehab || arv) { try { recalcB(); } catch(e){} }
+
+    // ── Save button ──────────────────────────────────────────────────────
+    var saveBtn = document.createElement('button');
+    saveBtn.id = 'rei-save-btn';
+    saveBtn.textContent = '💾 Save analysis to deal';
+    saveBtn.style.cssText = [
+      'position:fixed','bottom:16px','right:16px','z-index:9999',
+      'background:#b8860b','color:#fff','border:none','border-radius:8px',
+      'padding:10px 18px','font-size:13px','font-weight:600',
+      'cursor:pointer','font-family:inherit','box-shadow:0 4px 16px rgba(0,0,0,0.2)',
+      'transition:opacity .2s'
+    ].join(';');
+    saveBtn.onmouseenter = function(){ this.style.opacity = '0.85'; };
+    saveBtn.onmouseleave = function(){ this.style.opacity = '1'; };
+
+    saveBtn.onclick = function () {
+      // Determine active strategy tab
+      var strategy = 'flip';
+      var brrrrBtn = document.getElementById('tab-brrrr');
+      if (brrrrBtn && brrrrBtn.classList.contains('active')) strategy = 'brrrr';
+
+      // Collect inputs
+      function raw(id) {
+        var el = document.getElementById(id);
+        return el ? Number((el.value || '0').replace(/,/g,'')) : 0;
+      }
+
+      var payload = {
+        type: 'chg-calc-save',
+        strategy: strategy,
+        savedAt: new Date().toISOString(),
+        inputs: {
+          purchase: raw('ap-price'),
+          rehab:    raw('ap-rehab'),
+          arv:      strategy === 'flip' ? raw('f-arv') : raw('ap-price'),
+          closing:  raw('ap-closing'),
+          holding:  raw('ap-holding'),
+        }
+      };
+
+      window.parent.postMessage(payload, '*');
+
+      // Visual feedback
+      saveBtn.textContent = '✓ Saved!';
+      saveBtn.style.background = '#1F7A4D';
+      setTimeout(function(){
+        saveBtn.textContent = '💾 Save analysis to deal';
+        saveBtn.style.background = '#b8860b';
+      }, 2000);
+    };
+
+    document.body.appendChild(saveBtn);
+  });
+})();
+</script>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CHANGE 2 — apps/deallink/src/pages/DealAnalyzer.jsx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Add two new strategy tabs and an iframe renderer. Make these targeted changes:
+
+A) Find the STRATS array and add two new entries at the end:
+  { k: 'chg-flip',  label: 'Flip Pro',  icon: Briefcase },
+  { k: 'chg-brrrr', label: 'BRRRR Pro', icon: Repeat2   },
+
+Make sure Briefcase and Repeat2 are imported from lucide-react (they are already imported — Briefcase is used, Repeat2 may need adding to the import line).
+
+B) Inside the Analyzer component return, find where the strategy tabs render and the calculator form renders. Add this block so that when strategy is 'chg-flip' or 'chg-brrrr', the iframe renders instead of the existing form:
+
+After the SUBTABS/sub-tab section and before the main calculator form, add:
+
+  {(strategy === 'chg-flip' || strategy === 'chg-brrrr') && (
+    <ChgCalculatorFrame
+      deal={deal}
+      strategy={strategy}
+      onSave={(payload) => {
+        const label = strategy === 'chg-flip' ? 'Flip Pro' : 'BRRRR Pro';
+        const newAnalysis = {
+          id: 'chg-' + Date.now(),
+          strategy: strategy === 'chg-flip' ? 'flip' : 'brrrr',
+          label,
+          savedAt: payload.savedAt,
+          chgInputs: payload.inputs,
+          monthlyRent: 0,
+          purchasePrice: payload.inputs.purchase,
+          rehabCost: payload.inputs.rehab,
+          arv: payload.inputs.arv,
+        };
+        const current = Array.isArray(deal.analyzerState) ? deal.analyzerState : [];
+        const next = [...current, newAnalysis];
+        dispatch({ type: 'update_deal', id: deal.id, patch: { analyzerState: next } });
+        show('Analysis saved to deal');
+      }}
+    />
+  )}
+
+C) Add this component definition near the bottom of the file, before the closing of the module:
+
+function ChgCalculatorFrame({ deal, strategy, onSave }) {
+  const React = window.React || require('react'); // already in scope
+  const iframeRef = React.useRef(null);
+
+  React.useEffect(() => {
+    function handleMessage(e) {
+      if (e.data && e.data.type === 'chg-calc-save') {
+        onSave(e.data);
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onSave]);
+
+  const params = new URLSearchParams({
+    purchase: deal.ask  || '',
+    arv:      deal.arv  || '',
+    rehab:    deal.rehab || '',
+    addr:     encodeURIComponent(deal.addr || ''),
+  });
+
+  const src = `/chg-calculator.html?${params.toString()}`;
+
+  return (
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      height: 'calc(100vh - 180px)',
+      minHeight: 600,
+      border: 'none',
+      borderRadius: 8,
+      overflow: 'hidden',
+    }}>
+      <iframe
+        ref={iframeRef}
+        src={src}
+        title={strategy === 'chg-flip' ? 'Flip Pro Calculator' : 'BRRRR Pro Calculator'}
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        allow="same-origin"
+      />
+    </div>
+  );
+}
+
+Only edit files inside apps/deallink/. Do not touch any other folder.

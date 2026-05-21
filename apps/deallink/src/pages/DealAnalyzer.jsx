@@ -19,6 +19,8 @@ const STRATS = [
   { k: 'flip', label: 'Fix & Flip', icon: Wrench },
   { k: 'multi', label: 'Multifamily', icon: Layers },
   { k: 'commercial', label: 'Commercial', icon: Briefcase },
+  { k: 'chg-flip',  label: 'Flip Pro',  icon: Briefcase },
+  { k: 'chg-brrrr', label: 'BRRRR Pro', icon: Repeat2   },
 ];
 
 const SUBTABS = [
@@ -318,6 +320,32 @@ function Analyzer({ deal }) {
           </div>
         </div>
 
+        {(strategy === 'chg-flip' || strategy === 'chg-brrrr') && (
+          <ChgCalculatorFrame
+            deal={deal}
+            strategy={strategy}
+            onSave={(payload) => {
+              const label = strategy === 'chg-flip' ? 'Flip Pro' : 'BRRRR Pro';
+              const newAnalysis = {
+                id: 'chg-' + Date.now(),
+                strategy: strategy === 'chg-flip' ? 'flip' : 'brrrr',
+                label,
+                savedAt: payload.savedAt,
+                chgInputs: payload.inputs,
+                monthlyRent: 0,
+                purchasePrice: payload.inputs.purchase,
+                rehabCost: payload.inputs.rehab,
+                arv: payload.inputs.arv,
+              };
+              const current = Array.isArray(deal.analyzerState) ? deal.analyzerState : [];
+              const next = [...current, newAnalysis];
+              dispatch({ type: 'update_deal', id: deal.id, patch: { analyzerState: next } });
+              show('Analysis saved to deal');
+            }}
+          />
+        )}
+
+        {strategy !== 'chg-flip' && strategy !== 'chg-brrrr' && (
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 lg:col-span-5 space-y-5">
             {subtab === 'property' && (
@@ -381,8 +409,52 @@ function Analyzer({ deal }) {
             <Comps />
           </div>
         </div>
+        )}
       </div>
     </Layout>
+  );
+}
+
+function ChgCalculatorFrame({ deal, strategy, onSave }) {
+  const iframeRef = React.useRef(null);
+
+  React.useEffect(() => {
+    function handleMessage(e) {
+      if (e.data && e.data.type === 'chg-calc-save') {
+        onSave(e.data);
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onSave]);
+
+  const params = new URLSearchParams({
+    purchase: deal.ask  || '',
+    arv:      deal.arv  || '',
+    rehab:    deal.rehab || '',
+    addr:     encodeURIComponent(deal.addr || ''),
+  });
+
+  const src = `/chg-calculator.html?${params.toString()}`;
+
+  return (
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      height: 'calc(100vh - 180px)',
+      minHeight: 600,
+      border: 'none',
+      borderRadius: 8,
+      overflow: 'hidden',
+    }}>
+      <iframe
+        ref={iframeRef}
+        src={src}
+        title={strategy === 'chg-flip' ? 'Flip Pro Calculator' : 'BRRRR Pro Calculator'}
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        allow="same-origin"
+      />
+    </div>
   );
 }
 
