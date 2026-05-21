@@ -288,12 +288,22 @@ export default function IMDeal() {
         />
       )}
       {step === 'report' && (
-        <FullDealReport
-          deal={deal}
-          dealId={dealId}
-          buyer={loadBuyer()}
-          onDashboard={() => navigate('/buyer/dashboard')}
-        />
+        <>
+          {deal?.wholesaler?.handle && (
+            <a
+              href={`/p/${deal.wholesaler.handle}`}
+              className="inline-flex items-center gap-1 text-sm text-[#6e6e73] hover:text-[#1d1d1f] mb-4 block"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to profile
+            </a>
+          )}
+          <FullDealReport
+            deal={deal}
+            dealId={dealId}
+            buyer={loadBuyer()}
+            onDashboard={() => navigate('/buyer/dashboard')}
+          />
+        </>
       )}
 
       {flash && (
@@ -348,6 +358,14 @@ function Step0Preview({ deal, onUnlock }) {
   const wholesaler = deal.wholesaler || {};
   return (
     <div>
+      {wholesaler.handle && (
+        <a
+          href={`/p/${wholesaler.handle}`}
+          className="inline-flex items-center gap-1 text-sm text-[#6e6e73] hover:text-[#1d1d1f] mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to profile
+        </a>
+      )}
       <div className="rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white overflow-hidden">
         <div className="aspect-[16/9] bg-gradient-to-br from-[#f5f5f7] to-white flex items-center justify-center relative">
           {deal.photo_url ? (
