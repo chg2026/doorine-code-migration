@@ -222,7 +222,7 @@ export default function InvestorsTab({
                     onClick={() => setSelected(i)}
                     style={{
                       cursor: "pointer",
-                      background: isSel ? "var(--blue-light, #e6f1fb)" : "#fff",
+                      background: isSel ? "#E8EFF1" : "#fff",
                       borderTop: "0.5px solid var(--border-lo)",
                     }}
                   >
