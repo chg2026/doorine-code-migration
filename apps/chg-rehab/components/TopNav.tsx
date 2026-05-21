@@ -6,7 +6,7 @@ import type { SessionUser } from "@/lib/session";
 type NavItem = { href: string; label: string };
 type NavSection = { label?: string; items: NavItem[] };
 
-const DASHBOARD: NavItem = { href: "/dashboard", label: "Dashboard" };
+const DASHBOARD: NavItem = { href: "/pipeline", label: "Dashboard" };
 
 const BASE_SECTIONS: NavSection[] = [
   { items: [DASHBOARD] },
