@@ -89,7 +89,7 @@ export default function InvestorPortalClient({
               fontWeight: tab === t.id ? 500 : 400,
               borderBottom:
                 tab === t.id
-                  ? "2px solid var(--blue, #185fa5)"
+                  ? "2px solid var(--marine, #1F4D5C)"
                   : "2px solid transparent",
               marginBottom: -1,
             }}

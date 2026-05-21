@@ -39,7 +39,7 @@ export default function AdminTabStrip({
               color: active ? "var(--text-primary)" : "var(--text-secondary)",
               fontWeight: active ? 500 : 400,
               borderBottom: active
-                ? "2px solid var(--blue, #185fa5)"
+                ? "2px solid var(--marine, #1F4D5C)"
                 : "2px solid transparent",
               cursor: "pointer",
               textDecoration: "none",

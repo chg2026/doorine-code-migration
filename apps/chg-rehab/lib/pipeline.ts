@@ -19,7 +19,7 @@ export type DealMeta = {
 export const STAGE_COLUMNS: { key: string; stages: DealStage[]; title: string; subtitle: string; chipColor: string }[] = [
   { key: "uw",  stages: [DealStage.Sourced, DealStage.Underwriting], title: "Lead / Underwriting", subtitle: "Numbers being run",          chipColor: "#EEEDFE|#3C3489" },
   { key: "off", stages: [DealStage.OfferOut],                         title: "Offer Submitted",     subtitle: "Awaiting seller response",   chipColor: "#FAEEDA|#633806" },
-  { key: "uc",  stages: [DealStage.UnderContract],                    title: "Under Contract",      subtitle: "Due diligence in progress", chipColor: "#E6F1FB|#0C447C" },
+  { key: "uc",  stages: [DealStage.UnderContract],                    title: "Under Contract",      subtitle: "Due diligence in progress", chipColor: "#E8EFF1|#143641" },
   { key: "cl",  stages: [DealStage.Closed],                           title: "Closed / Acquired",   subtitle: "Property owned",            chipColor: "#EAF3DE|#27500A" },
 ];
 
@@ -43,7 +43,7 @@ export function stageBadgeColor(stage: DealStage): { bg: string; fg: string } {
     case DealStage.Sourced:
     case DealStage.Underwriting:  return { bg: "#EEEDFE", fg: "#3C3489" };
     case DealStage.OfferOut:      return { bg: "#FAEEDA", fg: "#633806" };
-    case DealStage.UnderContract: return { bg: "#E6F1FB", fg: "#0C447C" };
+    case DealStage.UnderContract: return { bg: "#E8EFF1", fg: "#143641" };
     case DealStage.Closed:        return { bg: "#EAF3DE", fg: "#27500A" };
     case DealStage.Lost:          return { bg: "#FCEBEB", fg: "#791F1F" };
   }

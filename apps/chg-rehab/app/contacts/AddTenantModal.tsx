@@ -554,7 +554,7 @@ function ModeRadio({
         flex: 1,
         padding: "6px 8px",
         fontSize: 11,
-        background: active ? "#E6F1FB" : "var(--bg-secondary)",
+        background: active ? "#E8EFF1" : "var(--bg-secondary)",
         color: disabled
           ? "var(--text-tertiary)"
           : active

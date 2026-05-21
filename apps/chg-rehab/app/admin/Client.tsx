@@ -663,7 +663,7 @@ function UsersPanel({
             </span>
             <span
               style={{
-                background: "#E6F1FB",
+                background: "#E8EFF1",
                 color: "#143641",
                 padding: "1px 6px",
                 borderRadius: 3,

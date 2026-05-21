@@ -818,7 +818,7 @@ async function TenantsTab({ property, companyId }: { property: NonNullable<Await
       <>
         <div style={{
           padding: "8px 16px", background: "#E8EFF1",
-          borderBottom: "0.5px solid rgba(24,95,165,0.2)",
+          borderBottom: "0.5px solid rgba(31,77,92,0.2)",
           fontSize: 10, color: "#143641",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
