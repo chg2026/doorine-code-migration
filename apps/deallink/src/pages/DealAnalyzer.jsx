@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Home, Wrench, ArrowLeft, Plus, Trash2, AlertCircle,
-  CheckCircle2, Save, Repeat, Layers, Briefcase, Building2, Search, Repeat2,
+  CheckCircle2, Save, Repeat, Layers, Briefcase, Building2, Search, Repeat2, Calculator,
 } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
@@ -21,6 +21,7 @@ const STRATS = [
   { k: 'commercial', label: 'Commercial', icon: Briefcase },
   { k: 'chg-flip',  label: 'Flip Pro',  icon: Briefcase },
   { k: 'chg-brrrr', label: 'BRRRR Pro', icon: Repeat2   },
+  { k: 'chg-flip-extra', label: 'FLIP EXTRA TEST', icon: Calculator },
 ];
 
 const SUBTABS = [
@@ -320,15 +321,15 @@ function Analyzer({ deal }) {
           </div>
         </div>
 
-        {(strategy === 'chg-flip' || strategy === 'chg-brrrr') && (
+        {(strategy === 'chg-flip' || strategy === 'chg-brrrr' || strategy === 'chg-flip-extra') && (
           <ChgCalculatorFrame
             deal={deal}
             strategy={strategy}
             onSave={(payload) => {
-              const label = strategy === 'chg-flip' ? 'Flip Pro' : 'BRRRR Pro';
+              const label = strategy === 'chg-flip' ? 'Flip Pro' : strategy === 'chg-brrrr' ? 'BRRRR Pro' : 'Flip Extra';
               const newAnalysis = {
                 id: 'chg-' + Date.now(),
-                strategy: strategy === 'chg-flip' ? 'flip' : 'brrrr',
+                strategy: strategy === 'chg-brrrr' ? 'brrrr' : 'flip',
                 label,
                 savedAt: payload.savedAt,
                 chgInputs: payload.inputs,
@@ -345,7 +346,7 @@ function Analyzer({ deal }) {
           />
         )}
 
-        {strategy !== 'chg-flip' && strategy !== 'chg-brrrr' && (
+        {strategy !== 'chg-flip' && strategy !== 'chg-brrrr' && strategy !== 'chg-flip-extra' && (
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 lg:col-span-5 space-y-5">
             {subtab === 'property' && (
@@ -435,7 +436,9 @@ function ChgCalculatorFrame({ deal, strategy, onSave }) {
     addr:     encodeURIComponent(deal.addr || ''),
   });
 
-  const src = `https://chg.doorine.com/underwriting-calc.html?${params.toString()}`;
+  const src = strategy === 'chg-flip-extra'
+    ? `/flip-extra-calc.html?${params.toString()}`
+    : `https://chg.doorine.com/underwriting-calc.html?${params.toString()}`;
 
   return (
     <div style={{
@@ -450,7 +453,7 @@ function ChgCalculatorFrame({ deal, strategy, onSave }) {
       <iframe
         ref={iframeRef}
         src={src}
-        title={strategy === 'chg-flip' ? 'Flip Pro Calculator' : 'BRRRR Pro Calculator'}
+        title={strategy === 'chg-flip' ? 'Flip Pro Calculator' : strategy === 'chg-brrrr' ? 'BRRRR Pro Calculator' : 'Flip Extra Calculator'}
         style={{ width: '100%', height: '100%', border: 'none' }}
         allow="same-origin"
       />

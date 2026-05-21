@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flip Extra Calculator</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --faint: #86868b;
+    --border: rgba(0,0,0,0.08);
+    --gold: #b8860b;
+    --green: #1F7A4D;
+    --red:   #C0392B;
+    --blue:  #2563EB;
+    --amber: #F59E0B;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 16px 14px 80px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .card-head { display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .row.tight { gap: 8px; }
+  .row.two { grid-template-columns: 1fr 1fr; }
+  .row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field label { display:block; font-size:10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .field .input-shell { display:flex; align-items:center; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+  .field .input-shell input, .field .input-shell select {
+    flex: 1; width: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; outline: none;
+  }
+  .field .pfx, .field .sfx { color: var(--faint); font-size: 12px; }
+  .field .pfx { margin-right: 4px; }
+  .field .sfx { margin-left: 4px; }
+  .field .ro { background: transparent; border: 0; }
+  .field .ro .ro-val { font-weight: 600; font-size: 20px; color: var(--ink); }
+  .field .ro .ro-sub { font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .kv { display: grid; grid-template-columns: 1fr auto; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+  .kv:last-child { border-bottom: 0; }
+  .kv .k { color: var(--muted); font-size: 12px; }
+  .kv .v { font-weight: 600; font-size: 13px; }
+  .kv .v.pos { color: var(--green); }
+  .kv .v.neg { color: var(--red); }
+  .kv.total { background: rgba(184,134,11,0.08); margin: 6px -8px 0; padding: 8px 8px; border-radius: 6px; border-bottom: 0; }
+  .pill { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; }
+  .pill.weak { background: #FEF3C7; color: #92400E; }
+  .pill.live { background: #D1FAE5; color: #065F46; }
+  .pill.warn { background: #FEE2E2; color: #991B1B; }
+  .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 24px; }
+  .metric { display:flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .metric .label { color: var(--muted); font-size: 12px; }
+  .metric .label .hint { color: var(--faint); font-size: 10px; margin-left: 4px; }
+  .metric .val { font-weight: 600; }
+  .metric .val.profit { color: var(--gold); font-size: 16px; }
+  .metric .val.pos { color: var(--green); }
+  .metric .val.neg { color: var(--red); }
+  .charts { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+  .bar-chart { padding: 8px 4px; }
+  .bar-row { display:grid; grid-template-columns: 100px 1fr 80px; align-items:center; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+  .bar-row .lbl { color: var(--muted); }
+  .bar-row .bar-track { background: var(--bg); border-radius: 4px; height: 16px; position: relative; overflow: hidden; }
+  .bar-row .bar-fill { position:absolute; left:0; top:0; bottom:0; border-radius: 4px; }
+  .bar-row .amt { text-align: right; font-weight: 600; }
+  .donut-wrap { display:flex; align-items:center; gap: 12px; }
+  .donut { flex: 0 0 130px; }
+  .legend { font-size: 11px; flex: 1; }
+  .legend .lg-row { display:grid; grid-template-columns: 12px 1fr auto auto; gap: 6px; align-items: center; padding: 3px 0; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 2px; }
+  .legend .lg-amt { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .legend .lg-pct { color: var(--faint); width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
+  .sens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sens .case { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .sens .case .head { display:flex; align-items:center; justify-content: space-between; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .sens .case.bear .head { color: var(--red); border-top: 2px solid var(--red); margin: -10px -12px 6px; padding: 6px 12px 0; }
+  .sens .case.base .head { color: var(--muted); border-top: 2px solid var(--muted); margin: -10px -12px 6px; padding: 6px 12px 0; }
+  .sens .case.bull .head { color: var(--gold); border-top: 2px solid var(--gold); margin: -10px -12px 6px; padding: 6px 12px 0; }
+  .sens .case .price { font-weight: 600; font-size: 13px; }
+  .sens .case .label { color: var(--faint); font-size: 10px; margin-top: 6px; }
+  .sens .case .profit { font-weight: 700; font-size: 16px; }
+  .sens .case .roi { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .doom .stress-bars { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; align-items: end; height: 160px; padding: 0 20px; margin-top: 12px; }
+  .doom .col { display:flex; flex-direction: column; align-items: center; justify-content: end; height: 100%; }
+  .doom .col .bar { width: 60%; min-height: 4px; border-radius: 4px 4px 0 0; position: relative; }
+  .doom .col .bar .top-lbl { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .doom .col .axis-lbl { margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .stress-banner { display:flex; align-items:center; gap: 8px; padding: 6px 10px; background: #FEF3C7; border-radius: 6px; margin-bottom: 6px; font-size: 11px; color: #92400E; }
+  .live-banner { background: #D1FAE5; color: #065F46; }
+  .slider-row { display:grid; grid-template-columns: 150px 1fr 130px; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .slider-row:last-child { border-bottom: 0; }
+  .slider-row .s-label { font-size: 12px; color: var(--ink); font-weight: 500; }
+  .slider-row input[type=range] { width: 100%; accent-color: var(--gold); }
+  .slider-row .s-val { text-align: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .slider-row .s-axis { display:flex; justify-content: space-between; font-size: 10px; color: var(--faint); margin-top: 2px; }
+  .live-summary { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .live-summary .ls { padding: 6px 0; }
+  .live-summary .ls .l { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; }
+  .live-summary .ls .v { font-weight: 700; font-size: 16px; margin-top: 2px; }
+  .reset-btn { float: right; font-size: 11px; padding: 4px 10px; border-radius: 6px; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
+  .reset-btn:hover { color: var(--ink); border-color: rgba(0,0,0,0.16); }
+  .save-btn {
+    position: fixed; bottom: 16px; right: 16px; z-index: 9999;
+    background: var(--gold); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: opacity .2s;
+  }
+  .save-btn:hover { opacity: 0.88; }
+  .deal-bar { display:flex; align-items:center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: var(--ink); }
+  .deal-bar .addr { font-weight: 700; font-size: 17px; }
+  .deal-bar .meta { color: var(--muted); font-size: 12px; }
+  @media (max-width: 720px) {
+    .row, .row.three, .row.two { grid-template-columns: 1fr 1fr; }
+    .charts { grid-template-columns: 1fr; }
+    .metric-grid { grid-template-columns: 1fr; }
+    .sens { grid-template-columns: 1fr; }
+    .slider-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="deal-bar">
+    <div>
+      <div class="addr" id="calc-name">—</div>
+      <div class="meta" id="calc-meta"></div>
+    </div>
+  </div>
+
+  <!-- ── SALE ASSUMPTIONS ─────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-head">▾ Sale Assumptions</div>
+    <div class="row">
+      <div class="field">
+        <label>After-repair value (ARV)</label>
+        <div class="input-shell"><span class="pfx">$</span><input id="i-arv" type="number" value="600000" /></div>
+      </div>
+      <div class="field">
+        <label>Months until sale<br><span style="color:var(--faint);text-transform:none;font-size:9px">After rehab</span></label>
+        <div class="input-shell"><input id="i-months" type="number" min="1" value="1" /><span class="sfx">month(s)</span></div>
+      </div>
+      <div class="field">
+        <label>Projected cost of sale (%)</label>
+        <div class="input-shell"><input id="i-cos-pct" type="number" step="0.1" value="7" /><span class="sfx">%</span></div>
+      </div>
+      <div class="field">
+        <label>Projected cost of sale ($)</label>
+        <div class="ro"><div class="ro-val" id="o-cos">$42,000</div></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="field">
+        <label>After repair value</label>
+        <div class="ro"><div class="ro-val" id="o-arv">$600,000</div></div>
+      </div>
+      <div class="field">
+        <label>Hold period</label>
+        <div class="ro"><div class="ro-val" id="o-hold">1 month</div></div>
+      </div>
+      <div class="field">
+        <label>Cost of sale ($)</label>
+        <div class="ro"><div class="ro-val" id="o-cos2">$42,000</div></div>
+      </div>
+      <div class="field">
+        <label>As a % of ARV</label>
+        <div class="ro"><div class="ro-val" id="o-arv-pct">87.63%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEAL COSTS ───────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-head">▾ Deal Costs</div>
+    <div class="row two" style="margin-bottom: 8px;">
+      <div class="field">
+        <label>Purchase price</label>
+        <div class="input-shell"><span class="pfx">$</span><input id="i-purchase" type="number" value="500000" /></div>
+      </div>
+      <div class="field">
+        <label>Total deal costs</label>
+        <div class="ro"><div class="ro-val" id="o-deal-cost">$500,000</div></div>
+      </div>
+    </div>
+    <div class="kv"><span class="k">+ Closing costs</span><span class="v"><input id="i-closing" type="number" value="2810" style="width:80px;text-align:right;border:0;background:transparent;color:var(--ink);font:inherit;" /></span></div>
+    <div class="kv"><span class="k">+ Holding costs</span><span class="v"><input id="i-holding" type="number" value="3000" style="width:80px;text-align:right;border:0;background:transparent;color:var(--ink);font:inherit;" /></span></div>
+    <div class="kv"><span class="k">+ Rehab budget</span><span class="v"><input id="i-rehab" type="number" value="20000" style="width:80px;text-align:right;border:0;background:transparent;color:var(--ink);font:inherit;" /></span></div>
+    <div class="kv"><span class="k">+ Cost of sale</span><span class="v" id="o-cos3">$42,000</span></div>
+    <div class="row two" style="margin-top: 10px;">
+      <div class="field">
+        <label>All-in deal cost (gross)</label>
+        <div class="ro"><div class="ro-val" id="o-allin">$567,810</div></div>
+      </div>
+      <div class="field">
+        <label>Cash required</label>
+        <div class="ro"><div class="ro-val" id="o-cash">$567,810</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RETURN METRICS ───────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-head">▾ Return Metrics</div>
+    <div class="metric-grid">
+      <div class="metric"><span class="label">Projected profit <span class="pill weak" id="m-warn" style="display:none">Weak deal ⚠</span><br><span class="hint">1-month hold • $525,810 cash invested</span></span><span class="val profit" id="m-profit">$32,190</span></div>
+      <div class="metric"><span class="label">ROI on cash invested</span><span class="val pos" id="m-roi">6.12%</span></div>
+      <div class="metric"><span class="label">ROI annualized <span class="hint">(non-adjusted)</span></span><span class="val pos" id="m-roi-ann">104.02%</span></div>
+      <div class="metric"><span class="label">IRR (annualized) <span class="hint">single period</span></span><span class="val pos" id="m-irr">104.02%</span></div>
+      <div class="metric"><span class="label">Equity multiple</span><span class="val" id="m-mult">1.06×</span></div>
+      <div class="metric"><span class="label">NPV @ 5% discount rate</span><span class="val pos" id="m-npv">+$26,495</span></div>
+      <div class="metric"><span class="label">Hold period</span><span class="val" id="m-hold">1 month</span></div>
+    </div>
+  </div>
+
+  <!-- ── DEAL STRUCTURE / ALLOCATION ──────────────────────────── -->
+  <div class="charts">
+    <div class="card">
+      <div class="card-head">Deal structure breakdown <span style="color:var(--faint);text-transform:none;font-size:10px;font-weight:400;">Costs above • Profit below</span></div>
+      <div class="bar-chart" id="bar-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">Deal allocation <span style="color:var(--faint);text-transform:none;font-size:10px;font-weight:400;">Every dollar of ARV — where it goes</span></div>
+      <div class="donut-wrap">
+        <svg class="donut" viewBox="0 0 36 36" width="130" height="130" id="donut"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARV / SALE PRICE SENSITIVITY ─────────────────────────── -->
+  <div class="card">
+    <div class="card-head">ARV / Sale price sensitivity <span style="color:var(--faint);text-transform:none;font-size:10px;font-weight:400;">Profit at three sale price scenarios</span></div>
+    <div class="sens">
+      <div class="case bear">
+        <div class="head"><span>Bear -10%</span></div>
+        <div class="price" id="s-bear-price">$540,000 sale price</div>
+        <div class="label">Profit</div>
+        <div class="profit" id="s-bear-profit" style="color:var(--red);">-$23,610</div>
+        <div class="roi" id="s-bear-roi">-4.4% of sale price</div>
+      </div>
+      <div class="case base">
+        <div class="head"><span>Base — Expected</span></div>
+        <div class="price" id="s-base-price">$600,000 sale price</div>
+        <div class="label">Profit</div>
+        <div class="profit" id="s-base-profit" style="color:var(--gold);">+$32,190</div>
+        <div class="roi" id="s-base-roi">5.4% of sale price</div>
+      </div>
+      <div class="case bull">
+        <div class="head"><span>Bull +10%</span></div>
+        <div class="price" id="s-bull-price">$660,000 sale price</div>
+        <div class="label">Profit</div>
+        <div class="profit" id="s-bull-profit" style="color:var(--green);">+$87,990</div>
+        <div class="roi" id="s-bull-roi">13.3% of sale price</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DOOMSDAY STRESS TEST ─────────────────────────────────── -->
+  <div class="card doom">
+    <div class="card-head">Doomsday stress test</div>
+    <div class="stress-banner">+$2,000 added to costs (10%) added to construction costs vs. baseline assumptions</div>
+    <div style="font-size:10px;color:var(--faint);margin-bottom:4px;">Stress test shows three scenarios: baseline assumption, -10%, and +10%</div>
+    <div class="stress-bars">
+      <div class="col"><div class="bar" id="d-bar-low" style="background:#FCA5A5;"><span class="top-lbl" id="d-lbl-low">-$26k</span></div><div class="axis-lbl">-10%</div></div>
+      <div class="col"><div class="bar" id="d-bar-base" style="background:#CBD5E1;"><span class="top-lbl" id="d-lbl-base">+$30k</span></div><div class="axis-lbl">Base</div></div>
+      <div class="col"><div class="bar" id="d-bar-high" style="background:#86EFAC;"><span class="top-lbl" id="d-lbl-high">+$86k</span></div><div class="axis-lbl">+10%</div></div>
+    </div>
+  </div>
+
+  <!-- ── LIVE DEAL STRESS TEST ────────────────────────────────── -->
+  <div class="card">
+    <div class="card-head">Live deal stress test <span class="pill live">LIVE</span> <button class="reset-btn" id="live-reset">⟳ Reset</button></div>
+    <div class="stress-banner live-banner" id="live-banner">Drag sliders to test scenarios</div>
+    <div class="row three" style="margin-bottom: 8px;">
+      <div class="field"><label>Adjusted profit</label><div class="ro"><div class="ro-val" id="lv-profit">$32,190</div></div></div>
+      <div class="field"><label>Baseline profit</label><div class="ro"><div class="ro-val" id="lv-base-profit">$32,190</div></div></div>
+      <div class="field"><label>Baseline ROI</label><div class="ro"><div class="ro-val" id="lv-base-roi">6.12%</div></div></div>
+    </div>
+    <div class="slider-row">
+      <div class="s-label">Sale price / ARV</div>
+      <div>
+        <input id="lv-sale" type="range" min="-30" max="30" value="0" step="1" />
+        <div class="s-axis"><span>-$120,000</span><span id="lv-sale-mid">Sale price: $600,000</span><span>+$120,000</span></div>
+      </div>
+      <div class="s-val" id="lv-sale-delta">No change</div>
+    </div>
+    <div class="slider-row">
+      <div class="s-label">Construction costs</div>
+      <div>
+        <input id="lv-rehab" type="range" min="-30" max="100" value="0" step="1" />
+        <div class="s-axis"><span>-$20,000</span><span id="lv-rehab-mid">Rehab cost: $20,000</span><span>+$30,000</span></div>
+      </div>
+      <div class="s-val" id="lv-rehab-delta">No change</div>
+    </div>
+    <div class="slider-row">
+      <div class="s-label">Total hold time</div>
+      <div>
+        <input id="lv-hold" type="range" min="1" max="13" value="1" step="1" />
+        <div class="s-axis"><span>0 mo</span><span id="lv-hold-mid">Baseline: 0mo rehab + 1mo sell = 1mo</span><span>12 mo</span></div>
+      </div>
+      <div class="s-val" id="lv-hold-delta">1 mo total → baseline</div>
+    </div>
+    <div class="live-summary">
+      <div class="ls"><div class="l">Stressed profit</div><div class="v" id="lv-stress-profit" style="color:var(--gold);">$32,190</div><div style="font-size:10px;color:var(--faint);">+$0 vs baseline</div></div>
+      <div class="ls"><div class="l" id="lv-warn-label">Status</div><div class="v" id="lv-warn-val" style="color:var(--amber);">Weak deal ⚠</div></div>
+      <div class="ls"><div class="l">ROI on cash</div><div class="v" id="lv-stress-roi" style="color:var(--gold);">6.12%</div><div style="font-size:10px;color:var(--faint);" id="lv-stress-note">No deviation from baseline</div></div>
+    </div>
+  </div>
+
+</div>
+
+<button id="save-btn" class="save-btn">💾 Save analysis to deal</button>
+
+<script>
+(function () {
+  // ── Helpers ──────────────────────────────────────────────────
+  function $(id) { return document.getElementById(id); }
+  function num(id) { var el = $(id); return el ? Number(el.value) || 0 : 0; }
+  function fmtUsd(n) {
+    var sign = n < 0 ? '-' : '';
+    var abs = Math.abs(Math.round(n));
+    return sign + '$' + abs.toLocaleString('en-US');
+  }
+  function fmtUsdSigned(n) {
+    if (n === 0) return '$0';
+    return (n > 0 ? '+' : '-') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+  }
+  function fmtPct(n, d) { return (n).toFixed(d == null ? 2 : d) + '%'; }
+  function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+  // ── Read URL params and prefill ──────────────────────────────
+  var params = new URLSearchParams(window.location.search);
+  function setIfNum(id, v) { if (v && !isNaN(Number(v))) $(id).value = Number(v); }
+  setIfNum('i-arv',      params.get('arv'));
+  setIfNum('i-purchase', params.get('purchase'));
+  setIfNum('i-rehab',    params.get('rehab'));
+  var addr = params.get('addr');
+  if (addr) {
+    try { addr = decodeURIComponent(addr); } catch (e) {}
+    $('calc-name').textContent = addr;
+  }
+
+  // ── Core compute ─────────────────────────────────────────────
+  function compute(overrides) {
+    overrides = overrides || {};
+    var arv      = overrides.arv      != null ? overrides.arv      : num('i-arv');
+    var months   = overrides.months   != null ? overrides.months   : Math.max(1, num('i-months'));
+    var cosPct   = overrides.cosPct   != null ? overrides.cosPct   : num('i-cos-pct');
+    var purchase = overrides.purchase != null ? overrides.purchase : num('i-purchase');
+    var closing  = overrides.closing  != null ? overrides.closing  : num('i-closing');
+    var holding  = overrides.holding  != null ? overrides.holding  : num('i-holding');
+    var rehab    = overrides.rehab    != null ? overrides.rehab    : num('i-rehab');
+
+    var costOfSale = arv * (cosPct / 100);
+    var allIn      = purchase + closing + holding + rehab + costOfSale;
+    var cashReq    = allIn;
+    var profit     = arv - allIn;
+    var roi        = cashReq > 0 ? (profit / cashReq) * 100 : 0;
+    var roiAnn     = cashReq > 0 ? (Math.pow(1 + profit / cashReq, 12 / months) - 1) * 100 : 0;
+    var irr        = roiAnn;
+    var mult       = cashReq > 0 ? (cashReq + profit) / cashReq : 0;
+    var npv        = profit / Math.pow(1.05, months / 12);
+    var arvUsedPct = arv > 0 ? (allIn / arv) * 100 : 0;
+
+    return { arv: arv, months: months, cosPct: cosPct, purchase: purchase, closing: closing, holding: holding, rehab: rehab,
+             costOfSale: costOfSale, allIn: allIn, cashReq: cashReq, profit: profit,
+             roi: roi, roiAnn: roiAnn, irr: irr, mult: mult, npv: npv, arvUsedPct: arvUsedPct };
+  }
+
+  // ── Render top sections ──────────────────────────────────────
+  function renderAll() {
+    var r = compute();
+
+    // Sale Assumptions outputs
+    $('o-cos').textContent  = fmtUsd(r.costOfSale);
+    $('o-cos2').textContent = fmtUsd(r.costOfSale);
+    $('o-cos3').textContent = fmtUsd(r.costOfSale);
+    $('o-arv').textContent  = fmtUsd(r.arv);
+    $('o-hold').textContent = r.months + ' month' + (r.months === 1 ? '' : 's');
+    $('o-arv-pct').textContent = fmtPct(r.arvUsedPct);
+
+    // Deal Costs outputs
+    $('o-deal-cost').textContent = fmtUsd(r.purchase);
+    $('o-allin').textContent     = fmtUsd(r.allIn);
+    $('o-cash').textContent      = fmtUsd(r.cashReq);
+
+    // Return Metrics
+    $('m-profit').textContent  = fmtUsdSigned(r.profit);
+    $('m-profit').style.color  = r.profit >= 0 ? 'var(--gold)' : 'var(--red)';
+    $('m-roi').textContent     = fmtPct(r.roi);
+    $('m-roi').className       = 'val ' + (r.roi >= 0 ? 'pos' : 'neg');
+    $('m-roi-ann').textContent = fmtPct(r.roiAnn);
+    $('m-roi-ann').className   = 'val ' + (r.roiAnn >= 0 ? 'pos' : 'neg');
+    $('m-irr').textContent     = fmtPct(r.irr);
+    $('m-irr').className       = 'val ' + (r.irr >= 0 ? 'pos' : 'neg');
+    $('m-mult').textContent    = r.mult.toFixed(2) + '×';
+    $('m-npv').textContent     = (r.npv >= 0 ? '+' : '') + fmtUsd(r.npv);
+    $('m-npv').className       = 'val ' + (r.npv >= 0 ? 'pos' : 'neg');
+    $('m-hold').textContent    = r.months + ' month' + (r.months === 1 ? '' : 's');
+    $('m-warn').style.display  = r.roi < 10 ? 'inline-block' : 'none';
+
+    // Charts
+    renderBars(r);
+    renderDonut(r);
+    renderSensitivity(r);
+    renderDoom(r);
+    renderLive(r);
+  }
+
+  // ── Bar chart (Deal structure) ───────────────────────────────
+  function renderBars(r) {
+    var rows = [
+      { lbl: 'Purchase',   val: r.purchase,   color: '#3B82F6' },
+      { lbl: 'Rehab',      val: r.rehab,      color: '#EF4444' },
+      { lbl: 'Closing',    val: r.closing,    color: '#FBBF24' },
+      { lbl: 'Holding',    val: r.holding,    color: '#A78BFA' },
+      { lbl: 'Cost of sale', val: r.costOfSale, color: '#F472B6' },
+      { lbl: 'Projected profit', val: Math.max(0, r.profit), color: '#10B981' }
+    ];
+    var max = Math.max.apply(null, rows.map(function (x) { return x.val; }));
+    if (max <= 0) max = 1;
+    var html = rows.map(function (x) {
+      var pct = (x.val / max) * 100;
+      return '<div class="bar-row"><div class="lbl">' + x.lbl + '</div>'
+           + '<div class="bar-track"><div class="bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + x.color + ';"></div></div>'
+           + '<div class="amt">' + fmtUsd(x.val) + '</div></div>';
+    }).join('');
+    $('bar-chart').innerHTML = html;
+  }
+
+  // ── Donut (Deal allocation) ──────────────────────────────────
+  function renderDonut(r) {
+    var slices = [
+      { lbl: 'Purchase',   val: r.purchase,   color: '#3B82F6' },
+      { lbl: 'Rehab',      val: r.rehab,      color: '#EF4444' },
+      { lbl: 'Closing',    val: r.closing,    color: '#FBBF24' },
+      { lbl: 'Holding',    val: r.holding,    color: '#A78BFA' },
+      { lbl: 'Cost of sale', val: r.costOfSale, color: '#F472B6' },
+      { lbl: 'Projected profit', val: Math.max(0, r.profit), color: '#10B981' }
+    ];
+    var total = slices.reduce(function (s, x) { return s + x.val; }, 0);
+    if (total <= 0) total = 1;
+    var svg = '';
+    var offset = 0;
+    slices.forEach(function (s) {
+      var dash = (s.val / total) * 100;
+      if (dash <= 0) return;
+      svg += '<circle r="15.915" cx="18" cy="18" fill="transparent" stroke="' + s.color + '" stroke-width="6" stroke-dasharray="' + dash.toFixed(2) + ' ' + (100 - dash).toFixed(2) + '" stroke-dashoffset="' + (100 - offset).toFixed(2) + '"/>';
+      offset += dash;
+    });
+    svg += '<text x="18" y="17" text-anchor="middle" font-size="3.5" fill="#1d1d1f">' + fmtUsd(total) + '</text>'
+         + '<text x="18" y="21" text-anchor="middle" font-size="2" fill="#86868b">all-in</text>';
+    $('donut').innerHTML = svg;
+
+    var legend = slices.map(function (s) {
+      var pct = (s.val / total) * 100;
+      return '<div class="lg-row"><div class="sw" style="background:' + s.color + '"></div>'
+           + '<div>' + s.lbl + '</div>'
+           + '<div class="lg-amt">' + fmtUsd(s.val) + '</div>'
+           + '<div class="lg-pct">' + pct.toFixed(1) + '%</div></div>';
+    }).join('');
+    $('legend').innerHTML = legend;
+  }
+
+  // ── ARV sensitivity ──────────────────────────────────────────
+  function renderSensitivity(r) {
+    var cases = [
+      { id: 'bear', pct: -0.10, color: 'var(--red)' },
+      { id: 'base', pct:  0.00, color: 'var(--gold)' },
+      { id: 'bull', pct:  0.10, color: 'var(--green)' }
+    ];
+    cases.forEach(function (c) {
+      var s = compute({ arv: r.arv * (1 + c.pct) });
+      $('s-' + c.id + '-price').textContent  = fmtUsd(s.arv) + ' sale price';
+      $('s-' + c.id + '-profit').textContent = (s.profit >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(s.profit)).toLocaleString('en-US');
+      $('s-' + c.id + '-profit').style.color = s.profit >= 0 ? c.color : 'var(--red)';
+      var pctOfSale = s.arv > 0 ? (s.profit / s.arv) * 100 : 0;
+      $('s-' + c.id + '-roi').textContent = (pctOfSale >= 0 ? '+' : '') + pctOfSale.toFixed(1) + '% of sale price';
+    });
+  }
+
+  // ── Doomsday stress test ─────────────────────────────────────
+  function renderDoom(r) {
+    var cases = [
+      { id: 'low',  pct: -0.10 },
+      { id: 'base', pct:  0.00 },
+      { id: 'high', pct:  0.10 }
+    ];
+    var profits = cases.map(function (c) {
+      var s = compute({ rehab: r.rehab * (1 + c.pct) + 2000, arv: r.arv * (1 - c.pct) });
+      return s.profit;
+    });
+    var maxAbs = Math.max.apply(null, profits.map(Math.abs));
+    if (maxAbs <= 0) maxAbs = 1;
+    cases.forEach(function (c, i) {
+      var p = profits[i];
+      var h = (Math.abs(p) / maxAbs) * 130;
+      $('d-bar-' + c.id).style.height = Math.max(4, h) + 'px';
+      $('d-bar-' + c.id).style.background = p >= 0 ? '#86EFAC' : '#FCA5A5';
+      $('d-lbl-' + c.id).textContent = (p >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(p / 1000)) + 'k';
+    });
+  }
+
+  // ── Live deal stress test ────────────────────────────────────
+  var liveBase = null;
+  function captureBaseline() { liveBase = compute(); }
+  function renderLive(r) {
+    if (!liveBase) liveBase = r;
+    var salePct  = num('lv-sale');
+    var rehabPct = num('lv-rehab');
+    var holdMo   = Math.max(1, num('lv-hold'));
+
+    var stressArv   = liveBase.arv * (1 + salePct / 100);
+    var stressRehab = Math.max(0, liveBase.rehab * (1 + rehabPct / 100));
+    var s = compute({ arv: stressArv, rehab: stressRehab, months: holdMo, purchase: liveBase.purchase, closing: liveBase.closing, holding: liveBase.holding, cosPct: liveBase.cosPct });
+
+    $('lv-profit').textContent      = fmtUsdSigned(s.profit);
+    $('lv-profit').style.color      = s.profit >= 0 ? 'var(--gold)' : 'var(--red)';
+    $('lv-base-profit').textContent = fmtUsdSigned(liveBase.profit);
+    $('lv-base-roi').textContent    = fmtPct(liveBase.roi);
+
+    var saleDelta = stressArv - liveBase.arv;
+    var rehabDelta = stressRehab - liveBase.rehab;
+    $('lv-sale-mid').textContent  = 'Sale price: ' + fmtUsd(stressArv);
+    $('lv-rehab-mid').textContent = 'Rehab cost: ' + fmtUsd(stressRehab);
+    $('lv-hold-mid').textContent  = 'Baseline: 0mo rehab + ' + holdMo + 'mo sell = ' + holdMo + 'mo';
+    $('lv-sale-delta').textContent  = saleDelta === 0  ? 'No change' : fmtUsdSigned(saleDelta);
+    $('lv-rehab-delta').textContent = rehabDelta === 0 ? 'No change' : fmtUsdSigned(rehabDelta);
+    $('lv-hold-delta').textContent  = holdMo === liveBase.months ? holdMo + ' mo total → baseline' : holdMo + ' mo total';
+
+    var delta = s.profit - liveBase.profit;
+    $('lv-stress-profit').textContent = fmtUsdSigned(s.profit);
+    $('lv-stress-profit').style.color = s.profit >= 0 ? 'var(--gold)' : 'var(--red)';
+    $('lv-stress-profit').nextElementSibling.textContent = (delta === 0 ? '$0' : fmtUsdSigned(delta)) + ' vs baseline';
+
+    $('lv-stress-roi').textContent = fmtPct(s.roi);
+    $('lv-stress-roi').style.color = s.roi >= 0 ? 'var(--gold)' : 'var(--red)';
+    var roiDelta = s.roi - liveBase.roi;
+    $('lv-stress-note').textContent = Math.abs(roiDelta) < 0.01 ? 'No deviation from baseline' : (roiDelta > 0 ? '+' : '') + roiDelta.toFixed(2) + '% vs baseline';
+
+    if (s.profit < 0) {
+      $('lv-warn-val').textContent = 'Negative ⚠';
+      $('lv-warn-val').style.color = 'var(--red)';
+    } else if (s.roi < 5) {
+      $('lv-warn-val').textContent = 'Weak deal ⚠';
+      $('lv-warn-val').style.color = 'var(--amber)';
+    } else if (s.roi < 15) {
+      $('lv-warn-val').textContent = 'OK';
+      $('lv-warn-val').style.color = 'var(--gold)';
+    } else {
+      $('lv-warn-val').textContent = 'Strong ✓';
+      $('lv-warn-val').style.color = 'var(--green)';
+    }
+  }
+
+  // ── Wiring ───────────────────────────────────────────────────
+  ['i-arv','i-months','i-cos-pct','i-purchase','i-closing','i-holding','i-rehab'].forEach(function (id) {
+    $(id).addEventListener('input', function () { captureBaseline(); renderAll(); });
+  });
+  ['lv-sale','lv-rehab','lv-hold'].forEach(function (id) {
+    $(id).addEventListener('input', function () { renderLive(compute()); });
+  });
+  $('live-reset').addEventListener('click', function () {
+    $('lv-sale').value = 0;
+    $('lv-rehab').value = 0;
+    $('lv-hold').value = liveBase ? liveBase.months : 1;
+    renderLive(compute());
+  });
+
+  // ── Save button ──────────────────────────────────────────────
+  $('save-btn').addEventListener('click', function () {
+    var r = compute();
+    var payload = {
+      type: 'chg-calc-save',
+      strategy: 'flip-extra',
+      savedAt: new Date().toISOString(),
+      inputs: {
+        purchase: r.purchase,
+        rehab:    r.rehab,
+        arv:      r.arv,
+        closing:  r.closing,
+        holding:  r.holding,
+        cosPct:   r.cosPct,
+        months:   r.months,
+      },
+      results: {
+        profit:     r.profit,
+        roi:        r.roi,
+        roiAnn:     r.roiAnn,
+        irr:        r.irr,
+        mult:       r.mult,
+        npv:        r.npv,
+        costOfSale: r.costOfSale,
+        allIn:      r.allIn,
+      }
+    };
+    try { window.parent.postMessage(payload, '*'); } catch (e) {}
+    var btn = $('save-btn');
+    var orig = btn.textContent;
+    btn.textContent = '✓ Saved!';
+    btn.style.background = '#1F7A4D';
+    setTimeout(function () { btn.textContent = orig; btn.style.background = '#b8860b'; }, 2000);
+  });
+
+  captureBaseline();
+  renderAll();
+})();
+</script>
+</body>
+</html>
