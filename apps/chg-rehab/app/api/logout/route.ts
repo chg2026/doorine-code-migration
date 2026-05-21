@@ -38,6 +38,7 @@ async function handle(req: NextRequest) {
   // leak across logins.
   const ironSession = await getIronSession<AppSession>(req, res, sessionOptions);
   ironSession.destroy();
+  res.cookies.delete("_chg_role");
 
   return res;
 }
