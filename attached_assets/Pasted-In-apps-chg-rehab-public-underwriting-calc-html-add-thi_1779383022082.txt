@@ -1,0 +1,47 @@
+In apps/chg-rehab/public/underwriting-calc.html, add this script block just before the closing </body> tag. Do not touch anything else in the file:
+
+<script>
+(function () {
+  function fmt(n) { return n ? Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }) : null; }
+  function setInput(id, val) { var el = document.getElementById(id); if (el && val !== null) { el.value = val; } }
+  document.addEventListener('DOMContentLoaded', function () {
+    var params = new URLSearchParams(window.location.search);
+    var purchase = fmt(params.get('purchase'));
+    var arv      = fmt(params.get('arv'));
+    var rehab    = fmt(params.get('rehab'));
+    var addr     = params.get('addr') || '';
+    setInput('ap-price', purchase);
+    setInput('ap-rehab', rehab);
+    setInput('f-arv', arv);
+    if (addr) { var nameEl = document.getElementById('calc-name'); if (nameEl) nameEl.textContent = decodeURIComponent(addr); }
+    if (purchase || rehab) { try { recalc(); } catch(e){} }
+    if (arv) { try { recalcFlip(); } catch(e){} }
+    if (purchase || rehab || arv) { try { recalcB(); } catch(e){} }
+
+    var saveBtn = document.createElement('button');
+    saveBtn.textContent = '💾 Save analysis to deal';
+    saveBtn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;background:#b8860b;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
+    saveBtn.onmouseenter = function(){ this.style.opacity='0.85'; };
+    saveBtn.onmouseleave = function(){ this.style.opacity='1'; };
+    saveBtn.onclick = function () {
+      var strategy = 'flip';
+      var brrrrBtn = document.getElementById('tab-brrrr');
+      if (brrrrBtn && brrrrBtn.classList.contains('active')) strategy = 'brrrr';
+      function raw(id) { var el = document.getElementById(id); return el ? Number((el.value||'0').replace(/,/g,'')) : 0; }
+      var payload = {
+        type: 'chg-calc-save',
+        strategy: strategy,
+        savedAt: new Date().toISOString(),
+        inputs: { purchase: raw('ap-price'), rehab: raw('ap-rehab'), arv: raw('f-arv'), closing: raw('ap-closing'), holding: raw('ap-holding') }
+      };
+      window.parent.postMessage(payload, '*');
+      saveBtn.textContent = '✓ Saved!';
+      saveBtn.style.background = '#1F7A4D';
+      setTimeout(function(){ saveBtn.textContent = '💾 Save analysis to deal'; saveBtn.style.background = '#b8860b'; }, 2000);
+    };
+    document.body.appendChild(saveBtn);
+  });
+})();
+</script>
+
+Only edit files inside apps/chg-rehab/. Do not touch any other folder.
