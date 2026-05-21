@@ -1,0 +1,387 @@
+Create the CHG public landing page. Two files to create/update, all inside apps/chg-rehab/.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE 1 — CREATE apps/chg-rehab/app/landing.css
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Create this file with the exact CSS below:
+
+:root{--cream:#F5F2ED;--cream2:#EDE9E2;--white:#FEFCF9;--gold:#C9952A;--gold-lt:#E8B84B;--gold-dim:rgba(201,149,42,0.10);--gold-border:rgba(201,149,42,0.25);--dark:#1C1A17;--dark2:#2E2B26;--mid:#6B6560;--border:#E0DDD6;--card:#FFFFFF;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+.lp-body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--dark);overflow-x:hidden}
+nav.lp-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 56px;height:64px;background:rgba(254,252,249,0.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.lp-logo{font-weight:700;font-size:22px;letter-spacing:-0.5px;color:var(--dark);text-decoration:none}
+.lp-logo sub{font-size:11px;font-weight:500;color:var(--mid);letter-spacing:0.06em;text-transform:uppercase;vertical-align:bottom;margin-left:4px;position:relative;top:-2px}
+.lp-nav-links{display:flex;gap:32px;list-style:none}
+.lp-nav-links a{text-decoration:none;color:var(--mid);font-size:13.5px;font-weight:500;transition:color .2s}
+.lp-nav-links a:hover{color:var(--dark)}
+.lp-nav-right{display:flex;gap:10px;align-items:center}
+.lp-btn-ghost{padding:8px 18px;border:1.5px solid var(--border);background:transparent;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border-radius:7px;cursor:pointer;transition:all .2s;text-decoration:none}
+.lp-btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.lp-btn-cta{padding:8px 18px;background:var(--gold);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:7px;cursor:pointer;transition:all .2s;text-decoration:none}
+.lp-btn-cta:hover{background:var(--gold-lt)}
+.lp-hero{padding:140px 56px 80px;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;min-height:100vh;}
+.lp-hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 13px;border-radius:100px;margin-bottom:24px;}
+.lp-hero-tag::before{content:'';width:6px;height:6px;background:var(--gold);border-radius:50%}
+.lp-hero h1{font-family:'Playfair Display',serif;font-size:62px;font-weight:700;line-height:1.08;letter-spacing:-1.5px;color:var(--dark);margin-bottom:22px;}
+.lp-hero h1 em{font-style:italic;color:var(--gold)}
+.lp-hero-sub{font-size:17px;line-height:1.72;color:var(--mid);font-weight:300;margin-bottom:38px;max-width:500px}
+.lp-hero-btns{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.lp-btn-hero{padding:14px 30px;background:var(--gold);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+.lp-btn-hero:hover{background:var(--gold-lt);transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,149,42,0.28)}
+.lp-btn-hero-ghost{padding:14px 30px;background:transparent;color:var(--dark);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .25s;text-decoration:none;}
+.lp-btn-hero-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.lp-hero-stats{display:flex;gap:36px;margin-top:48px;padding-top:36px;border-top:1px solid var(--border)}
+.lp-hero-stat-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--dark)}
+.lp-hero-stat-label{font-size:12px;color:var(--mid);font-weight:500;letter-spacing:.04em;margin-top:2px}
+.lp-hero-visual{position:relative;height:540px}
+.lp-dash-mockup{background:var(--cream);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 24px 80px rgba(28,26,23,0.12),0 4px 16px rgba(28,26,23,0.06);height:100%;padding:20px;}
+.lp-dash-top-bar{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.lp-dash-logo{font-weight:700;font-size:15px;color:var(--dark)}
+.lp-dash-url{background:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--mid)}
+.lp-dash-avatar{width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.lp-dash-welcome{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.lp-dash-sub{font-size:11px;color:var(--mid);margin-bottom:16px}
+.lp-dash-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.lp-kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;min-height:80px}
+.lp-kpi-label{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:6px}
+.lp-kpi-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark)}
+.lp-kpi-sub{font-size:8px;color:var(--mid);margin-top:2px}
+.lp-kpi-bar{height:2px;background:linear-gradient(90deg,var(--gold) 60%,var(--border) 60%);border-radius:2px;margin-top:8px}
+.lp-deals-label{font-size:12px;font-weight:600;margin-bottom:8px;color:var(--dark)}
+.lp-deal-row{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 12px;margin-bottom:6px}
+.lp-deal-addr{font-size:11px;font-weight:600;color:var(--dark)}
+.lp-deal-city{font-size:9px;color:var(--mid)}
+.lp-deal-price{font-size:11px;font-weight:700;color:var(--dark);text-align:right}
+.lp-deal-arv{font-size:9px;color:var(--mid);text-align:right}
+.lp-deal-badge{font-size:8px;font-weight:600;padding:3px 8px;border-radius:100px}
+.lp-badge-contract{background:#FFF3E0;color:#E65100}
+.lp-badge-identified{background:#F3E5F5;color:#6A1B9A}
+.lp-badge-closed{background:#E8F5E9;color:#2E7D32}
+.lp-float-card{position:absolute;bottom:40px;right:-28px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;box-shadow:0 12px 40px rgba(28,26,23,0.10);min-width:160px;}
+.lp-float-label{font-size:10px;color:var(--mid);font-weight:500;margin-bottom:4px}
+.lp-float-num{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--gold)}
+.lp-float-sub{font-size:10px;color:var(--mid);margin-top:2px}
+.lp-section{padding:96px 56px}
+.lp-section-inner{max-width:1200px;margin:0 auto}
+.lp-section-tag{display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:100px;margin-bottom:18px;}
+.lp-section-tag::before{content:'';width:5px;height:5px;background:var(--gold);border-radius:50%}
+.lp-section-h{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;line-height:1.1;letter-spacing:-.8px;color:var(--dark)}
+.lp-section-h em{font-style:italic;color:var(--gold)}
+.lp-section-p{font-size:16px;line-height:1.72;color:var(--mid);font-weight:300;max-width:540px;margin-top:14px}
+.lp-feat-bg{background:var(--cream)}
+.lp-feat-header{text-align:center;margin-bottom:64px}
+.lp-feat-header .lp-section-p{margin:14px auto 0}
+.lp-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.lp-feat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 28px;transition:all .25s;position:relative;overflow:hidden;}
+.lp-feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-lt));transform:scaleX(0);transform-origin:left;transition:transform .3s ease;}
+.lp-feat-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(28,26,23,0.10)}
+.lp-feat-card:hover::before{transform:scaleX(1)}
+.lp-feat-icon{width:44px;height:44px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:20px;}
+.lp-feat-title{font-size:17px;font-weight:700;color:var(--dark);margin-bottom:10px}
+.lp-feat-desc{font-size:14px;line-height:1.7;color:var(--mid);font-weight:300}
+.lp-feat-list{list-style:none;margin-top:16px}
+.lp-feat-list li{font-size:13px;color:var(--mid);padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.lp-feat-list li:last-child{border-bottom:none}
+.lp-feat-list li::before{content:'↗';font-size:10px;color:var(--gold)}
+.lp-how-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-top:56px}
+.lp-steps{display:flex;flex-direction:column;gap:0}
+.lp-step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.lp-step:first-child{padding-top:0}
+.lp-step:last-child{border-bottom:none}
+.lp-step-num{width:36px;height:36px;min-width:36px;background:var(--cream2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--mid);transition:all .2s;}
+.lp-step:hover .lp-step-num{background:var(--gold);color:#fff;border-color:var(--gold)}
+.lp-step-h{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:6px}
+.lp-step-p{font-size:14px;line-height:1.65;color:var(--mid);font-weight:300}
+.lp-how-vis{background:var(--cream);border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 12px 48px rgba(28,26,23,0.08);}
+.lp-how-vis-hd{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.lp-how-vis-badge{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border);font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;letter-spacing:.06em}
+.lp-scope-row{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
+.lp-scope-name{font-size:13px;font-weight:600;color:var(--dark)}
+.lp-scope-trade{font-size:11px;color:var(--mid)}
+.lp-scope-amt{font-size:13px;font-weight:700;color:var(--dark)}
+.lp-scope-status{font-size:10px;padding:2px 8px;border-radius:100px;font-weight:600}
+.lp-s-pending{background:#FFF8E1;color:#F57F17}
+.lp-s-approved{background:#E8F5E9;color:#2E7D32}
+.lp-s-review{background:#EDE7F6;color:#4527A0}
+.lp-scope-total{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:8px;margin-top:8px;}
+.lp-scope-total-label{font-size:12px;font-weight:600;color:var(--gold)}
+.lp-scope-total-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--gold)}
+.lp-mod-bg{background:var(--cream)}
+.lp-mod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:56px}
+.lp-mod-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;display:flex;gap:18px;align-items:flex-start;transition:all .22s;}
+.lp-mod-card:hover{transform:translateX(4px);box-shadow:0 8px 32px rgba(28,26,23,0.08);border-color:var(--gold-border)}
+.lp-mod-icon{width:40px;height:40px;min-width:40px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.lp-mod-title{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:6px}
+.lp-mod-desc{font-size:13.5px;line-height:1.65;color:var(--mid);font-weight:300}
+.lp-metrics-band{background:var(--dark);padding:72px 56px}
+.lp-metrics-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.1)}
+.lp-metric-box{background:var(--dark);padding:40px 36px;text-align:center;}
+.lp-metric-num{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--gold);line-height:1}
+.lp-metric-label{font-size:13px;color:rgba(255,255,255,0.55);margin-top:10px;font-weight:400;line-height:1.5}
+.lp-testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px}
+.lp-testi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;}
+.lp-testi-stars{color:var(--gold);font-size:13px;letter-spacing:2px;margin-bottom:14px}
+.lp-testi-quote{font-family:'Playfair Display',serif;font-size:16px;font-style:italic;line-height:1.65;color:var(--dark);margin-bottom:18px}
+.lp-testi-author{display:flex;align-items:center;gap:12px}
+.lp-testi-avatar{width:36px;height:36px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gold)}
+.lp-testi-name{font-size:13px;font-weight:600;color:var(--dark)}
+.lp-testi-role{font-size:11px;color:var(--mid)}
+.lp-cta-band{background:linear-gradient(135deg,var(--dark) 0%,var(--dark2) 100%);padding:100px 56px;text-align:center;position:relative;overflow:hidden;}
+.lp-cta-band::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(201,149,42,.15) 0%,transparent 70%);pointer-events:none;}
+.lp-cta-h{font-family:'Playfair Display',serif;font-size:50px;font-weight:700;line-height:1.1;letter-spacing:-.8px;color:#fff;text-align:center}
+.lp-cta-h em{font-style:italic;color:var(--gold)}
+.lp-cta-p{font-size:17px;line-height:1.7;color:rgba(255,255,255,.55);font-weight:300;max-width:520px;margin:16px auto 40px}
+.lp-cta-btns{display:flex;gap:14px;justify-content:center;align-items:center}
+.lp-btn-cta-lg{padding:15px 34px;background:var(--gold);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:all .25s;text-decoration:none;}
+.lp-btn-cta-lg:hover{background:var(--gold-lt);transform:translateY(-2px);box-shadow:0 10px 32px rgba(201,149,42,.35)}
+.lp-btn-cta-ghost{padding:15px 34px;background:transparent;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;border:1.5px solid rgba(255,255,255,.2);border-radius:8px;cursor:pointer;transition:all .25s;text-decoration:none;}
+.lp-btn-cta-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.lp-footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.07);padding:56px 56px 36px}
+.lp-footer-inner{max-width:1200px;margin:0 auto}
+.lp-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.lp-footer-logo{font-weight:700;font-size:22px;color:#fff;text-decoration:none}
+.lp-footer-tagline{font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;font-weight:300;margin-top:12px}
+.lp-footer-col h4{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px}
+.lp-footer-col ul{list-style:none}
+.lp-footer-col li{margin-bottom:10px}
+.lp-footer-col a{text-decoration:none;font-size:13px;color:rgba(255,255,255,.55);transition:color .2s}
+.lp-footer-col a:hover{color:var(--gold)}
+.lp-footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:28px;border-top:1px solid rgba(255,255,255,.07)}
+.lp-footer-bottom p{font-size:12px;color:rgba(255,255,255,.3)}
+@media(max-width:960px){
+  nav.lp-nav{padding:0 24px}
+  .lp-nav-links{display:none}
+  .lp-hero{grid-template-columns:1fr;padding:120px 24px 64px;min-height:auto;gap:48px}
+  .lp-hero h1{font-size:42px}
+  .lp-hero-visual{height:380px}
+  .lp-float-card{display:none}
+  .lp-section{padding:72px 24px}
+  .lp-feat-grid,.lp-mod-grid{grid-template-columns:1fr}
+  .lp-how-grid{grid-template-columns:1fr;gap:40px}
+  .lp-metrics-inner{grid-template-columns:repeat(2,1fr)}
+  .lp-testi-grid{grid-template-columns:1fr}
+  .lp-footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+  .lp-cta-band{padding:72px 24px}
+  .lp-footer{padding:48px 24px 28px}
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE 2 — REPLACE apps/chg-rehab/app/page.tsx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Replace the entire file with this content:
+
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import "./landing.css";
+
+export default async function Home() {
+  const user = await getCurrentUser();
+  if (user) redirect("/pipeline");
+
+  return (
+    <div className="lp-body">
+      {/* NAV */}
+      <nav className="lp-nav">
+        <a className="lp-logo" href="#">CHG <sub>Rehab</sub></a>
+        <ul className="lp-nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#modules">Modules</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#testimonials">Clients</a></li>
+        </ul>
+        <div className="lp-nav-right">
+          <a className="lp-btn-ghost" href="/login">Sign in</a>
+          <a className="lp-btn-cta" href="/login">Request demo</a>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <div className="lp-hero">
+        <div className="lp-hero-left">
+          <div className="lp-hero-tag">Enterprise Rehab Platform</div>
+          <h1>Every deal.<br /><em>Every phase.</em><br />One platform.</h1>
+          <p className="lp-hero-sub">CHG is the end-to-end operating system for real estate rehab businesses — from first underwrite to final close. Manage deals, projects, contractors, and capital all in one place.</p>
+          <div className="lp-hero-btns">
+            <a className="lp-btn-hero" href="/login">Get started →</a>
+            <a className="lp-btn-hero-ghost" href="/login">Watch demo</a>
+          </div>
+          <div className="lp-hero-stats">
+            <div><div className="lp-hero-stat-num">$14.2M</div><div className="lp-hero-stat-label">Portfolio ARV tracked</div></div>
+            <div><div className="lp-hero-stat-num">12+</div><div className="lp-hero-stat-label">Active deals managed</div></div>
+            <div><div className="lp-hero-stat-num">8</div><div className="lp-hero-stat-label">Modules built-in</div></div>
+          </div>
+        </div>
+        <div className="lp-hero-visual">
+          <div className="lp-dash-mockup">
+            <div className="lp-dash-top-bar">
+              <span className="lp-dash-logo">CHG <span style={{fontSize:10,fontWeight:400,color:'var(--mid)'}}>Rehab</span></span>
+              <span className="lp-dash-url">chg.doorine.com/pipeline ↗</span>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div className="lp-dash-avatar">CA</div>
+                <span style={{fontSize:11,fontWeight:600}}>CHG Admin</span>
+              </div>
+            </div>
+            <div className="lp-dash-welcome">Welcome back, CHG.</div>
+            <div className="lp-dash-sub">Here&apos;s what&apos;s moving across your portfolio this week.</div>
+            <div className="lp-dash-kpis">
+              <div className="lp-kpi"><div className="lp-kpi-label">Active Deals</div><div className="lp-kpi-num">12</div><div className="lp-kpi-sub">3 due diligence · 2 under contract</div><div className="lp-kpi-bar"></div></div>
+              <div className="lp-kpi"><div className="lp-kpi-label">Active Rehabs</div><div className="lp-kpi-num">5</div><div className="lp-kpi-sub">3 on schedule · 1 behind</div><div className="lp-kpi-bar" style={{background:'linear-gradient(90deg,var(--gold) 75%,var(--border) 75%)'}}></div></div>
+              <div className="lp-kpi"><div className="lp-kpi-label">Open RFIs</div><div className="lp-kpi-num">8</div><div className="lp-kpi-sub">3 awaiting contractor reply</div><div className="lp-kpi-bar" style={{background:'linear-gradient(90deg,var(--gold) 40%,var(--border) 40%)'}}></div></div>
+              <div className="lp-kpi"><div className="lp-kpi-label">Portfolio ARV</div><div className="lp-kpi-num" style={{fontSize:17}}>$14.2M</div><div className="lp-kpi-sub">$11.8M basis · +$2.4M proj.</div><div className="lp-kpi-bar" style={{background:'linear-gradient(90deg,var(--gold) 85%,var(--border) 85%)'}}></div></div>
+            </div>
+            <div className="lp-deals-label">Recent deals</div>
+            <div className="lp-deal-row"><div><div className="lp-deal-addr">3411 Cedar Ridge Dr</div><div className="lp-deal-city">Dallas, TX · 75204</div></div><div><div className="lp-deal-price">$162,000</div><div className="lp-deal-arv">ARV $238k</div></div><span className="lp-deal-badge lp-badge-identified">Identified</span></div>
+            <div className="lp-deal-row"><div><div className="lp-deal-addr">2455 Larkfield Ave</div><div className="lp-deal-city">Cleveland, OH · 44109</div></div><div><div className="lp-deal-price">$94,500</div><div className="lp-deal-arv">ARV $172k</div></div><span className="lp-deal-badge lp-badge-contract">Under contract</span></div>
+            <div className="lp-deal-row"><div><div className="lp-deal-addr">1812 Magnolia Park Ln</div><div className="lp-deal-city">Woodland Hills, CA</div></div><div><div className="lp-deal-price">$520,000</div><div className="lp-deal-arv">ARV $810k</div></div><span className="lp-deal-badge lp-badge-contract">Under contract</span></div>
+            <div className="lp-deal-row"><div><div className="lp-deal-addr">1920 W 50th St, Apt 1</div><div className="lp-deal-city">Cleveland, OH · 44102</div></div><div><div className="lp-deal-price">$104,200</div><div className="lp-deal-arv">ARV $186k</div></div><span className="lp-deal-badge lp-badge-closed">Closed</span></div>
+          </div>
+          <div className="lp-float-card">
+            <div className="lp-float-label">This week · New leads</div>
+            <div className="lp-float-num">7</div>
+            <div className="lp-float-sub">↑ 3 from last week</div>
+          </div>
+        </div>
+      </div>
+
+      {/* FEATURES */}
+      <section className="lp-section lp-feat-bg" id="features">
+        <div className="lp-section-inner">
+          <div className="lp-feat-header">
+            <div className="lp-section-tag">Core Capabilities</div>
+            <div className="lp-section-h">Built for the way <em>rehab operators</em> work</div>
+            <p className="lp-section-p">Every tool you need — and nothing you don&apos;t. CHG is purpose-built for investors who run real rehab businesses at scale.</p>
+          </div>
+          <div className="lp-feat-grid">
+            {[
+              {icon:'📊',title:'Deal Underwriting',desc:'Model deals with precision. Run ARV comps, repair estimates, and return projections in a single, structured workflow.',items:['ARV & comp analysis','MAO calculator','Investor return modeling','Side-by-side scenario comparison']},
+              {icon:'🔨',title:'Rehab Manager',desc:'Track every project from scope to punch list. Monitor schedules, budgets, and milestones across your entire rehab portfolio.',items:['Scope of work builder','Budget vs. actual tracking','Phase-by-phase progress','Photo & document logs']},
+              {icon:'🤝',title:'Contractor Portal',desc:'Give your subs their own workspace. Send RFIs, approve bids, issue change orders, and track lien waivers — all in one place.',items:['RFI & change order management','Bid comparison tool','Contractor scorecards','Lien waiver tracking']},
+              {icon:'🏗️',title:'Deal Pipeline',desc:'Never lose track of a deal. Move properties through every stage from identified to closed with full status visibility.',items:['Kanban & list views','Stage-based automations','Team assignment & notes','Pipeline ARV reporting']},
+              {icon:'👥',title:'CRM & Contacts',desc:'Manage every relationship — sellers, buyers, investors, contractors. Your entire network, linked to the deals that matter.',items:['Seller & buyer tracking','Investor portal access','Activity timelines','Lead source attribution']},
+              {icon:'📁',title:'Documents Hub',desc:'One organized home for every contract, inspection, title document, and permit — linked directly to the property it belongs to.',items:['Property-linked storage','eSign integrations','Version history','Shared access controls']},
+            ].map((f) => (
+              <div key={f.title} className="lp-feat-card">
+                <div className="lp-feat-icon">{f.icon}</div>
+                <div className="lp-feat-title">{f.title}</div>
+                <div className="lp-feat-desc">{f.desc}</div>
+                <ul className="lp-feat-list">{f.items.map(i => <li key={i}>{i}</li>)}</ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="lp-section" id="how">
+        <div className="lp-section-inner">
+          <div className="lp-section-tag">How It Works</div>
+          <div className="lp-section-h">From lead to close, <em>seamlessly connected</em></div>
+          <div className="lp-how-grid">
+            <div className="lp-steps">
+              {[
+                {n:'01',h:'Identify & Underwrite',p:'Add a property to your pipeline and run a full underwrite — comps, rehab estimate, and projected returns — before making an offer.'},
+                {n:'02',h:'Get Under Contract',p:'Move the deal through due diligence and contract stages. Store all documents, track deadlines, and loop in your team as needed.'},
+                {n:'03',h:'Manage the Rehab',p:'Build your scope, assign trades, and track every line item of the budget. Communicate with contractors directly through the platform.'},
+                {n:'04',h:'Market & Close',p:'List to your buyer network, collect offers, and close. Every step is logged so your team always knows exactly where things stand.'},
+              ].map((s) => (
+                <div key={s.n} className="lp-step">
+                  <div className="lp-step-num">{s.n}</div>
+                  <div><h3 className="lp-step-h">{s.h}</h3><p className="lp-step-p">{s.p}</p></div>
+                </div>
+              ))}
+            </div>
+            <div className="lp-how-vis">
+              <div className="lp-how-vis-hd"><span>Scope of Work — 555 Beech St</span><span className="lp-how-vis-badge">Active Rehab</span></div>
+              {[{n:'Kitchen Demo & Rebuild',t:'General Contractor',a:'$18,400',s:'lp-s-approved',sl:'Approved'},{n:'Roof Replacement',t:'Roofing',a:'$9,200',s:'lp-s-pending',sl:'Pending bid'},{n:'HVAC Full Replacement',t:'HVAC',a:'$7,800',s:'lp-s-approved',sl:'Approved'},{n:'Electrical Panel Upgrade',t:'Electrician',a:'$4,100',s:'lp-s-review',sl:'In review'},{n:'Full Interior Paint',t:'Painter',a:'$3,600',s:'lp-s-approved',sl:'Approved'},{n:'Flooring (LVP)',t:'Flooring',a:'$5,200',s:'lp-s-pending',sl:'Pending bid'}].map((r) => (
+                <div key={r.n} className="lp-scope-row"><div><div className="lp-scope-name">{r.n}</div><div className="lp-scope-trade">{r.t}</div></div><div style={{textAlign:'right'}}><div className="lp-scope-amt">{r.a}</div><span className={`lp-scope-status ${r.s}`}>{r.sl}</span></div></div>
+              ))}
+              <div className="lp-scope-total"><span className="lp-scope-total-label">Total Rehab Budget</span><span className="lp-scope-total-num">$48,300</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MODULES */}
+      <section className="lp-section lp-mod-bg" id="modules">
+        <div className="lp-section-inner">
+          <div className="lp-section-tag">Platform Modules</div>
+          <div className="lp-section-h">Everything your operation <em>needs to scale</em></div>
+          <p className="lp-section-p">CHG is modular by design. Use what you need today, and activate more as your business grows.</p>
+          <div className="lp-mod-grid">
+            {[
+              {icon:'📋',title:'Pipeline Management',desc:'A full deal pipeline with customizable stages, team assignments, and real-time status across every active property in your portfolio.'},
+              {icon:'🧮',title:'Deal Analyzer',desc:'Pro forma underwriting with ARV comps, rehab cost inputs, financing scenarios, and projected investor returns — all exportable.'},
+              {icon:'🏠',title:'Property Record',desc:'A single source of truth for every property — photos, docs, notes, timeline, contacts, and financials all linked in one place.'},
+              {icon:'📦',title:'Warehouse & Materials',desc:'Track material orders, deliveries, and inventory across your active job sites so nothing falls through the cracks mid-project.'},
+              {icon:'💼',title:'Investor Portal',desc:'Give capital partners secure, read-only access to project status, financials, and key milestones — without the endless update emails.'},
+              {icon:'👨‍👩‍👧‍👦',title:'Team Management',desc:'Assign roles and permissions so acquisitions, project managers, and admin staff each see exactly what they need — nothing more.'},
+            ].map((m) => (
+              <div key={m.title} className="lp-mod-card">
+                <div className="lp-mod-icon">{m.icon}</div>
+                <div><div className="lp-mod-title">{m.title}</div><div className="lp-mod-desc">{m.desc}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* METRICS */}
+      <div className="lp-metrics-band">
+        <div className="lp-metrics-inner">
+          {[{n:'$2.4B+',l:'In rehab projects\ntracked on platform'},{n:'40K+',l:'RFIs & change orders\nprocessed'},{n:'98%',l:'Uptime SLA across\nenterprise clients'},{n:'3×',l:'Faster project close\nvs. spreadsheet ops'}].map((m) => (
+            <div key={m.n} className="lp-metric-box"><div className="lp-metric-num">{m.n}</div><div className="lp-metric-label">{m.l}</div></div>
+          ))}
+        </div>
+      </div>
+
+      {/* TESTIMONIALS */}
+      <section className="lp-section" id="testimonials">
+        <div className="lp-section-inner">
+          <div className="lp-section-tag">Client Stories</div>
+          <div className="lp-section-h">Trusted by operators who <em>move fast and build right</em></div>
+          <div className="lp-testi-grid">
+            {[
+              {q:'"We went from managing 4 rehabs in spreadsheets to running 18 projects simultaneously with a team of 6. CHG made that possible."',n:'James M.',r:'Principal · Cleveland, OH',i:'JM'},
+              {q:'"The contractor portal alone saved us 10 hours a week. No more texts, no more missed RFIs — everything lives in the project record."',n:'Tanya R.',r:'Project Manager · Dallas, TX',i:'TR'},
+              {q:'"Our investors finally stopped calling asking for updates. We just point them to their portal and the numbers speak for themselves."',n:'Derek K.',r:'GP · Woodland Hills, CA',i:'DK'},
+            ].map((t) => (
+              <div key={t.n} className="lp-testi-card">
+                <div className="lp-testi-stars">★★★★★</div>
+                <div className="lp-testi-quote">{t.q}</div>
+                <div className="lp-testi-author"><div className="lp-testi-avatar">{t.i}</div><div><div className="lp-testi-name">{t.n}</div><div className="lp-testi-role">{t.r}</div></div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <div className="lp-cta-band">
+        <div className="lp-cta-h">Ready to run your rehab <em>business like a business?</em></div>
+        <p className="lp-cta-p">Join operators across the country who use CHG to underwrite faster, build smarter, and close more deals.</p>
+        <div className="lp-cta-btns">
+          <a className="lp-btn-cta-lg" href="/login">Request a demo →</a>
+          <a className="lp-btn-cta-ghost" href="/login">Sign in</a>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div className="lp-footer-grid">
+            <div><a className="lp-footer-logo" href="#">CHG</a><p className="lp-footer-tagline">The enterprise operating system for real estate rehab. Built for operators who take their business seriously.</p></div>
+            <div className="lp-footer-col"><h4>Product</h4><ul><li><a href="#">Pipeline</a></li><li><a href="#">Underwriting</a></li><li><a href="#">Rehab Manager</a></li><li><a href="#">Contractor Portal</a></li><li><a href="#">Investor Portal</a></li></ul></div>
+            <div className="lp-footer-col"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul></div>
+            <div className="lp-footer-col"><h4>Support</h4><ul><li><a href="#">Documentation</a></li><li><a href="#">Onboarding</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+          </div>
+          <div className="lp-footer-bottom"><p>© 2026 CHG Rehab. All rights reserved.</p><p>Built for real estate operators.</p></div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+Also update apps/chg-rehab/app/layout.tsx: in the unauthenticated (no user) <head> block, add:
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+Only edit files inside apps/chg-rehab/. Do not touch any other folder.
