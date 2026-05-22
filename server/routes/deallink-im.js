@@ -86,6 +86,12 @@ router.get('/:dealId', async (req, res) => {
     if (dealErr) return res.status(500).json({ error: dealErr.message })
     if (!deal)   return res.status(404).json({ error: 'Deal not found.' })
 
+    const { data: profile } = await db
+      .from('deallink_profiles')
+      .select('handle, name, display_name, avatar_url')
+      .eq('account_id', deal.account_id)
+      .maybeSingle()
+
     const addr = deal.hide_street
       ? String(deal.addr || '').replace(/^\d+\s+/, '— ')
       : deal.addr
@@ -104,6 +110,11 @@ router.get('/:dealId', async (req, res) => {
         sqft:   deal.sqft,
         status: deal.status,
         photos: deal.photos?.[0] ? [deal.photos[0]] : [],
+        wholesaler: {
+          handle:     profile?.handle     || null,
+          name:       profile?.name || profile?.display_name || null,
+          avatar_url: profile?.avatar_url || null,
+        },
       },
     })
   } catch (e) {
