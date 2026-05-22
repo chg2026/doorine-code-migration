@@ -405,11 +405,15 @@ function Step0Preview({ deal, onUnlock }) {
             <Lock className="w-4 h-4" /> View full analysis
           </button>
 
-          <p className="text-center text-xs text-[#86868b]">
-            This deal is shared by{' '}
-            <span className="text-[#b8860b] font-semibold">@{wholesaler.handle || 'wholesaler'}</span>{' '}
-            on REI Flywheel
-          </p>
+          {(wholesaler.handle || wholesaler.name) && (
+            <p className="text-center text-xs text-[#86868b]">
+              This deal is shared by{' '}
+              <span className="text-[#b8860b] font-semibold">
+                {wholesaler.handle ? `@${wholesaler.handle}` : wholesaler.name}
+              </span>{' '}
+              on REI Flywheel
+            </p>
+          )}
         </div>
       </div>
     </div>
