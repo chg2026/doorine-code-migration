@@ -78,17 +78,19 @@
   -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
 }
 
-.ap .section-label,
-.ap label,
-.ap .field-label,
-.ap .inp-label,
-.assumption-panel label,
-.assumption-panel .section-label,
-.assumption-panel h2,
-.assumption-panel h3,
-.assumption-panel p,
-.assumption-panel span {
+.ap,
+.ap .fg-lbl,
+.ap .ap-sec-hd,
+.ap .ap-hd-name,
+.ap .ap-hd-sub,
+.ap .ap-sec > *,
+.ap span:not(.fp),
+.ap div:not(.fw):not(.fg) {
   color: #1A1A1A !important;
+}
+
+.ap * {
+  color: #1A1A1A;
 }
 
 .ap-hd{background:var(--assumption-bg)!important;border-bottom:0.5px solid rgba(0,0,0,0.10)!important;}
