@@ -1,0 +1,143 @@
+Read apps/deallink/src/pages/DealAnalyzer.jsx carefully, then make these changes:
+
+1. FIND the `Comps()` function (around line 699). It currently has a hardcoded `comps` array with 2 fake entries and non-functional Add/Delete buttons. DELETE the entire function body and replace it with a new version as described below.
+
+2. FIND where `<Comps />` is called inside the `Analyzer` component (around line 407). Replace it with:
+   <Comps comps={comps} onAdd={handleAddComp} onRemove={handleRemoveComp} />
+
+3. INSIDE the `Analyzer` component, just after the existing `useState`/`seed` calls, add this state:
+   const [comps, setComps] = useState(() => seed('comps', []));
+   const [showCompModal, setShowCompModal] = useState(false);
+   const [compForm, setCompForm] = useState({ addr: '', price: '', beds: '', baths: '', sqft: '', date: '' });
+
+4. ADD these two handlers inside `Analyzer`, just before the return statement:
+
+   function handleAddComp() {
+     if (!compForm.addr || !compForm.price) return;
+     const newComp = {
+       id: Date.now(),
+       addr: compForm.addr,
+       price: Number(compForm.price.replace(/[^0-9.]/g, '')),
+       beds: compForm.beds,
+       baths: compForm.baths,
+       sqft: Number(compForm.sqft.replace(/[^0-9.]/g, '')) || 0,
+       date: compForm.date,
+     };
+     const updated = [...comps, newComp];
+     setComps(updated);
+     setShowCompModal(false);
+     setCompForm({ addr: '', price: '', beds: '', baths: '', sqft: '', date: '' });
+     // persist to analyzerState
+     dispatch({ type: 'PATCH_DEAL', id: deal.id, patch: {
+       analyzerState: { ...deal.analyzerState, comps: updated }
+     }});
+   }
+
+   function handleRemoveComp(id) {
+     const updated = comps.filter(c => c.id !== id);
+     setComps(updated);
+     dispatch({ type: 'PATCH_DEAL', id: deal.id, patch: {
+       analyzerState: { ...deal.analyzerState, comps: updated }
+     }});
+   }
+
+5. REPLACE the `Comps()` function entirely with:
+
+   function Comps({ comps, onAdd, onRemove }) {
+     const avgPrice = comps.length
+       ? Math.round(comps.reduce((s, c) => s + c.price, 0) / comps.length)
+       : 0;
+     const withSqft = comps.filter(c => c.sqft > 0);
+     const avgPpsf = withSqft.length
+       ? Math.round(withSqft.reduce((s, c) => s + c.price / c.sqft, 0) / withSqft.length)
+       : 0;
+
+     return (
+       <div>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+           <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--dim)', letterSpacing: 1.4, textTransform: 'uppercase' }}>Comparable Sales</div>
+           <button className="btn sm solid" onClick={() => setShowCompModal(true)}>+ Add Comp</button>
+         </div>
+
+         {comps.length === 0 && (
+           <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--mute)', fontSize: 13 }}>
+             No comps yet — add nearby sales to estimate ARV.
+           </div>
+         )}
+
+         {comps.map(c => (
+           <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
+             <div style={{ flex: 1 }}>
+               <div style={{ fontSize: 13, fontWeight: 500 }}>{c.addr}</div>
+               <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>
+                 {[c.beds && `${c.beds}bd`, c.baths && `${c.baths}ba`, c.sqft && `${c.sqft.toLocaleString()} sqft`].filter(Boolean).join(' · ')}
+                 {c.date ? `  ·  ${c.date}` : ''}
+               </div>
+             </div>
+             <div style={{ textAlign: 'right' }}>
+               <div style={{ fontSize: 13, fontWeight: 600 }}>${c.price.toLocaleString()}</div>
+               {c.sqft > 0 && <div style={{ fontSize: 11, color: 'var(--mute)' }}>${Math.round(c.price / c.sqft)}/sqft</div>}
+             </div>
+             <button className="btn sm" style={{ color: 'var(--danger, #c0392b)' }} onClick={() => onRemove(c.id)}>✕</button>
+           </div>
+         ))}
+
+         {comps.length > 0 && (
+           <div style={{ display: 'flex', gap: 24, marginTop: 16, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
+             <div>
+               <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--dim)', letterSpacing: 1.2 }}>AVG SALE PRICE</div>
+               <div className="serif" style={{ fontSize: 22, marginTop: 4 }}>${avgPrice.toLocaleString()}</div>
+             </div>
+             {avgPpsf > 0 && (
+               <div>
+                 <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--dim)', letterSpacing: 1.2 }}>AVG $/SQFT</div>
+                 <div className="serif" style={{ fontSize: 22, marginTop: 4 }}>${avgPpsf}</div>
+               </div>
+             )}
+           </div>
+         )}
+
+         {showCompModal && (
+           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+             <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 28, width: 360, maxWidth: '90vw' }}>
+               <div className="serif" style={{ fontSize: 20, marginBottom: 20 }}>Add Comp</div>
+               {[
+                 { key: 'addr', label: 'Address', placeholder: '123 Main St' },
+                 { key: 'price', label: 'Sale Price', placeholder: '295000' },
+                 { key: 'beds', label: 'Bedrooms', placeholder: '3' },
+                 { key: 'baths', label: 'Bathrooms', placeholder: '2' },
+                 { key: 'sqft', label: 'Sq Ft', placeholder: '1640' },
+                 { key: 'date', label: 'Sale Date', placeholder: '2024-11-01' },
+               ].map(({ key, label, placeholder }) => (
+                 <div key={key} style={{ marginBottom: 12 }}>
+                   <label style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--dim)', letterSpacing: 1.2, display: 'block', marginBottom: 4 }}>{label}</label>
+                   <input
+                     className="input"
+                     placeholder={placeholder}
+                     value={compForm[key]}
+                     onChange={e => setCompForm(f => ({ ...f, [key]: e.target.value }))}
+                     style={{ width: '100%' }}
+                   />
+                 </div>
+               ))}
+               <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                 <button className="btn solid" style={{ flex: 1 }} onClick={onAdd}>Save Comp</button>
+                 <button className="btn" onClick={() => { setShowCompModal(false); setCompForm({ addr: '', price: '', beds: '', baths: '', sqft: '', date: '' }); }}>Cancel</button>
+               </div>
+             </div>
+           </div>
+         )}
+       </div>
+     );
+   }
+
+6. IMPORTANT: The `showCompModal`, `setShowCompModal`, `compForm`, `setCompForm` variables used inside `Comps()` must be passed as props OR the modal state should live in `Analyzer` and be passed down. The cleanest approach: keep `showCompModal` and `compForm` state in `Analyzer`, and pass `showCompModal`, `setShowCompModal`, `compForm`, `setCompForm` as props to `Comps`. Update the `<Comps />` call in step 2 accordingly:
+   <Comps comps={comps} onAdd={handleAddComp} onRemove={handleRemoveComp} showModal={showCompModal} setShowModal={setShowCompModal} compForm={compForm} setCompForm={setCompForm} />
+   And update the Comps function signature to: function Comps({ comps, onAdd, onRemove, showModal, setShowModal, compForm, setCompForm })
+   And replace all `showCompModal` refs inside Comps with `showModal`, `setShowCompModal` with `setShowModal`.
+
+7. ALSO check: does the `seed()` helper in this file read from `deal.analyzerState`? If yes, `seed('comps', [])` should correctly initialize from saved data. If `seed()` does not exist or works differently, initialize as: `useState(deal?.analyzerState?.comps || [])` instead.
+
+8. VERIFY the store has a PATCH_DEAL action that supports nested analyzerState updates. If not, use whatever the existing save pattern is in this file to persist the comps array.
+
+Only edit files inside apps/deallink/. Do not touch any other folder.

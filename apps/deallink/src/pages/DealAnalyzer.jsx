@@ -119,6 +119,51 @@ function Analyzer({ deal }) {
   const [refiLTV, setRefiLTV] = useState(seed('refiLTV', 75));
   const [refiRate, setRefiRate] = useState(seed('refiRate', 7.5));
 
+  // ─── Comparable sales ────────────────────────────────────────────────
+  // Comps live alongside the deal (not inside any one saved analysis),
+  // so they're persisted via the flexible `imConfig` JSONB blob under
+  // `imConfig.comps`. (`comps` is not in the server's DEAL_FIELDS
+  // allow-list, and analyzerState is an array of saved analyses — not
+  // an object — so neither is a good direct home.)
+  const initialComps = Array.isArray(deal.imConfig?.comps) ? deal.imConfig.comps : [];
+  const [comps, setComps] = useState(initialComps);
+  const [showCompModal, setShowCompModal] = useState(false);
+  const EMPTY_COMP_FORM = { addr: '', price: '', beds: '', baths: '', sqft: '', date: '' };
+  const [compForm, setCompForm] = useState(EMPTY_COMP_FORM);
+
+  function persistComps(next) {
+    const baseCfg = (deal.imConfig && typeof deal.imConfig === 'object') ? deal.imConfig : {};
+    dispatch({
+      type: 'update_deal',
+      id: deal.id,
+      patch: { imConfig: { ...baseCfg, comps: next } },
+    });
+  }
+
+  function handleAddComp() {
+    if (!compForm.addr || !compForm.price) return;
+    const newComp = {
+      id: Date.now(),
+      addr: compForm.addr,
+      price: Number(String(compForm.price).replace(/[^0-9.]/g, '')) || 0,
+      beds: compForm.beds,
+      baths: compForm.baths,
+      sqft: Number(String(compForm.sqft).replace(/[^0-9.]/g, '')) || 0,
+      date: compForm.date,
+    };
+    const updated = [...comps, newComp];
+    setComps(updated);
+    setShowCompModal(false);
+    setCompForm(EMPTY_COMP_FORM);
+    persistComps(updated);
+  }
+
+  function handleRemoveComp(id) {
+    const updated = comps.filter((c) => c.id !== id);
+    setComps(updated);
+    persistComps(updated);
+  }
+
   const m = useMemo(() => {
     const rehab = rehabOverride || items.reduce((s, i) => s + (i.cost || 0), 0);
     const closingBuy = purchasePrice * (closingPct / 100);
@@ -404,7 +449,15 @@ function Analyzer({ deal }) {
               </>
             )}
             {strategy === 'brrrr' && <BrrrAnalysis m={m} />}
-            <Comps />
+            <Comps
+              comps={comps}
+              onAdd={handleAddComp}
+              onRemove={handleRemoveComp}
+              showModal={showCompModal}
+              setShowModal={setShowCompModal}
+              compForm={compForm}
+              setCompForm={setCompForm}
+            />
           </div>
         </div>
         )}
@@ -696,36 +749,123 @@ function FlipResults({ m, arv, purchasePrice }) {
   );
 }
 
-function Comps() {
-  const comps = [
-    { addr: '110 Oak Ave', beds: '3bd/2ba', sqft: '1,640 sqft', ppsf: '$190/sqft', date: '2024-11-01', price: 295000 },
-    { addr: '201 Elm Dr', beds: '3bd/2ba', sqft: '1,800 sqft', ppsf: '$155/sqft', date: '2024-10-15', price: 280000 },
-  ];
+function Comps({ comps, onAdd, onRemove, showModal, setShowModal, compForm, setCompForm }) {
+  const EMPTY_COMP_FORM = { addr: '', price: '', beds: '', baths: '', sqft: '', date: '' };
+  const avgPrice = comps.length
+    ? Math.round(comps.reduce((s, c) => s + (c.price || 0), 0) / comps.length)
+    : 0;
+  const withSqft = comps.filter((c) => c.sqft > 0);
+  const avgPpsf = withSqft.length
+    ? Math.round(withSqft.reduce((s, c) => s + c.price / c.sqft, 0) / withSqft.length)
+    : 0;
+
+  const subline = comps.length
+    ? `Avg: ${fmt(avgPrice)}${avgPpsf > 0 ? ` · $${avgPpsf}/sqft` : ''}`
+    : 'No comps yet — add nearby sales to estimate ARV.';
+
   return (
     <div className="rounded-xl border border-[rgba(0,0,0,0.08)] bg-white/40 p-5">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-medium text-[#1d1d1f]">Comparable Sales (Comps)</h3>
-          <p className="text-[11px] text-[#86868b]">Avg: $288K · $172/sqft</p>
+          <p className="text-[11px] text-[#86868b]">{subline}</p>
         </div>
-        <button className="px-3 py-1.5 text-xs rounded-md border border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.10)] text-[#3a3a3c] flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="px-3 py-1.5 text-xs rounded-md border border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.10)] text-[#3a3a3c] flex items-center gap-1.5"
+        >
           <Plus className="w-3.5 h-3.5" /> Add Comp
         </button>
       </div>
-      <div className="space-y-2">
-        {comps.map((c) => (
-          <div key={c.addr} className="flex items-center justify-between border-t border-[rgba(0,0,0,0.08)] pt-2 text-sm">
-            <div>
-              <p className="text-[#3a3a3c] flex items-center gap-2"><Home className="w-3.5 h-3.5 text-[#b8860b]" /> {c.addr}</p>
-              <p className="text-[11px] text-[#86868b] ml-5">{c.beds} · {c.sqft} · {c.ppsf} · {c.date}</p>
+
+      {comps.length === 0 ? (
+        <div className="py-6 text-center text-xs text-[#86868b]">
+          Add nearby sales to anchor your ARV.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {comps.map((c) => (
+            <div key={c.id} className="flex items-center justify-between border-t border-[rgba(0,0,0,0.08)] pt-2 text-sm">
+              <div>
+                <p className="text-[#3a3a3c] flex items-center gap-2">
+                  <Home className="w-3.5 h-3.5 text-[#b8860b]" /> {c.addr}
+                </p>
+                <p className="text-[11px] text-[#86868b] ml-5">
+                  {[
+                    c.beds && `${c.beds}bd`,
+                    c.baths && `${c.baths}ba`,
+                    c.sqft > 0 && `${c.sqft.toLocaleString()} sqft`,
+                    c.sqft > 0 && c.price > 0 && `$${Math.round(c.price / c.sqft)}/sqft`,
+                    c.date,
+                  ].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[#1d1d1f] font-medium">{fmt(c.price || 0)}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(c.id)}
+                  className="text-[#86868b] hover:text-rose-400"
+                  aria-label="Remove comp"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[#1d1d1f] font-medium">{fmt(c.price)}</span>
-              <button className="text-[#86868b] hover:text-rose-400"><Trash2 className="w-4 h-4" /></button>
+          ))}
+        </div>
+      )}
+
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="w-[360px] max-w-[90vw] rounded-xl bg-white p-7 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-base font-medium text-[#1d1d1f] mb-5">Add comp</h4>
+            {[
+              { key: 'addr',  label: 'Address',    placeholder: '123 Main St' },
+              { key: 'price', label: 'Sale price', placeholder: '295000' },
+              { key: 'beds',  label: 'Bedrooms',   placeholder: '3' },
+              { key: 'baths', label: 'Bathrooms',  placeholder: '2' },
+              { key: 'sqft',  label: 'Sq ft',      placeholder: '1640' },
+              { key: 'date',  label: 'Sale date',  placeholder: '2024-11-01' },
+            ].map(({ key, label, placeholder }) => (
+              <label key={key} className="block mb-3">
+                <span className="block text-[10px] uppercase tracking-wider text-[#86868b] mb-1">{label}</span>
+                <input
+                  type="text"
+                  placeholder={placeholder}
+                  value={compForm[key]}
+                  onChange={(e) => setCompForm((f) => ({ ...f, [key]: e.target.value }))}
+                  className="w-full bg-[#f5f5f7] border border-[rgba(0,0,0,0.08)] rounded-md py-2 px-3 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#b8860b]/60"
+                />
+              </label>
+            ))}
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={onAdd}
+                disabled={!compForm.addr || !compForm.price}
+                className="flex-1 rounded-md bg-[#b8860b] text-white text-sm font-medium py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save comp
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowModal(false); setCompForm(EMPTY_COMP_FORM); }}
+                className="rounded-md border border-[rgba(0,0,0,0.08)] text-sm text-[#3a3a3c] py-2 px-4"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
