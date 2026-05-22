@@ -9,7 +9,6 @@ import { supabase } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { UpgradeBanner } from '../components/UpgradePrompt.jsx';
 import PhotoUploader from '../components/PhotoUploader.jsx';
-import FlipExtraVisuals, { isFlipExtra, flipExtraSummary } from '../components/FlipExtraVisuals.jsx';
 
 const FREE_DEAL_LIMIT = 10;
 const FREE_HIDE_STREET_LIMIT = 1;
@@ -445,7 +444,6 @@ const STRATEGY_LABELS = {
   rental: 'Rental',
   brrrr: 'BRRRR',
   flip: 'Fix & Flip',
-  'flip-extra': 'Fix & Flip+',
   multi: 'Multifamily',
   commercial: 'Commercial',
 };
@@ -509,14 +507,9 @@ const STRATEGY_BADGE = {
   rental:        { label: 'Rental',      cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
   brrrr:         { label: 'BRRRR',       cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
   flip:          { label: 'Fix & Flip',  cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40' },
-  'flip-extra':  { label: 'Fix & Flip+', cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40' },
   multi:         { label: 'Multifamily', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
   commercial:    { label: 'Commercial',  cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40' },
 };
-
-// ─────────────────────────────────────────────────────────────────────────
-// (FlipExtraVisuals and its helpers live in
-// ../components/FlipExtraVisuals.jsx so the public IM report can reuse them.)
 
 function fmtSavedAt(iso) {
   if (!iso) return '—';
@@ -606,19 +599,10 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
   const strategy = a.strategy || (a.summary && a.summary.strategy) || 'rental';
   const badge = STRATEGY_BADGE[strategy] || { label: strategy, cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40' };
   const isFlip = strategy === 'flip';
-  const flipExtra = flipExtraSummary(a);
 
-  // Flip-extra stores results under `results.*`; the legacy deriveMetrics
-  // (rental schema) returns zeros for it, so prefer the saved profit number.
-  let previewLabel, previewValue;
-  if (flipExtra) {
-    previewLabel = 'Net Profit';
-    previewValue = flipExtra.profit;
-  } else {
-    const m = deriveMetrics(a);
-    previewLabel = isFlip ? 'Net Profit' : 'Monthly Cash Flow';
-    previewValue = isFlip ? m.flipNetProfit : m.monthlyCashFlow;
-  }
+  const m = deriveMetrics(a);
+  const previewLabel = isFlip ? 'Net Profit' : 'Monthly Cash Flow';
+  const previewValue = isFlip ? m.flipNetProfit : m.monthlyCashFlow;
   const previewTone = previewValue >= 0 ? 'text-emerald-300' : 'text-rose-300';
 
   return (
@@ -665,7 +649,6 @@ function SavedAnalysisReport({ analysis, deal }) {
   const strategy = state.strategy || (state.summary && state.summary.strategy) || 'rental';
   const strategyLabel = STRATEGY_LABELS[strategy] || (state.summary && state.summary.strategyLabel) || strategy;
   const isFlip = strategy === 'flip';
-  const flipExtra = flipExtraSummary(state);
 
   const savedAtIso = state.savedAt || deal.analyzerStateUpdatedAt;
   const savedDate = savedAtIso
@@ -674,41 +657,6 @@ function SavedAnalysisReport({ analysis, deal }) {
 
   const addressLine = [deal.addr, [deal.city, deal.state || deal.zip].filter(Boolean).join(', ')]
     .filter(Boolean).join(' · ');
-
-  // Fix & Flip+ uses a different payload shape (inputs/results sub-objects
-  // plus chart data). Render the dedicated visualization stack instead of
-  // the rental-derived deriveMetrics blocks.
-  if (flipExtra) {
-    return (
-      <section className="space-y-5">
-        <div className="rounded-xl border border-[#b8860b]/30 bg-gradient-to-br from-[rgba(184,134,11,0.08)] to-white p-5">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <Calculator className="w-4 h-4 text-[#b8860b]" />
-                <span className="text-[10px] uppercase tracking-wider text-[#b8860b] font-semibold">
-                  {strategyLabel} Analysis
-                </span>
-              </div>
-              <h3 className="text-[#1d1d1f] font-semibold text-base truncate">
-                {addressLine || 'Untitled property'}
-              </h3>
-              {savedDate && (
-                <p className="text-xs text-[#6e6e73] mt-1">Saved on {savedDate}</p>
-              )}
-            </div>
-            <Link
-              to={`/deal-analyzer/${deal.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-[#b8860b] text-white text-xs font-semibold hover:opacity-90 flex-shrink-0"
-            >
-              <Calculator className="w-3.5 h-3.5" /> Re-run analysis
-            </Link>
-          </div>
-        </div>
-        <FlipExtraVisuals analysis={state} />
-      </section>
-    );
-  }
 
   const m = deriveMetrics(state);
 
@@ -1272,9 +1220,6 @@ const IM_SECTIONS = [
   { key: 'documents',         title: 'Documents',          desc: 'Files attached to this deal (per-doc toggles next)', defaultOn: false },
   { key: 'wholesalerContact', title: 'Wholesaler contact', desc: 'Your name, phone, email',                         defaultOn: true  },
   { key: 'dealAnalysis',      title: 'Deal analysis',      desc: 'Cash flow, cap rate, ROI from the chosen scenario', defaultOn: true  },
-  { key: 'flipExtraDealStructure', title: 'Deal structure breakdown', desc: 'Fix & Flip+ only · Bar chart of cost components vs projected profit', defaultOn: true  },
-  { key: 'flipExtraSensitivity',   title: 'ARV / Sale Price sensitivity', desc: 'Fix & Flip+ only · Bear / Base / Bull profit at ±10% ARV', defaultOn: true  },
-  { key: 'flipExtraStressTest',    title: 'Doomsday stress test',     desc: 'Fix & Flip+ only · Profit under best / baseline / worst conditions', defaultOn: false },
 ];
 
 const IM_NUMBER_FIELDS = [
@@ -1628,7 +1573,7 @@ function IMLivePreview({ deal }) {
         )}
 
         {/* ─── Deal analysis (full breakdown) ─────────────────────────── */}
-        {cfg.sections.dealAnalysis && metrics && !isFlipExtra(selectedAnalysis) && (
+        {cfg.sections.dealAnalysis && metrics && (
           <section>
             <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">
               Deal analysis · {STRATEGY_LABELS[selectedAnalysis?.strategy] || 'Scenario'}
@@ -1639,27 +1584,6 @@ function IMLivePreview({ deal }) {
               <MetricTile label="P&I / mo" value={fmtUsd(metrics.piti)} tone="text-[#1d1d1f]" />
               <MetricTile label="Cash to close" value={fmtUsd(metrics.totalCash)} tone="text-[#1d1d1f]" />
             </div>
-          </section>
-        )}
-
-        {/* ─── Fix & Flip+ advanced visualizations ────────────────────── */}
-        {isFlipExtra(selectedAnalysis) && (cfg.sections.dealAnalysis
-          || cfg.sections.flipExtraDealStructure
-          || cfg.sections.flipExtraSensitivity
-          || cfg.sections.flipExtraStressTest) && (
-          <section>
-            <p className="text-[11px] uppercase tracking-wider text-[#86868b] mb-2">
-              Deal analysis · Fix &amp; Flip+
-            </p>
-            <FlipExtraVisuals
-              analysis={selectedAnalysis}
-              show={{
-                keyMetrics:    cfg.sections.dealAnalysis,
-                dealStructure: cfg.sections.flipExtraDealStructure,
-                sensitivity:   cfg.sections.flipExtraSensitivity,
-                stressTest:    cfg.sections.flipExtraStressTest,
-              }}
-            />
           </section>
         )}
 
