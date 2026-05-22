@@ -11,10 +11,10 @@ export default function FlipBrrrrCalc({ deal, dispatch, mode = 'flip' }) {
         type: 'REI_PREFILL',
         mode,
         deal: {
-          purchasePrice: deal?.purchase_price || 0,
-          rehabCost: deal?.rehab_budget || 0,
+          purchasePrice: deal?.ask || 0,
+          rehabCost: 0,
           arv: deal?.arv || 0,
-          address: deal?.address || '',
+          address: deal?.addr || '',
           calcState: deal?.imConfig?.calcState || null,
         },
       }, '*');
