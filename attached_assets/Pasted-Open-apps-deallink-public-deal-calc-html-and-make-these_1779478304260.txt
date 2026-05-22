@@ -1,0 +1,51 @@
+Open apps/deallink/public/deal-calc.html and make these targeted fixes only. Read the file first.
+
+━━━ FIX 1: Hide the internal FLIP/BRRRR toggle ━━━
+Find the FLIP / BRRRR toggle button row (the pill-style toggle that switches between FLIP and BRRRR/Rental views). Add CSS to hide it:
+  display: none !important;
+Do this via a rule in the <style> block targeting that toggle's container. The mode is now controlled by the URL param — users should not see this toggle inside the iframe.
+
+━━━ FIX 2: Fix assumption panel input text visibility ━━━
+In the :root / CSS, find the input styling for the assumption panel. The issue is input values are invisible (white text on white/light background, or transparent). 
+Find the CSS rules for inputs inside the assumption panel (likely something like .assumption-panel input, or .inp-field, or similar). Set:
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+This ensures typed values and pre-filled values are visible against the dark panel background. Also check if the assumption panel background is dark — if yes, set input text to #f5f0e8 (light) instead.
+Look at the actual assumption panel background color in the CSS first, then pick the right contrast color.
+
+━━━ FIX 3: Remove the CHG footer bar entirely ━━━
+Find and DELETE the entire bottom action bar that contains:
+- "Auto-saving to deal record"
+- "Results saved to [address] as you work"
+- Print button
+- Save button  
+- "Return to deal →" button
+- "Continue to scenarios →" button
+Remove both the HTML element AND any JS that populates the address text in it.
+
+━━━ FIX 4: Remove CHG-specific label text ━━━
+Find and DELETE the text "Full line-item scope built post-acquisition in Rehab Manager" (it appears as a helper text under the rehab cost input in the assumption panel).
+
+━━━ FIX 5: Clear hardcoded test data from the init block ━━━
+Find the JavaScript init block near the bottom of the file (the block that runs on page load and calls recalcFlip() / recalcB() for the first time).
+Look for any hardcoded values being set on inputs before the first recalc — things like:
+  document.getElementById('inp-purchase').value = 195000
+  document.getElementById('inp-arv').value = 340000
+  or similar default/seed data
+DELETE all hardcoded test values. Replace with zeros:
+  All numeric inputs in the assumption panel should initialize to 0 (or empty string '')
+The pre-fill data will come from the REI_PREFILL postMessage after load.
+
+━━━ FIX 6: Ensure the FLIP/BRRRR toggle in CSS hides properly ━━━
+Also find any CSS class for the toggle wrapper and add to the <style> block:
+  .rv-toggle, .flip-brrrr-toggle, [class*="toggle-rv"], [class*="rv-switcher"] { display: none !important; }
+Use the actual class name you find in the markup — look at the toggle HTML to get the real class.
+
+After all edits, verify:
+- No test/hardcoded deal data remains in the init block
+- The footer bar HTML is completely gone
+- The FLIP/BRRRR toggle is hidden
+- Input text color is set explicitly
+
+Only edit apps/deallink/public/deal-calc.html. Do not touch any other file.
+Report the actual class name of the FLIP/BRRRR toggle and the actual background color of the assumption panel so I can confirm the contrast fix is right.

@@ -51,7 +51,12 @@
 .ap-sec-lbl{color:rgba(245,240,232,0.55)!important;}
 .ap-sec-lbl::after{background:rgba(255,255,255,0.10)!important;}
 .ap .fg-lbl,.ap .fg-hint,.ap .rehab-note,.ap .fin-divider{color:rgba(245,240,232,0.75)!important;}
-.ap .fw input,.ap .fw select{background:rgba(255,255,255,0.06)!important;color:var(--assumption-text)!important;border-color:rgba(255,255,255,0.12)!important;}
+.ap .fw input,.ap .fw select,.ap input,.ap select{background:rgba(255,255,255,0.06)!important;color:#F5F0E8!important;-webkit-text-fill-color:#F5F0E8!important;border-color:rgba(255,255,255,0.12)!important;}
+.ap .fw input::placeholder,.ap input::placeholder{color:rgba(245,240,232,0.40)!important;-webkit-text-fill-color:rgba(245,240,232,0.40)!important;}
+.ap .fw input:-webkit-autofill,.ap input:-webkit-autofill{-webkit-text-fill-color:#F5F0E8!important;-webkit-box-shadow:0 0 0 1000px rgba(255,255,255,0.06) inset!important;}
+
+/* Hide internal FLIP/BRRRR toggle (mode is now controlled by URL param) */
+.rv-toggle,.flip-brrrr-toggle,[class*="toggle-rv"],[class*="rv-switcher"]{display:none!important;}
 .ap .fp,.ap .fs{color:rgba(245,240,232,0.55)!important;}
 .ap .tip-icon{background:rgba(245,240,232,0.18);color:var(--assumption-text);}
 
@@ -452,9 +457,9 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
       <div class="ap-sec">
         <div class="ap-sec-lbl">Purchase</div>
         <div class="fg"><div class="fg-lbl">Price type</div><div class="fw"><select id="ap-pt" onchange="recalc()"><option value="purchase">Purchase price</option><option value="arv">After repair value</option></select></div></div>
-        <div class="fg"><div class="fg-lbl">Amount</div><div class="fw"><span class="fp">$</span><input id="ap-price" value="195,000" oninput="recalc()" /></div></div>
-        <div class="fg"><div class="fg-lbl">Closing costs <span class="fg-hint">title, escrow, inspection</span></div><div class="fw"><span class="fp">$</span><input id="ap-closing" value="2,810" oninput="recalc()" /></div></div>
-        <div class="fg"><div class="fg-lbl">Monthly holding costs <span class="fg-hint">taxes, insurance, utilities</span></div><div class="fw"><span class="fp">$</span><input id="ap-holding" value="3,000" oninput="recalc()" /></div></div>
+        <div class="fg"><div class="fg-lbl">Amount</div><div class="fw"><span class="fp">$</span><input id="ap-price" value="0" oninput="recalc()" /></div></div>
+        <div class="fg"><div class="fg-lbl">Closing costs <span class="fg-hint">title, escrow, inspection</span></div><div class="fw"><span class="fp">$</span><input id="ap-closing" value="0" oninput="recalc()" /></div></div>
+        <div class="fg"><div class="fg-lbl">Monthly holding costs <span class="fg-hint">taxes, insurance, utilities</span></div><div class="fw"><span class="fp">$</span><input id="ap-holding" value="0" oninput="recalc()" /></div></div>
       </div>
 
       <div class="ap-sec">
@@ -467,8 +472,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
               <div class="tip-box"><strong style="display:block;margin-bottom:3px;">What to enter here</strong>Your best estimate of total renovation costs — materials, labor, and contingency. This drives the all-in cost and profit projections. Once the property is acquired, you'll build a detailed line-item scope of work in the Rehab Manager, organized by trade with contractor payment gates.</div>
             </div>
           </div>
-          <div class="fw"><span class="fp">$</span><input id="ap-rehab" value="20,000" placeholder="e.g. 20,000" oninput="recalc()" /></div>
-          <div class="rehab-note">Full line-item scope built post-acquisition in Rehab Manager</div>
+          <div class="fw"><span class="fp">$</span><input id="ap-rehab" value="0" oninput="recalc()" /></div>
         </div>
         <div class="fg"><div class="fg-lbl">Rehab period</div><div class="fw"><select id="ap-rmo" onchange="recalc()"><option value="0">0 months — as-is</option><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="5">5 months</option><option value="6">6 months</option><option value="7">7 months</option><option value="8">8 months</option><option value="9">9 months</option><option value="10">10 months</option><option value="11">11 months</option><option value="12">12 months</option><option value="18">18 months</option><option value="24">24 months</option></select></div></div>
       </div>
@@ -494,8 +498,8 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
       <div class="rv active" id="rv-flip">
         <div class="rv-inner">
 
-          <!-- Analysis type toggle -->
-          <div style="display:flex;justify-content:center;">
+          <!-- Analysis type toggle (hidden in REI — mode comes from URL) -->
+          <div class="rv-toggle" style="display:none;">
             <div style="display:inline-flex;background:rgba(0,0,0,0.09);border-radius:20px;padding:3px;gap:2px;border:0.5px solid rgba(0,0,0,0.08);">
               <button id="st-flip" onclick="switchRV('flip')" style="padding:6px 20px;border-radius:16px;border:none;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;background:var(--surface);color:var(--amb-dk);box-shadow:var(--shadow);transition:all 0.15s;">FLIP</button>
               <button id="st-brrrr" onclick="switchRV('brrrr')" style="padding:6px 20px;border-radius:16px;border:none;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;background:transparent;color:var(--t3);transition:all 0.15s;">BRRRR / Rental</button>
@@ -508,7 +512,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
               <span class="rs-hd" style="margin-bottom:0;">A &nbsp;&middot;&nbsp; Sale assumptions</span>
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 14px;border-bottom:0.5px solid var(--b1);">
-              <div><div class="ig3-lbl">After-repair value (ARV)</div><div class="fw"><span class="fp">$</span><input id="f-arv" value="340,000" oninput="syncCosDisplay();recalcFlip()" /></div></div>
+              <div><div class="ig3-lbl">After-repair value (ARV)</div><div class="fw"><span class="fp">$</span><input id="f-arv" value="0" oninput="syncCosDisplay();recalcFlip()" /></div></div>
               <div><div class="ig3-lbl">Months to sell after rehab</div><div class="fw"><select id="f-smo" onchange="recalcFlip()"><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="5">5 months</option><option value="6">6 months</option><option value="7">7 months</option><option value="8">8 months</option><option value="9">9 months</option><option value="10">10 months</option><option value="11">11 months</option><option value="12">12 months</option></select></div></div>
               <div>
                 <div style="display:flex;gap:5px;margin-bottom:5px;">
@@ -517,7 +521,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
                 </div>
                 <div style="display:flex;gap:5px;">
                   <div class="fw" style="flex:1;"><input id="f-cos" value="7" style="text-align:right;" oninput="cosFromPct()" /><span class="fs">%</span></div>
-                  <div class="fw" style="flex:1;"><span class="fp">$</span><input id="f-cos-dollar" value="23,800" style="text-align:right;" oninput="cosFromDollar()" /></div>
+                  <div class="fw" style="flex:1;"><span class="fp">$</span><input id="f-cos-dollar" value="0" style="text-align:right;" oninput="cosFromDollar()" /></div>
                 </div>
               </div>
             </div>
@@ -780,15 +784,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
             </div>
           </div>
 
-          <div class="card rf">
-            <div class="rf-note"><strong>&#10003; Auto-saving to deal record</strong>Results saved to 1847 Oak Ridge Dr as you work</div>
-            <div class="rf-btns">
-              <button class="btn-print" onclick="window.print()">&#9113; Print</button>
-              <div class="btn-sep"></div>
-              <button class="btn-save">Save</button>
-              <button class="btn-ret">Return to deal &rarr;</button>
-            </div>
-          </div>
+          <!-- CHG footer bar removed in REI (Auto-saving / Print / Save / Return to deal) -->
 
         </div>
       </div>
@@ -797,8 +793,8 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
       <div class="rv" id="rv-brrrr">
         <div class="rv-inner">
 
-          <!-- Analysis type toggle -->
-          <div style="display:flex;justify-content:center;">
+          <!-- Analysis type toggle (hidden in REI — mode comes from URL) -->
+          <div class="rv-toggle" style="display:none;">
             <div style="display:inline-flex;background:rgba(0,0,0,0.09);border-radius:20px;padding:3px;gap:2px;border:0.5px solid rgba(0,0,0,0.08);">
               <button id="st-flip-b" onclick="switchRV('flip')" style="padding:6px 20px;border-radius:16px;border:none;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;background:transparent;color:var(--t3);transition:all 0.15s;">FLIP</button>
               <button id="st-brrrr-b" onclick="switchRV('brrrr')" style="padding:6px 20px;border-radius:16px;border:none;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;background:var(--surface);color:var(--amb-dk);box-shadow:var(--shadow);transition:all 0.15s;">BRRRR / Rental</button>
@@ -965,7 +961,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
             <div class="refi-sec show" id="refi-sec">
               <!-- Refi inputs — matching RV rows 33, 46-49 -->
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 14px;border-bottom:0.5px solid var(--b1);">
-                <div><div class="ig3-lbl">ARV / Appraised value (row 32)</div><div class="fw"><span class="fp">$</span><input id="b-arv" value="280,000" oninput="recalcB()" /></div></div>
+                <div><div class="ig3-lbl">ARV / Appraised value (row 32)</div><div class="fw"><span class="fp">$</span><input id="b-arv" value="0" oninput="recalcB()" /></div></div>
                 <div><div class="ig3-lbl">Months to rent after rehab (row 33)</div><div class="fw"><select id="b-rent-delay" onchange="recalcB()"><option value="0">Immediate</option><option value="1">1 month</option><option value="2" selected>2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="5">5 months</option><option value="6">6 months</option><option value="7">7 months</option><option value="8">8 months</option><option value="9">9 months</option><option value="10">10 months</option><option value="11">11 months</option><option value="12">12 months</option></select></div></div>
                 <div><div class="ig3-lbl">Refi % of appraisal / LTV (row 46)</div><div class="fw"><input id="b-ltv" value="75" style="text-align:right;" oninput="recalcB()" /><span class="fs">%</span></div></div>
                 <div><div class="ig3-lbl">New mortgage rate (row 47)</div><div class="fw"><input id="b-rate" value="7.0" style="text-align:right;" oninput="recalcB()" /><span class="fs">%</span></div></div>
@@ -1187,15 +1183,7 @@ body{font-family:var(--font);font-size:13px;color:var(--t1);background:var(--bg)
               </div>
             </div>
 
-          <div class="card rf">
-            <div class="rf-note"><strong>&#10003; Auto-saving to deal record</strong>Results saved to 1847 Oak Ridge Dr as you work</div>
-            <div class="rf-btns">
-              <button class="btn-print" onclick="window.print()">&#9113; Print</button>
-              <div class="btn-sep"></div>
-              <button class="btn-save">Save</button>
-              <button class="btn-ret">Return to deal &rarr;</button>
-            </div>
-          </div>
+          <!-- CHG footer bar removed in REI (Auto-saving / Print / Save / Return to deal) -->
 
         </div>
       </div>
