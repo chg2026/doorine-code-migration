@@ -28,8 +28,8 @@
   --color-positive:#22863a;
   --color-negative:#c0392b;
   --color-accent:#C9973B;
-  --assumption-bg:#18181B;
-  --assumption-text:#F5F0E8;
+  --assumption-bg:#F5F0E8;
+  --assumption-text:#1A1A1A;
 
   /* Re-map the original CHG vars to REI tones so the rest of the sheet picks them up */
   --navy:#1C2333;          /* assumption-panel header / sidebar dark band */
@@ -67,22 +67,22 @@
 .assumption-panel select,
 [class*="assumption"] input,
 [class*="assumption"] select {
-  color: #F5F0E8 !important;
-  -webkit-text-fill-color: #F5F0E8 !important;
-  background-color: rgba(255,255,255,0.08) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
+  color: #1A1A1A !important;
+  -webkit-text-fill-color: #1A1A1A !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
 }
 
 .ap input::placeholder,
 .assumption-panel input::placeholder {
-  color: rgba(245,240,232,0.4) !important;
-  -webkit-text-fill-color: rgba(245,240,232,0.4) !important;
+  color: rgba(0,0,0,0.35) !important;
+  -webkit-text-fill-color: rgba(0,0,0,0.35) !important;
 }
 
 .ap input:-webkit-autofill,
 .ap input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #F5F0E8 !important;
-  -webkit-box-shadow: 0 0 0px 1000px #18181B inset !important;
+  -webkit-text-fill-color: #1A1A1A !important;
+  -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
 }
 
 .ap .section-label,
@@ -90,9 +90,17 @@
 .ap .field-label,
 .ap .inp-label,
 .assumption-panel label,
-.assumption-panel .section-label {
-  color: rgba(245,240,232,0.6) !important;
+.assumption-panel .section-label,
+.assumption-panel h2,
+.assumption-panel h3,
+.assumption-panel p,
+.assumption-panel span {
+  color: #1A1A1A !important;
 }
+
+.ap-hd{background:var(--assumption-bg)!important;border-bottom:0.5px solid rgba(0,0,0,0.10)!important;}
+.ap-hd-name{color:#1A1A1A!important;}
+.ap-hd-sub{color:#1A1A1A!important;background:rgba(0,0,0,0.08)!important;border-color:rgba(0,0,0,0.12)!important;}
 
 /* nav + tabs */
 .nl.active{border-bottom-color:#C9973B!important;}
