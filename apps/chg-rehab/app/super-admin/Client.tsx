@@ -13,19 +13,19 @@ const TABS: { id: TabId; label: string }[] = [
 
 const PLANS_BY_PRODUCT: Record<string, string[]> = {
   chg: ["starter", "professional", "enterprise"],
-  deallink: ["free", "pro"],
+  deallink: ["free", "personal", "team"],
   "investor-portal": ["standard"],
   "contractor-portal": ["free", "pro"],
 };
 const PRODUCT_LABEL: Record<string, string> = {
   chg: "CHG CRM",
-  deallink: "Deal Link",
+  deallink: "REI Flywheel",
   "investor-portal": "Investor Portal",
   "contractor-portal": "Contractor Portal",
 };
 const PRODUCT_SHORT: Record<string, string> = {
   chg: "CHG",
-  deallink: "Deal Link",
+  deallink: "REI Flywheel",
   "investor-portal": "Investor",
   "contractor-portal": "Contractor",
 };
