@@ -2808,7 +2808,6 @@ function getCalcState() {
   });
   return inputs;
 }
-
 function restoreCalcState(state) {
   if (!state || typeof state !== 'object') return;
   Object.keys(state).forEach(function(id) {
@@ -2816,9 +2815,31 @@ function restoreCalcState(state) {
     if (el) { el.value = state[id]; el.dispatchEvent(new Event('input')); }
   });
 }
-
+function getCalcSummary() {
+  function txt(id) { var el = document.getElementById(id); return el ? el.textContent.trim() : null; }
+  return {
+    flipProfit: txt('f-profit'),
+    brrrrCfmo: txt('b-cfmo'),
+    brrrrCapC: txt('b-cap-c'),
+    brrrrCapA: txt('b-cap-a'),
+    brrrrCapitalInvested: txt('b-capital-invested'),
+  };
+}
+(function() {
+  if (new URLSearchParams(window.location.search).get('readonly') === '1') {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('input[id^="ap-"], select[id^="ap-"], input[id^="f-"], select[id^="f-"], input[id^="b-"], select[id^="b-"]').forEach(function(el) {
+        el.disabled = true;
+        el.style.pointerEvents = 'none';
+        el.style.opacity = '0.75';
+        el.style.cursor = 'default';
+        el.style.background = '#f5f5f7';
+      });
+    });
+  }
+})();
 setInterval(function() {
-  try { window.parent.postMessage({ type: 'REI_SAVE', calcState: getCalcState() }, '*'); } catch (e) {}
+  try { window.parent.postMessage({ type: 'REI_SAVE', calcState: getCalcState(), summary: getCalcSummary() }, '*'); } catch (e) {}
 }, 5000);
 </script>
 </body>

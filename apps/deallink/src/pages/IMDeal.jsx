@@ -47,6 +47,28 @@ function fmtUsd(n) {
 function fmtPct(n) { return Number.isFinite(n) ? `${Number(n).toFixed(1)}%` : '0.0%'; }
 function fmtSignedUsd(n) { return n < 0 ? `-${fmtUsd(Math.abs(n))}` : fmtUsd(n); }
 
+function deriveMetricsV2(s) {
+  if (!s || !s.summary) return null;
+  const sm = s.summary;
+  const parseVal = (str) => {
+    if (!str) return 0;
+    return parseFloat(str.replace(/[^0-9.\-]/g, '')) || 0;
+  };
+  const isBrrrr = s.strategy === 'brrrr';
+  if (isBrrrr) {
+    const monthlyCashFlow = parseVal(sm.brrrrCfmo);
+    const cap = parseVal(sm.brrrrCapC);
+    return { monthlyCashFlow, cap, noi: 0, coc: 0, purchasePrice: 0, arv: 0, rehab: 0,
+      closingBuy: 0, totalCash: parseVal(sm.brrrrCapitalInvested), loan: 0, piti: 0,
+      holdingTotal: 0, items: [] };
+  } else {
+    const flipNetProfit = parseVal(sm.flipProfit);
+    return { flipNetProfit, flipROI: 0, flipAnnROI: 0, flipInvestment: 0, purchasePrice: 0,
+      arv: 0, rehab: 0, closingBuy: 0, totalCash: 0, loan: 0, piti: 0,
+      holdingTotal: 0, noi: 0, monthlyCashFlow: 0, coc: 0, cap: 0, items: [] };
+  }
+}
+
 // Mirror of deriveMetrics() in DealEditor.jsx so the buyer-facing report
 // shows the exact same headline numbers the wholesaler saw on save.
 function deriveMetrics(s) {
@@ -585,8 +607,9 @@ function FullDealReport({ deal, dealId, buyer, onDashboard }) {
     ? deal.photos
     : (deal.photo_url ? [deal.photo_url] : []);
 
-  const analyzer = pickFirstAnalysis(deal.analyzerState || deal.analyzer_state);
-  const metrics = deriveMetrics(analyzer);
+  const cfgAnalysis = cfg.latestAnalysis || null;
+  const analyzer = cfgAnalysis || pickFirstAnalysis(deal.analyzerState || deal.analyzer_state);
+  const metrics = analyzer?.v === 2 ? deriveMetricsV2(analyzer) : deriveMetrics(analyzer);
   const strategy = analyzer?.strategy || 'rental';
   const isFlip = strategy === 'flip';
 

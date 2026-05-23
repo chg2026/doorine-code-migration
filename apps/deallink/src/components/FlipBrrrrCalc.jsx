@@ -28,7 +28,13 @@ export default function FlipBrrrrCalc({ deal, dispatch, mode = 'flip' }) {
         dispatch({
           type: 'update_deal',
           id: deal.id,
-          patch: { imConfig: { ...baseCfg, calcState: e.data.calcState } },
+          patch: {
+            imConfig: {
+              ...baseCfg,
+              calcState: e.data.calcState,
+              ...(e.data.summary ? { summary: e.data.summary } : {}),
+            },
+          },
         });
       }
     }

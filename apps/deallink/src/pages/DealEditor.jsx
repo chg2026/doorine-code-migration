@@ -669,7 +669,7 @@ function IframeCalcReport({ analysis }) {
     <div style={{ width: '100%', height: 900 }}>
       <iframe
         ref={frameRef}
-        src={`/deal-calc.html?mode=${mode}`}
+        src={`/deal-calc.html?mode=${mode}&readonly=1`}
         style={{ width: '100%', height: '100%', border: 'none', borderRadius: 8 }}
         onLoad={() => setReady(true)}
         title="Saved Deal Analysis"

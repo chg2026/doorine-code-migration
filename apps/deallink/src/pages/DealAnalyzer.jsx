@@ -249,6 +249,7 @@ function Analyzer({ deal }) {
         label: `${stratLabel} Analysis`,
         savedAt: new Date().toISOString(),
         calcState: deal?.imConfig?.calcState || null,
+        summary: deal?.imConfig?.summary || null,
       };
     } else {
       const monthlyCashFlow = m.cashFlowYr / 12;
@@ -278,12 +279,19 @@ function Analyzer({ deal }) {
       };
     }
     const nextAnalyses = [...savedAnalyses, newAnalysis];
+    const baseCfg = (deal.imConfig && typeof deal.imConfig === 'object') ? deal.imConfig : {};
+    const imConfigPatch = { ...baseCfg, latestAnalysis: newAnalysis };
     try {
       await dispatch({
         type: 'update_deal',
         id: deal.id,
         patch: { analyzerState: nextAnalyses },
         throwOnError: true,
+      });
+      await dispatch({
+        type: 'update_deal',
+        id: deal.id,
+        patch: { imConfig: imConfigPatch },
       });
       show('Analysis saved');
     } catch (e) {
