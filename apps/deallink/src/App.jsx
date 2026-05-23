@@ -81,9 +81,7 @@ export default function App() {
         </ProGate></Admin>} />
         <Route path="/offers" element={<Admin><Offers /></Admin>} />
         <Route path="/analytics" element={<Admin><Analytics /></Admin>} />
-        <Route path="/marketplace" element={<Admin><ProGate pageTitle="Marketplace" pageSubtitle="Cross-wholesaler deal flow" title="Marketplace is a paid feature" body="Upgrade to Personal or Team to opt into the cross-wholesaler marketplace and browse deals from other REI Flywheel members.">
-          <Marketplace />
-        </ProGate></Admin>} />
+        <Route path="/marketplace" element={<Admin><Marketplace /></Admin>} />
 
         <Route path="/deal-blast" element={<Admin><ProGate pageTitle="AI Deal Blast"><DealBlast /></ProGate></Admin>} />
         <Route path="/god-mode" element={<Admin><ProGate pageTitle="God Mode"><GodMode /></ProGate></Admin>} />
