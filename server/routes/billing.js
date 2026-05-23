@@ -244,11 +244,20 @@ router.post('/webhook', async (req, res) => {
         const apPayload = { plan, seat_limit, guest_limit }
         console.log('[billing/webhook] account_products payload:', JSON.stringify(apPayload))
 
+        const { data: prodRow } = await supabaseAdmin
+          .from('products')
+          .select('id')
+          .eq('code', product_code)
+          .maybeSingle()
         const { data: apData, error: apError } = await supabaseAdmin
           .from('account_products')
-          .update(apPayload)
-          .eq('account_id', account_id)
-          .eq('status', 'active')
+          .upsert({
+            account_id: account_id,
+            product_id: prodRow?.id,
+            ...apPayload,
+            status: 'active',
+            started_at: new Date().toISOString(),
+          }, { onConflict: 'account_id,product_id' })
           .select()
 
         console.log('[billing/webhook] account_products result — data:', JSON.stringify(apData), 'error:', apError?.message ?? null)
