@@ -272,6 +272,34 @@ router.get('/me', requireAuth, async (req, res) => {
 
     const ap = apResult.data || {}
 
+    // Auto-provision a free deallink entitlement the first time a user
+    // hits /auth/me — ensures every account has a real account_products row.
+    if (!apResult.data) {
+      supabaseAdmin
+        .from('products')
+        .select('id')
+        .eq('code', 'deallink')
+        .maybeSingle()
+        .then(({ data: prod }) => {
+          if (!prod?.id) return
+          return supabaseAdmin
+            .from('account_products')
+            .upsert({
+              account_id: accountId,
+              product_id: prod.id,
+              plan: 'free',
+              status: 'active',
+              seat_limit: 0,
+              guest_limit: 0,
+              started_at: new Date().toISOString(),
+            }, { onConflict: 'account_id,product_id' })
+        })
+        .then(result => {
+          if (result?.error) console.error('[auth/me] auto-provision error:', result.error.message)
+        })
+        .catch(err => console.error('[auth/me] auto-provision threw:', err.message))
+    }
+
     // Tally guests_used and members_used from the accepted invites rows.
     let guests_used  = 0
     let members_used = 0
