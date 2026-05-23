@@ -1,0 +1,73 @@
+Make the following changes to apps/deallink/src/pages/DealAnalyzer.jsx:
+CHANGE 1 — STRATS array (around line 17). Add the two Advanced entries right after the existing brrrr and flip entries. Change from:
+jsconst STRATS = [
+  { k: 'brrrr', label: 'BRRRR', icon: Repeat },
+  { k: 'flip', label: 'Fix & Flip', icon: Wrench },
+to:
+jsconst STRATS = [
+  { k: 'brrrr', label: 'BRRRR', icon: Repeat },
+  { k: 'flip', label: 'Fix & Flip', icon: Wrench },
+  { k: 'brrrr_adv', label: 'Advanced BRRRR', icon: Repeat },
+  { k: 'flip_adv', label: 'Advanced Fix & Flip', icon: Wrench },
+CHANGE 2 — saveAnalysis() v:2 condition (around line 240). Change:
+jsif (strategy === 'flip' || strategy === 'brrrr') {
+to:
+jsif (strategy === 'flip_adv' || strategy === 'brrrr_adv') {
+Also update the strategy field stored inside the v:2 analysis so it saves the canonical mode (not the _adv key). Inside that same if block, find where strategy is set and change:
+jsstrategy,
+to:
+jsstrategy: strategy === 'brrrr_adv' ? 'brrrr' : 'flip',
+CHANGE 3 — iframe render condition (around line 369). Change:
+js{(strategy === 'flip' || strategy === 'brrrr') ? (
+  <div className="-mx-6 -mb-6">
+    <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy} />
+  </div>
+to:
+js{(strategy === 'flip_adv' || strategy === 'brrrr_adv') ? (
+  <div className="-mx-6 -mb-6">
+    <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy === 'brrrr_adv' ? 'brrrr' : 'flip'} />
+  </div>
+
+Then in apps/deallink/src/pages/DealEditor.jsx, find the STRATEGY_BADGE object and add the two advanced entries:
+jsbrrrr_adv:  { label: 'Adv. BRRRR',    cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
+flip_adv:   { label: 'Adv. Fix & Flip', cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40' },
+And in STRATEGY_LABELS (also in DealEditor.jsx) add:
+jsbrrrr_adv: 'Advanced BRRRR',
+flip_adv:  'Advanced Fix & Flip',You said: why aren't you sharing everything in just 1 messsage to copy and paste, you are splitting the messagewhy aren't you sharing everything in just 1 messsage to copy and paste, you are splitting the messageClaude responded: You're right, sorry.You're right, sorry. Here it is all in one:
+
+Make the following changes:
+FILE 1 — apps/deallink/src/pages/DealAnalyzer.jsx
+Change 1: Find the STRATS array (around line 17). Change from:
+jsconst STRATS = [
+  { k: 'brrrr', label: 'BRRRR', icon: Repeat },
+  { k: 'flip', label: 'Fix & Flip', icon: Wrench },
+to:
+jsconst STRATS = [
+  { k: 'brrrr', label: 'BRRRR', icon: Repeat },
+  { k: 'flip', label: 'Fix & Flip', icon: Wrench },
+  { k: 'brrrr_adv', label: 'Advanced BRRRR', icon: Repeat },
+  { k: 'flip_adv', label: 'Advanced Fix & Flip', icon: Wrench },
+Change 2: In saveAnalysis(), find the v:2 branch condition and change:
+jsif (strategy === 'flip' || strategy === 'brrrr') {
+to:
+jsif (strategy === 'flip_adv' || strategy === 'brrrr_adv') {
+Inside that same if block, find the line strategy, and change it to:
+jsstrategy: strategy === 'brrrr_adv' ? 'brrrr' : 'flip',
+Change 3: Find the iframe render condition (around line 369) and change:
+js{(strategy === 'flip' || strategy === 'brrrr') ? (
+  <div className="-mx-6 -mb-6">
+    <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy} />
+  </div>
+to:
+js{(strategy === 'flip_adv' || strategy === 'brrrr_adv') ? (
+  <div className="-mx-6 -mb-6">
+    <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy === 'brrrr_adv' ? 'brrrr' : 'flip'} />
+  </div>
+
+FILE 2 — apps/deallink/src/pages/DealEditor.jsx
+Change 1: Find the STRATEGY_BADGE object and add two new entries inside it:
+jsbrrrr_adv: { label: 'Adv. BRRRR',     cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
+flip_adv:  { label: 'Adv. Fix & Flip', cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40' },
+Change 2: Find the STRATEGY_LABELS object and add:
+jsbrrrr_adv: 'Advanced BRRRR',
+flip_adv:  'Advanced Fix & Flip',

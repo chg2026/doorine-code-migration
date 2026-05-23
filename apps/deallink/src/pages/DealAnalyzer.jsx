@@ -18,6 +18,8 @@ const STRATS = [
   { k: 'rental', label: 'Rental', icon: Home },
   { k: 'brrrr', label: 'BRRRR', icon: Repeat },
   { k: 'flip', label: 'Fix & Flip', icon: Wrench },
+  { k: 'brrrr_adv', label: 'Advanced BRRRR', icon: Repeat },
+  { k: 'flip_adv', label: 'Advanced Fix & Flip', icon: Wrench },
   { k: 'multi', label: 'Multifamily', icon: Layers },
   { k: 'commercial', label: 'Commercial', icon: Briefcase },
 ];
@@ -237,7 +239,7 @@ function Analyzer({ deal }) {
     setSaving(true);
     const stratLabel = (STRATS.find((x) => x.k === strategy) || {}).label || strategy;
     let newAnalysis;
-    if (strategy === 'flip' || strategy === 'brrrr') {
+    if (strategy === 'flip_adv' || strategy === 'brrrr_adv') {
       // These tabs use the iframe calculator — save its state directly.
       newAnalysis = {
         id: (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -245,7 +247,7 @@ function Analyzer({ deal }) {
           : `an_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         v: 2,
         source: 'iframe',
-        strategy,
+        strategy: strategy === 'brrrr_adv' ? 'brrrr' : 'flip',
         label: `${stratLabel} Analysis`,
         savedAt: new Date().toISOString(),
         calcState: deal?.imConfig?.calcState || null,
@@ -366,9 +368,9 @@ function Analyzer({ deal }) {
           })}
         </div>
 
-        {(strategy === 'flip' || strategy === 'brrrr') ? (
+        {(strategy === 'flip_adv' || strategy === 'brrrr_adv') ? (
           <div className="-mx-6 -mb-6">
-            <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy} />
+            <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy === 'brrrr_adv' ? 'brrrr' : 'flip'} />
           </div>
         ) : (<>
         <div className="border-b border-[rgba(0,0,0,0.08)] mb-5">
