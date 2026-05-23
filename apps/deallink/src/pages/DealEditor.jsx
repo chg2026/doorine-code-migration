@@ -600,10 +600,11 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
   const badge = STRATEGY_BADGE[strategy] || { label: strategy, cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40' };
   const isFlip = strategy === 'flip';
 
-  const m = deriveMetrics(a);
-  const previewLabel = isFlip ? 'Net Profit' : 'Monthly Cash Flow';
-  const previewValue = isFlip ? m.flipNetProfit : m.monthlyCashFlow;
-  const previewTone = previewValue >= 0 ? 'text-emerald-300' : 'text-rose-300';
+  const isIframe = a.source === 'iframe';
+  const m = isIframe ? null : deriveMetrics(a);
+  const previewLabel = isIframe ? null : (isFlip ? 'Net Profit' : 'Monthly Cash Flow');
+  const previewValue = isIframe ? null : (isFlip ? m?.flipNetProfit : m?.monthlyCashFlow);
+  const previewTone = (!isIframe && previewValue >= 0) ? 'text-emerald-300' : 'text-rose-300';
 
   return (
     <div className="rounded-lg border border-[rgba(0,0,0,0.08)] bg-white/40 overflow-hidden">
@@ -618,8 +619,14 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
           <div className="min-w-0 flex-1">
             <p className="text-xs text-[#6e6e73] truncate">{fmtSavedAt(a.savedAt)}</p>
             <p className="text-[11px] text-[#86868b] mt-0.5">
-              <span className="text-[#6e6e73]">{previewLabel}:</span>{' '}
-              <span className={`font-mono font-semibold ${previewTone}`}>{fmtSignedUsd(previewValue)}</span>
+              {isIframe ? (
+                <span className="text-[#6e6e73]">Tap to view full analysis →</span>
+              ) : (
+                <>
+                  <span className="text-[#6e6e73]">{previewLabel}:</span>{' '}
+                  <span className={`font-mono font-semibold ${previewTone}`}>{fmtSignedUsd(previewValue)}</span>
+                </>
+              )}
             </p>
           </div>
           <ChevronRight
@@ -644,7 +651,37 @@ function SavedAnalysisRow({ analysis, deal, expanded, onToggle, onDelete }) {
   );
 }
 
+function IframeCalcReport({ analysis }) {
+  const frameRef = React.useRef(null);
+  const [ready, setReady] = React.useState(false);
+  const mode = analysis.strategy === 'brrrr' ? 'brrrr' : 'flip';
+  React.useEffect(() => {
+    if (!ready || !frameRef.current) return;
+    try {
+      frameRef.current.contentWindow.postMessage({
+        type: 'REI_PREFILL',
+        mode,
+        deal: { calcState: analysis.calcState },
+      }, '*');
+    } catch (e) {}
+  }, [ready, mode, analysis.calcState]);
+  return (
+    <div style={{ width: '100%', height: 900 }}>
+      <iframe
+        ref={frameRef}
+        src={`/deal-calc.html?mode=${mode}`}
+        style={{ width: '100%', height: '100%', border: 'none', borderRadius: 8 }}
+        onLoad={() => setReady(true)}
+        title="Saved Deal Analysis"
+      />
+    </div>
+  );
+}
+
 function SavedAnalysisReport({ analysis, deal }) {
+  if (analysis.source === 'iframe' && analysis.calcState) {
+    return <IframeCalcReport analysis={analysis} />;
+  }
   const state = analysis;
   const strategy = state.strategy || (state.summary && state.summary.strategy) || 'rental';
   const strategyLabel = STRATEGY_LABELS[strategy] || (state.summary && state.summary.strategyLabel) || strategy;

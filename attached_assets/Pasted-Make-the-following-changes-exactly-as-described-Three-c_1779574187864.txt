@@ -1,0 +1,168 @@
+Make the following changes exactly as described. Three changes across two files.
+
+─── CHANGE 1: apps/deallink/src/pages/DealAnalyzer.jsx ───
+
+Find this exact block:
+
+  async function saveAnalysis() {
+    if (saving) return;
+    setSaving(true);
+    const stratLabel = (STRATS.find((x) => x.k === strategy) || {}).label || strategy;
+    const monthlyCashFlow = strategy === 'flip' ? 0 : m.cashFlowYr / 12;
+    const roi = strategy === 'flip' ? m.flipROI : m.coc;
+    const newAnalysis = {
+      id:
+        (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : `an_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      v: 1,
+      strategy,
+      label: `${stratLabel} Analysis`,
+      savedAt: new Date().toISOString(),
+      purchasePrice, arv, downPct, rate, term, closingPct,
+      monthlyRent, vacancyPct, taxesYr, insYr, mgmtPct, maintPct, capexPct, holdingMo,
+      rehabOverride, items,
+      refiArv, refiLTV, refiRate,
+      summary: {
+        strategy,
+        strategyLabel: stratLabel,
+        purchasePrice,
+        arv,
+        rehab: m.rehab,
+        mao: m.mao,
+        monthlyCashFlow,
+        roi,
+      },
+    };
+
+Replace with:
+
+  async function saveAnalysis() {
+    if (saving) return;
+    setSaving(true);
+    const stratLabel = (STRATS.find((x) => x.k === strategy) || {}).label || strategy;
+    let newAnalysis;
+    if (strategy === 'flip' || strategy === 'brrrr') {
+      // These tabs use the iframe calculator — save its state directly.
+      newAnalysis = {
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : `an_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        v: 2,
+        source: 'iframe',
+        strategy,
+        label: `${stratLabel} Analysis`,
+        savedAt: new Date().toISOString(),
+        calcState: deal?.imConfig?.calcState || null,
+      };
+    } else {
+      const monthlyCashFlow = m.cashFlowYr / 12;
+      const roi = m.coc;
+      newAnalysis = {
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : `an_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        v: 1,
+        strategy,
+        label: `${stratLabel} Analysis`,
+        savedAt: new Date().toISOString(),
+        purchasePrice, arv, downPct, rate, term, closingPct,
+        monthlyRent, vacancyPct, taxesYr, insYr, mgmtPct, maintPct, capexPct, holdingMo,
+        rehabOverride, items,
+        refiArv, refiLTV, refiRate,
+        summary: {
+          strategy,
+          strategyLabel: stratLabel,
+          purchasePrice,
+          arv,
+          rehab: m.rehab,
+          mao: m.mao,
+          monthlyCashFlow,
+          roi,
+        },
+      };
+    }
+
+─── CHANGE 2: apps/deallink/src/pages/DealEditor.jsx ───
+
+Find this exact line:
+
+function SavedAnalysisReport({ analysis, deal }) {
+
+Insert this entire new component IMMEDIATELY BEFORE that line:
+
+function IframeCalcReport({ analysis }) {
+  const frameRef = React.useRef(null);
+  const [ready, setReady] = React.useState(false);
+  const mode = analysis.strategy === 'brrrr' ? 'brrrr' : 'flip';
+  React.useEffect(() => {
+    if (!ready || !frameRef.current) return;
+    try {
+      frameRef.current.contentWindow.postMessage({
+        type: 'REI_PREFILL',
+        mode,
+        deal: { calcState: analysis.calcState },
+      }, '*');
+    } catch (e) {}
+  }, [ready, mode, analysis.calcState]);
+  return (
+    <div style={{ width: '100%', height: 900 }}>
+      <iframe
+        ref={frameRef}
+        src={`/deal-calc.html?mode=${mode}`}
+        style={{ width: '100%', height: '100%', border: 'none', borderRadius: 8 }}
+        onLoad={() => setReady(true)}
+        title="Saved Deal Analysis"
+      />
+    </div>
+  );
+}
+
+─── CHANGE 3: apps/deallink/src/pages/DealEditor.jsx ───
+
+Inside the SavedAnalysisReport function, find the very first line of its body:
+
+  const state = analysis;
+
+Add these two lines IMMEDIATELY BEFORE that line (still inside the function):
+
+  if (analysis.source === 'iframe' && analysis.calcState) {
+    return <IframeCalcReport analysis={analysis} />;
+  }
+
+Also in DealEditor.jsx, inside SavedAnalysisRow, find:
+
+  const m = deriveMetrics(a);
+  const previewLabel = isFlip ? 'Net Profit' : 'Monthly Cash Flow';
+  const previewValue = isFlip ? m.flipNetProfit : m.monthlyCashFlow;
+  const previewTone = previewValue >= 0 ? 'text-emerald-300' : 'text-rose-300';
+
+Replace with:
+
+  const isIframe = a.source === 'iframe';
+  const m = isIframe ? null : deriveMetrics(a);
+  const previewLabel = isIframe ? null : (isFlip ? 'Net Profit' : 'Monthly Cash Flow');
+  const previewValue = isIframe ? null : (isFlip ? m?.flipNetProfit : m?.monthlyCashFlow);
+  const previewTone = (!isIframe && previewValue >= 0) ? 'text-emerald-300' : 'text-rose-300';
+
+And find:
+
+            <p className="text-[11px] text-[#86868b] mt-0.5">
+              <span className="text-[#6e6e73]">{previewLabel}:</span>{' '}
+              <span className={`font-mono font-semibold ${previewTone}`}>{fmtSignedUsd(previewValue)}</span>
+            </p>
+
+Replace with:
+
+            <p className="text-[11px] text-[#86868b] mt-0.5">
+              {isIframe ? (
+                <span className="text-[#6e6e73]">Tap to view full analysis →</span>
+              ) : (
+                <>
+                  <span className="text-[#6e6e73]">{previewLabel}:</span>{' '}
+                  <span className={`font-mono font-semibold ${previewTone}`}>{fmtSignedUsd(previewValue)}</span>
+                </>
+              )}
+            </p>
+
+No other changes. Save both files.

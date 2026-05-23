@@ -236,32 +236,47 @@ function Analyzer({ deal }) {
     if (saving) return;
     setSaving(true);
     const stratLabel = (STRATS.find((x) => x.k === strategy) || {}).label || strategy;
-    const monthlyCashFlow = strategy === 'flip' ? 0 : m.cashFlowYr / 12;
-    const roi = strategy === 'flip' ? m.flipROI : m.coc;
-    const newAnalysis = {
-      id:
-        (typeof crypto !== 'undefined' && crypto.randomUUID)
+    let newAnalysis;
+    if (strategy === 'flip' || strategy === 'brrrr') {
+      // These tabs use the iframe calculator — save its state directly.
+      newAnalysis = {
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID)
           ? crypto.randomUUID()
           : `an_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      v: 1,
-      strategy,
-      label: `${stratLabel} Analysis`,
-      savedAt: new Date().toISOString(),
-      purchasePrice, arv, downPct, rate, term, closingPct,
-      monthlyRent, vacancyPct, taxesYr, insYr, mgmtPct, maintPct, capexPct, holdingMo,
-      rehabOverride, items,
-      refiArv, refiLTV, refiRate,
-      summary: {
+        v: 2,
+        source: 'iframe',
         strategy,
-        strategyLabel: stratLabel,
-        purchasePrice,
-        arv,
-        rehab: m.rehab,
-        mao: m.mao,
-        monthlyCashFlow,
-        roi,
-      },
-    };
+        label: `${stratLabel} Analysis`,
+        savedAt: new Date().toISOString(),
+        calcState: deal?.imConfig?.calcState || null,
+      };
+    } else {
+      const monthlyCashFlow = m.cashFlowYr / 12;
+      const roi = m.coc;
+      newAnalysis = {
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : `an_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        v: 1,
+        strategy,
+        label: `${stratLabel} Analysis`,
+        savedAt: new Date().toISOString(),
+        purchasePrice, arv, downPct, rate, term, closingPct,
+        monthlyRent, vacancyPct, taxesYr, insYr, mgmtPct, maintPct, capexPct, holdingMo,
+        rehabOverride, items,
+        refiArv, refiLTV, refiRate,
+        summary: {
+          strategy,
+          strategyLabel: stratLabel,
+          purchasePrice,
+          arv,
+          rehab: m.rehab,
+          mao: m.mao,
+          monthlyCashFlow,
+          roi,
+        },
+      };
+    }
     const nextAnalyses = [...savedAnalyses, newAnalysis];
     try {
       await dispatch({
