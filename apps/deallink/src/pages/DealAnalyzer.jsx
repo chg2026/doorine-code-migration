@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Home, Wrench, ArrowLeft, Plus, Trash2, AlertCircle,
-  CheckCircle2, Save, Repeat, Layers, Briefcase, Building2, Search, Repeat2,
+  CheckCircle2, Save, Repeat, Layers, Briefcase, Building2, Search, Repeat2, Calculator,
 } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import FlipBrrrrCalc from '../components/FlipBrrrrCalc.jsx';
@@ -22,6 +22,7 @@ const STRATS = [
   { k: 'flip_adv', label: 'Advanced Fix & Flip', icon: Wrench },
   { k: 'multi', label: 'Multifamily', icon: Layers },
   { k: 'commercial', label: 'Commercial', icon: Briefcase },
+  { k: 'mao', label: 'MAO', icon: Calculator },
 ];
 
 const SUBTABS = [
@@ -57,6 +58,103 @@ export default function DealAnalyzer() {
 
   // Remount on dealId change so all useState initializers re-run with the new property's data.
   return <Analyzer key={deal.id} deal={deal} />;
+}
+
+function MaoCalc({ deal }) {
+  const [arv, setArv] = React.useState(Number(deal?.arv) || 0);
+  const [repair, setRepair] = React.useState(0);
+  const [fee, setFee] = React.useState(0);
+  const [misc, setMisc] = React.useState(0);
+  const [profitVal, setProfitVal] = React.useState(20);
+  const [profitMode, setProfitMode] = React.useState('%'); // '%' or '$'
+
+  const profitDollar = profitMode === '%' ? arv * (profitVal / 100) : profitVal;
+  const profitPct    = profitMode === '$' ? (arv > 0 ? (profitVal / arv) * 100 : 0) : profitVal;
+  const mao          = arv - profitDollar - repair - fee - misc;
+  const totalInvest  = mao + repair + misc;
+  const roi          = totalInvest > 0 ? (profitDollar / totalInvest) * 100 : 0;
+
+  const inp = 'w-full border border-[rgba(0,0,0,0.08)] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#b8860b]';
+  const row = (label, icon, children) => (
+    <div className="mb-3">
+      <label className="flex items-center gap-1.5 text-xs text-[#6e6e73] mb-1">{icon} {label}</label>
+      {children}
+    </div>
+  );
+
+  return (
+    <div className="max-w-sm">
+      <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-[#1d1d1f] mb-4 flex items-center gap-2">
+          <Calculator className="w-4 h-4 text-[#b8860b]" /> MAO (Maximum Allowable Offer)
+        </h2>
+
+        {row('After Repair Value (ARV)', '🏠',
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-[#6e6e73]">$</span>
+            <input type="number" className={inp} value={arv} onChange={e => setArv(Number(e.target.value) || 0)} />
+          </div>
+        )}
+        {row('Repair Costs', '🔧',
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-[#6e6e73]">$</span>
+            <input type="number" className={inp} value={repair} onChange={e => setRepair(Number(e.target.value) || 0)} />
+          </div>
+        )}
+        {row('Your Wholesale Fee', '$',
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-[#6e6e73]">$</span>
+            <input type="number" className={inp} value={fee} onChange={e => setFee(Number(e.target.value) || 0)} />
+          </div>
+        )}
+        {row('Miscellaneous Costs', '$',
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-[#6e6e73]">$</span>
+            <input type="number" className={inp} value={misc} onChange={e => setMisc(Number(e.target.value) || 0)} />
+          </div>
+        )}
+        {row("Buyer's Profit", '📊',
+          <div className="flex items-center gap-1">
+            <input type="number" className={inp} value={profitVal} onChange={e => setProfitVal(Number(e.target.value) || 0)} />
+            <select
+              value={profitMode}
+              onChange={e => setProfitMode(e.target.value)}
+              className="border border-[rgba(0,0,0,0.08)] rounded-md px-2 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#b8860b]"
+            >
+              <option value="%">%</option>
+              <option value="$">$</option>
+            </select>
+          </div>
+        )}
+
+        <div className="mt-5 pt-4 border-t border-[rgba(0,0,0,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#6e6e73] mb-3">Results</p>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-[#b8860b] font-medium">Maximum Allowable Offer:</span>
+              <span className="font-semibold text-[#b8860b]">{mao >= 0 ? `$${Math.round(mao).toLocaleString()}` : '—'}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[#6e6e73]">Total Buyer Investment:</span>
+              <span className="font-mono">${Math.round(totalInvest).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[#6e6e73]">Buyer's Profit Margin:</span>
+              <span className="font-mono">{profitPct.toFixed(1)}%</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[#6e6e73]">Buyer's ROI:</span>
+              <span className="font-mono">{roi.toFixed(2)}%</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[#b8860b]">Your Wholesale Fee:</span>
+              <span className="font-semibold text-[#b8860b]">${Math.round(fee).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Analyzer({ deal }) {
@@ -372,6 +470,8 @@ function Analyzer({ deal }) {
           <div className="-mx-6 -mb-6">
             <FlipBrrrrCalc deal={deal} dispatch={dispatch} mode={strategy === 'brrrr_adv' ? 'brrrr' : 'flip'} />
           </div>
+        ) : strategy === 'mao' ? (
+          <MaoCalc deal={deal} onSave={saveAnalysis} />
         ) : (<>
         <div className="border-b border-[rgba(0,0,0,0.08)] mb-5">
           <div className="flex items-center gap-1">

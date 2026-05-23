@@ -448,6 +448,7 @@ const STRATEGY_LABELS = {
   commercial: 'Commercial',
   brrrr_adv: 'Advanced BRRRR',
   flip_adv: 'Advanced Fix & Flip',
+  mao: 'MAO',
 };
 
 // Recompute the headline metrics from the saved analyzerState inputs.
@@ -513,6 +514,7 @@ const STRATEGY_BADGE = {
   flip_adv:      { label: 'Adv. Fix & Flip', cls: 'bg-[rgba(184,134,11,0.10)] text-[#b8860b] border-[#b8860b]/40' },
   multi:         { label: 'Multifamily', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
   commercial:    { label: 'Commercial',  cls: 'bg-[rgba(0,0,0,0.06)] text-[#3a3a3c] border-[rgba(0,0,0,0.12)]/40' },
+  mao:           { label: 'MAO',         cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
 };
 
 function fmtSavedAt(iso) {
