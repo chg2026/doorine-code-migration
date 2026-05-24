@@ -15,7 +15,7 @@ export default function ArtemisMode() {
   return (
     <Layout>
       <PageHeader
-        title="Artemis Mode"
+        title="Quest Search"
         subtitle="Autonomous AI agent that hunts, scores, and routes deals 24/7"
         actions={<Button><Bot className="w-4 h-4" /> Configure agent</Button>}
       />
@@ -25,7 +25,7 @@ export default function ArtemisMode() {
         <Card className="p-6 lg:col-span-1 bg-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-xl bg-[#b8860b] flex items-center justify-center"><Eye className="w-6 h-6 text-[#1d1d1f]" /></div>
-            <div><p className="text-[#1d1d1f] font-bold">Artemis</p><p className="text-[#b8860b] text-xs flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Online · 12d uptime</p></div>
+            <div><p className="text-[#1d1d1f] font-bold">Quest Search</p><p className="text-[#b8860b] text-xs flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Online · 12d uptime</p></div>
           </div>
           <p className="text-[#3a3a3c] text-sm leading-relaxed">Your autonomous deal hunter. She scrapes signals, scores leads, and pings the right buyer — even while you sleep.</p>
           <div className="mt-4 pt-4 border-t border-[rgba(0,0,0,0.08)] grid grid-cols-2 gap-3">

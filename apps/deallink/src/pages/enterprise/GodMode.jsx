@@ -23,7 +23,7 @@ const signals = [
 export default function GodMode() {
   return (
     <Layout>
-      <PageHeader title="God Mode" subtitle="Real-time market intelligence across the network" />
+      <PageHeader title="Power" subtitle="Real-time market intelligence across the network" />
       <EnterpriseBanner />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

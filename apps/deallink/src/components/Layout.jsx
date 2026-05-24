@@ -31,8 +31,8 @@ const navGroups = [
   ]},
   { label: 'Enterprise', items: [
     { label: 'AI Deal Blast', path: '/deal-blast', icon: Zap, enterprise: true },
-    { label: 'God Mode', path: '/god-mode', icon: Eye, enterprise: true },
-    { label: 'Artemis Mode', path: '/artemis-mode', icon: Eye, enterprise: true },
+    { label: 'Power', path: '/god-mode', icon: Eye, enterprise: true },
+    { label: 'Quest Search', path: '/artemis-mode', icon: Eye, enterprise: true },
     { label: 'Handoff', path: '/handoff', icon: Handshake, enterprise: true },
   ]},
   { label: 'Reports', items: [

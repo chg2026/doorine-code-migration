@@ -44,7 +44,7 @@ const PLANS = {
       '5 team members (same domain)',
       '5 guests (view-only)',
       'Unlimited deals',
-      'All Enterprise modules (Deal Blast, God Mode, Artemis)',
+      'All Enterprise modules (Deal Blast, Power, Quest Search)',
       'JV Deals + Buyer Rental',
       'Handoff workflow',
     ],
