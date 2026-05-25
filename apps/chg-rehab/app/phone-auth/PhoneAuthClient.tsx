@@ -68,6 +68,14 @@ export default function PhoneAuthClient({ next }: { next: string }) {
         refresh_token: data.session.refresh_token,
       });
 
+      const meRes = await fetch("/api/auth/user");
+      const me = await meRes.json();
+      if (!me?.user) {
+        await supabase.auth.signOut();
+        setError("Phone sign-in is not supported for CHG accounts. Please sign in with your email instead.");
+        setLoading(false);
+        return;
+      }
       window.location.href = next || "/";
     } catch (e: any) {
       setError(e.message);

@@ -190,11 +190,16 @@ async function resolveCurrentUser(): Promise<SessionUser | null> {
   }
 
   console.log(`[auth:diag] resolveCurrentUser | session=OK | user=${supaUser.id}`);
-  const synced = await syncSupabaseUser(supaUser.id, supaUser.email ?? null, supaUser.phone ?? null);
-  if (!synced) {
-    console.log(`[auth:diag] resolveCurrentUser | user=${supaUser.id} | syncSupabaseUser=null (deactivated, no profile row, wrong role, or lookup error)`);
+  try {
+    const synced = await syncSupabaseUser(supaUser.id, supaUser.email ?? null, supaUser.phone ?? null);
+    if (!synced) {
+      console.log(`[auth:diag] resolveCurrentUser | user=${supaUser.id} | syncSupabaseUser=null (deactivated, no profile row, wrong role, or lookup error)`);
+    }
+    return synced;
+  } catch (e) {
+    console.error("[auth] syncSupabaseUser threw — treating as logged out:", (e as Error).message);
+    return null;
   }
-  return synced;
 }
 
 /**
