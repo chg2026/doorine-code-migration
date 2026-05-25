@@ -21,6 +21,8 @@ type ProfileFlags = {
 const PUBLIC_PATHS = [
   "/",
   "/login",
+  "/forgot-password",
+  "/reset-password",
   "/phone-auth",
   "/api/auth/login",
   "/api/auth/phone/send-otp",

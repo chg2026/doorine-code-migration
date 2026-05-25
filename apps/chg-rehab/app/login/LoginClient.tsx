@@ -116,6 +116,10 @@ export default function LoginClient({
           </button>
         </form>
 
+        <Link href="/forgot-password" className="login-forgot">
+          Forgot password?
+        </Link>
+
         <div className="login-divider">or</div>
 
         <Link
