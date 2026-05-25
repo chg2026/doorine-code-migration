@@ -3,6 +3,7 @@ import { Plus, Search, Mail, Phone, MapPin, Send, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, Button, Input, Modal, Field, Select, Textarea, PageHeader } from '../components/ui.jsx';
+import PhoneInput, { normalizePhone } from '../components/PhoneInput.jsx';
 import { initialsOf } from '../lib/utils.js';
 
 const TYPE_COLORS = {
@@ -120,14 +121,15 @@ export default function Buyers() {
 }
 
 function AddBuyerModal({ open, onClose, onSave }) {
-  const [form, setForm] = React.useState({ name: '', email: '', phone: '+1 ', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' });
-  React.useEffect(() => { if (open) setForm({ name: '', email: '', phone: '+1 ', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' }); }, [open]);
+  const [form, setForm] = React.useState({ name: '', email: '', phone: '', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' });
+  React.useEffect(() => { if (open) setForm({ name: '', email: '', phone: '', buyerType: 'Cash Buyer', markets: '', minPrice: '', maxPrice: '', notes: '' }); }, [open]);
 
   function submit(e) {
     e.preventDefault();
     if (!form.name.trim()) return;
     onSave({
       ...form,
+      phone: form.phone ? normalizePhone(form.phone) : '',
       markets: form.markets ? form.markets.split(',').map((s) => s.trim()).filter(Boolean) : [],
       minPrice: Number(form.minPrice) || 0,
       maxPrice: Number(form.maxPrice) || 0,
@@ -140,7 +142,7 @@ function AddBuyerModal({ open, onClose, onSave }) {
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2"><Field label="Full name *"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required autoFocus /></Field></div>
           <Field label="Email"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-          <Field label="Phone"><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+          <Field label="Phone"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} /></Field>
           <Field label="Buyer type"><Select value={form.buyerType} onChange={(e) => setForm({ ...form, buyerType: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
           <Field label="Markets (comma-sep)"><Input value={form.markets} onChange={(e) => setForm({ ...form, markets: e.target.value })} placeholder="Atlanta, GA" /></Field>
           <Field label="Min budget"><Input type="number" value={form.minPrice} onChange={(e) => setForm({ ...form, minPrice: e.target.value })} /></Field>

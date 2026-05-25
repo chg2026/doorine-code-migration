@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Modal, Input, Select, Field } from '../components/ui.jsx';
+import PhoneInput, { normalizePhone } from '../components/PhoneInput.jsx';
 
 const PROFILE = {
   handle: 'jrodriguez.deals',
@@ -429,7 +430,7 @@ function LeadFormModal({ open, onClose, deal, onSubmit }) {
   const [first, setFirst]   = React.useState('');
   const [last, setLast]     = React.useState('');
   const [email, setEmail]   = React.useState('');
-  const [phone, setPhone]   = React.useState('+1 ');
+  const [phone, setPhone]   = React.useState('');
   const [type, setType]     = React.useState('Cash');
 
   React.useEffect(() => {
@@ -443,7 +444,7 @@ function LeadFormModal({ open, onClose, deal, onSubmit }) {
     if (!email || !phone) return;
     onSubmit({
       name: `${first} ${last}`.trim() || '(no name)',
-      email, phone, type,
+      email, phone: normalizePhone(phone), type,
     });
   }
 
@@ -455,7 +456,7 @@ function LeadFormModal({ open, onClose, deal, onSubmit }) {
           <Field label="Last name"><Input value={last} onChange={(e) => setLast(e.target.value)} placeholder="Doe" /></Field>
         </div>
         <Field label="Email *"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></Field>
-        <Field label="Phone *"><Input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(216) 555-0100" /></Field>
+        <Field label="Phone *"><PhoneInput value={phone} onChange={setPhone} required /></Field>
         <Field label="Buyer type">
           <Select value={type} onChange={(e) => setType(e.target.value)}>
             {TYPE_OPTS.map((t) => <option key={t} value={t}>{t}</option>)}

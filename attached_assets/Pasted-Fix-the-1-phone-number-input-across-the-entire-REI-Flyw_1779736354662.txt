@@ -1,0 +1,57 @@
+Fix the +1 phone number input across the entire REI Flywheel app. The current pattern of useState('+1 ') pre-fills the input and breaks UX. Apply this fix to every phone input in the app:
+Step 1 — Create a shared component
+Create apps/deallink/src/components/PhoneInput.jsx:
+jsximport React from 'react';
+
+/**
+ * US phone input. User types 10 digits only.
+ * Renders a non-editable '+1' prefix badge next to the input.
+ * normalizePhone() converts to E.164 (+1XXXXXXXXXX) for API calls.
+ */
+export function normalizePhone(raw = '') {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '';
+  return '+1' + digits.slice(-10);
+}
+
+export default function PhoneInput({ value, onChange, placeholder = '(555) 123-4567', required, style, className, inputStyle }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, ...style }} className={className}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 10px', height: '100%', background: '#f3f4f6',
+        border: '1px solid #d1d5db', borderRight: 'none',
+        borderRadius: '6px 0 0 6px', fontSize: 13, fontWeight: 500,
+        color: '#374151', whiteSpace: 'nowrap', minHeight: 38,
+      }}>
+        +1
+      </span>
+      <input
+        type='tel'
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
+        placeholder={placeholder}
+        required={required}
+        style={{
+          flex: 1, borderRadius: '0 6px 6px 0',
+          border: '1px solid #d1d5db', padding: '8px 10px',
+          fontSize: 13, minHeight: 38, outline: 'none',
+          ...inputStyle,
+        }}
+      />
+    </div>
+  );
+}
+Step 2 — Fix every file that has a phone input
+For each file below, do TWO things: (a) replace useState('+1 ') or useState('+1') with useState(''), and (b) replace the raw <input> or <Input> for phone with <PhoneInput> imported from @/components/PhoneInput or the relative path. Before sending to any API, wrap the value with normalizePhone(phone). Also remove any old normalizePhone local function and import the shared one instead.
+Files to fix:
+
+apps/deallink/src/pages/Signup.jsx — phone tab signup flow
+apps/deallink/src/pages/Login.jsx — phone tab login flow (already has a local normalizePhone — replace it with the import)
+apps/deallink/src/pages/DealDetail.jsx — buyer lead capture phone field
+apps/deallink/src/pages/DealIM.jsx — IM phone field
+apps/deallink/src/pages/Buyers.jsx — add buyer form phone field
+apps/deallink/src/pages/Demo.jsx — demo form phone field
+apps/deallink/src/components/im/GateStep2Phone.jsx — IM gate phone step (this one has a country code dropdown — keep the dropdown but fix the phone input field the same way; the cc state and dropdown can stay, just fix the input portion)
+
+After all changes confirm each file modified

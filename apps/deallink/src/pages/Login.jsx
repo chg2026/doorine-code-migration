@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Button, Input, Field } from '../components/ui.jsx';
+import PhoneInput, { normalizePhone } from '../components/PhoneInput.jsx';
 import { supabase } from '../lib/supabase.js';
 
 const PHONE_API_BASE = 'https://rei-code-dev.replit.app/api/auth/phone';
@@ -20,7 +21,7 @@ export default function Login() {
   const [error, setError] = React.useState(null);
 
   // Phone tab state
-  const [phone, setPhone] = React.useState('+1 ');
+  const [phone, setPhone] = React.useState('');
   const [code, setCode] = React.useState('');
   const [phoneStep, setPhoneStep] = React.useState('phone'); // 'phone' | 'code'
   const [phoneSubmitting, setPhoneSubmitting] = React.useState(false);
@@ -46,12 +47,6 @@ export default function Login() {
     try { await auth.signIn(email.trim(), password); }
     catch (err) { setError(err?.message || 'Sign-in failed.'); }
     finally { setSubmitting(false); }
-  }
-
-  function normalizePhone(raw) {
-    const trimmed = (raw || '').trim();
-    if (trimmed.startsWith('+1')) return trimmed.replace(/[^\d+]/g, '');
-    return '+1' + trimmed.replace(/\D/g, '');
   }
 
   async function sendPhoneCode(e) {
@@ -171,14 +166,9 @@ export default function Login() {
           ) : phoneStep === 'phone' ? (
             <form onSubmit={sendPhoneCode} className="mt-6 space-y-4">
               <Field label="Phone number">
-                <Input
-                  type="tel"
-                  inputMode="tel"
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => { setPhone(e.target.value); setPhoneError(null); }}
-                  placeholder="(555) 123-4567"
-                  autoFocus
-                  disabled={phoneSubmitting}
+                  onChange={(v) => { setPhone(v); setPhoneError(null); }}
                 />
               </Field>
               <p className="text-xs text-[#86868b]">We'll text you a 6-digit code. US numbers only.</p>

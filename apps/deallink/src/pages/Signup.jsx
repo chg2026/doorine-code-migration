@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabase.js';
 import { Button, Input, Field } from '../components/ui.jsx';
+import PhoneInput, { normalizePhone } from '../components/PhoneInput.jsx';
 import { API_BASE } from '../lib/api.js';
 
 function extractTokens(data) {
@@ -27,7 +28,7 @@ export default function Signup() {
   const [lastName, setLastName] = React.useState('');
 
   // Phone state
-  const [phone, setPhone] = React.useState('+1 ');
+  const [phone, setPhone] = React.useState('');
   const [code, setCode] = React.useState('');
   const [phoneStep, setPhoneStep] = React.useState('enter'); // 'enter' | 'verify'
 
@@ -107,7 +108,7 @@ export default function Signup() {
     if (!phone.trim()) { setError('Phone number is required.'); return; }
     setSubmitting(true);
     try {
-      await axios.post(`${API_BASE}/auth/phone/send-otp`, { phone: phone.trim() });
+      await axios.post(`${API_BASE}/auth/phone/send-otp`, { phone: normalizePhone(phone) });
       setPhoneStep('verify');
     } catch (err) {
       setError(err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Could not send code.');
@@ -123,7 +124,7 @@ export default function Signup() {
     setSubmitting(true);
     try {
       const { data } = await axios.post(`${API_BASE}/auth/phone/verify-otp`, {
-        phone: phone.trim(),
+        phone: normalizePhone(phone),
         code: code.trim(),
         product_code: 'deallink',
       });
@@ -209,13 +210,9 @@ export default function Signup() {
               ) : phoneStep === 'enter' ? (
                 <form onSubmit={sendOtp} className="mt-6 space-y-4">
                   <Field label="Phone number">
-                    <Input
-                      type="tel"
+                    <PhoneInput
                       value={phone}
-                      onChange={(e) => { setPhone(e.target.value); resetMessages(); }}
-                      placeholder="+1 555 123 4567"
-                      autoFocus
-                      disabled={submitting}
+                      onChange={(v) => { setPhone(v); resetMessages(); }}
                     />
                   </Field>
                   {error && <p className="text-sm text-red-400">{error}</p>}

@@ -12,7 +12,7 @@ const COUNTRY_CODES = [
 
 export default function GateStep2Phone({ summary, name, initialPhone = '', onNext, onBack }) {
   const [cc, setCc] = React.useState('+1');
-  const [phone, setPhone] = React.useState(initialPhone || '+1 ');
+  const [phone, setPhone] = React.useState(initialPhone || '');
   const [sending, setSending] = React.useState(false);
   const [error, setError] = React.useState(null);
 
@@ -54,8 +54,9 @@ export default function GateStep2Phone({ summary, name, initialPhone = '', onNex
               <Input
                 autoFocus
                 inputMode="tel"
+                type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 placeholder="555 123 4567"
               />
             </Field>

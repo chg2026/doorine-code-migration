@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { PublicAPI } from '../lib/deallink-api.js';
 import { Kicker, Hairline, Status, Modal, Field } from '../components/LegacyPublicUI.jsx';
+import PhoneInput, { normalizePhone } from '../components/PhoneInput.jsx';
 
 export default function DealDetail() {
   const { handle, dealId } = useParams();
@@ -149,7 +150,7 @@ function LeadModal({ handle, deal, onClose, onSubmitted }) {
   const [first, setFirst] = React.useState('');
   const [last, setLast] = React.useState('');
   const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('+1 ');
+  const [phone, setPhone] = React.useState('');
   const [buyerType, setBuyerType] = React.useState('Cash');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
@@ -160,7 +161,7 @@ function LeadModal({ handle, deal, onClose, onSubmitted }) {
     setSubmitting(true);
     setError(null);
     try {
-      await PublicAPI.submitLead(handle, { first, last, email, phone, buyerType, dealId: deal.id, kind: 'deal-interest' });
+      await PublicAPI.submitLead(handle, { first, last, email, phone: normalizePhone(phone), buyerType, dealId: deal.id, kind: 'deal-interest' });
       onSubmitted();
     } catch (err) {
       setError(err?.message || 'Failed to submit.');
@@ -180,7 +181,7 @@ function LeadModal({ handle, deal, onClose, onSubmitted }) {
           <Field label="Last name"><input value={last} onChange={(e) => setLast(e.target.value)} /></Field>
         </div>
         <Field label="Email"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
-        <Field label="Phone"><input value={phone} onChange={(e) => setPhone(e.target.value)} required /></Field>
+        <Field label="Phone"><PhoneInput value={phone} onChange={setPhone} required /></Field>
         <Field label="Buyer type">
           <select value={buyerType} onChange={(e) => setBuyerType(e.target.value)}>
             <option>Cash</option>
