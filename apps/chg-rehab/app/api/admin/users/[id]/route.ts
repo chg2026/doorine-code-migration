@@ -35,7 +35,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
 
   const target = await prisma.user.findUnique({ where: { id } });
-  if (!target || target.companyId !== me.companyId)
+  if (!target || (!me.isSuperAdmin && target.companyId !== me.companyId))
     return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   if (!target.active)
@@ -112,7 +112,7 @@ export async function DELETE(
     );
 
   const target = await prisma.user.findUnique({ where: { id } });
-  if (!target || target.companyId !== me.companyId)
+  if (!target || (!me.isSuperAdmin && target.companyId !== me.companyId))
     return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   if (!target.active)
