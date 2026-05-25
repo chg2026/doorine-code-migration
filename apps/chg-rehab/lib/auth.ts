@@ -211,7 +211,9 @@ async function syncSupabaseUser(
   authEmail: string | null,
   authPhone: string | null
 ): Promise<SessionUser | null> {
-  const existing = await prisma.user.findUnique({ where: { id: authUserId } });
+  const existing =
+    (await prisma.user.findUnique({ where: { id: authUserId } })) ??
+    (authEmail ? await prisma.user.findUnique({ where: { email: authEmail } }) : null);
   if (existing) {
     if (!existing.active) return null;
     return refreshFromSupabase(existing, authEmail);
@@ -496,7 +498,7 @@ async function refreshFromSupabase(existing: User, authEmail: string | null): Pr
     const { data: profileById } = await admin
       .from("user_profiles")
       .select("email, full_name, avatar_url, status, profile_score, is_super_admin, is_investor, is_contractor")
-      .eq("id", existing.id)
+      .eq("email", existing.email ?? authEmail ?? "")
       .maybeSingle<RefreshProfile>();
     profile = profileById ?? null;
   }
