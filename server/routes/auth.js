@@ -455,6 +455,37 @@ router.post('/phone/verify-otp', async (req, res) => {
     if (existingProfile.status === 'suspended') {
       return res.status(403).json({ error: 'Account suspended.' })
     }
+    // Auto-grant product entitlement if the user exists but hasn't used this
+    // product before (e.g. CHG user signing into REI Flywheel for the first time,
+    // or a re-registering user whose account survived a soft-delete).
+    if (existingProfile.account_id) {
+      try {
+        const { data: product } = await supabaseAdmin
+          .from('products').select('id').eq('code', product_code).single()
+        if (product?.id) {
+          const { data: existingEnt } = await supabaseAdmin
+            .from('account_products')
+            .select('id, status')
+            .eq('account_id', existingProfile.account_id)
+            .eq('product_id', product.id)
+            .maybeSingle()
+          if (!existingEnt) {
+            await supabaseAdmin.from('account_products').insert({
+              account_id: existingProfile.account_id,
+              product_id: product.id,
+              plan: product_code === 'deallink' ? 'free' : 'starter',
+              status: 'active',
+              started_at: new Date().toISOString(),
+            })
+          } else if (existingEnt.status !== 'active') {
+            await supabaseAdmin.from('account_products')
+              .update({ status: 'active' }).eq('id', existingEnt.id)
+          }
+        }
+      } catch (entErr) {
+        console.error('[auth/phone/verify-otp] entitlement auto-grant error (non-fatal):', entErr.message)
+      }
+    }
     return res.json({ session, isNewUser: false })
   }
 
@@ -497,7 +528,7 @@ router.post('/phone/verify-otp', async (req, res) => {
 
     const { error: entitlementError } = await supabaseAdmin
       .from('account_products')
-      .insert({ account_id: accountId, product_id: product.id, plan: 'starter', status: 'active', started_at: new Date().toISOString() })
+      .insert({ account_id: accountId, product_id: product.id, plan: product_code === 'deallink' ? 'free' : 'starter', status: 'active', started_at: new Date().toISOString() })
     if (entitlementError) throw entitlementError
 
     const { error: profileError } = await supabaseAdmin
