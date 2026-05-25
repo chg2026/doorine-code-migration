@@ -161,7 +161,7 @@ export default function Login() {
               <Field label="Password"><Input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" disabled={submitting} /></Field>
               {error && <p className="text-sm text-red-400">{error}</p>}
               <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Signing in…' : <>Sign in <ArrowRight className="w-4 h-4" /></>}</Button>
-              <p className="text-xs text-[#6e6e73] text-center">Need an account? <Link to="/signup" className="text-[#b8860b] hover:underline">Sign up</Link></p>
+              <p className="text-xs text-[#6e6e73] text-center">New to REI Flywheel? <Link to="/" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Sign up here</Link> with your phone number.</p>
             </form>
           ) : phoneStep === 'phone' ? (
             <form onSubmit={sendPhoneCode} className="mt-6 space-y-4">
@@ -176,7 +176,7 @@ export default function Login() {
               <Button type="submit" className="w-full" disabled={phoneSubmitting}>
                 {phoneSubmitting ? 'Sending…' : <>Send code <ArrowRight className="w-4 h-4" /></>}
               </Button>
-              <p className="text-xs text-[#6e6e73] text-center">Need an account? <Link to="/signup" className="text-[#b8860b] hover:underline">Sign up</Link></p>
+              <p className="text-xs text-[#6e6e73] text-center">New to REI Flywheel? <Link to="/" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Sign up here</Link> with your phone number.</p>
             </form>
           ) : (
             <form onSubmit={verifyPhoneCode} className="mt-6 space-y-4">
