@@ -32,7 +32,7 @@ export async function requireSuperAdmin() {
   const { data, error } = await admin
     .from("user_profiles")
     .select("is_super_admin")
-    .eq("id", user.id)
+    .eq("email", user.email ?? "")
     .maybeSingle<{ is_super_admin: boolean | null }>();
 
   if (error) {
