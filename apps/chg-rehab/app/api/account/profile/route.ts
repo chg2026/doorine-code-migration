@@ -48,7 +48,7 @@ export async function GET() {
   const { data, error } = await admin
     .from("user_profiles")
     .select("full_name, phone, email, avatar_url, profile_score, accounts ( name, plan_tier )")
-    .eq("id", user.id)
+    .eq("email", user.email ?? "")
     .maybeSingle<ProfileRow>();
   if (error) {
     console.error("[api/account/profile] GET failed:", error.message);
@@ -89,7 +89,7 @@ export async function PUT(req: Request) {
   const { data: current, error: selErr } = await admin
     .from("user_profiles")
     .select("email, avatar_url, accounts ( name )")
-    .eq("id", user.id)
+    .eq("email", user.email ?? "")
     .maybeSingle<{ email: string | null; avatar_url: string | null; accounts: { name: string | null } | { name: string | null }[] | null }>();
   if (selErr) {
     console.error("[api/account/profile] PUT load failed:", selErr.message);
@@ -114,7 +114,7 @@ export async function PUT(req: Request) {
       phone: phone || null,
       profile_score: profileScore,
     })
-    .eq("id", user.id);
+    .eq("email", user.email ?? "");
   if (upErr) {
     console.error("[api/account/profile] PUT update failed:", upErr.message);
     return NextResponse.json({ error: "update_failed" }, { status: 500 });

@@ -67,7 +67,7 @@ async function loadProfileInitial(
   const { data } = await admin
     .from("user_profiles")
     .select("full_name, phone, email, profile_score, accounts ( name, plan_tier )")
-    .eq("id", userId)
+    .eq("email", fallbackEmail ?? "")
     .maybeSingle<ProfileRow>();
   const account = Array.isArray(data?.accounts)
     ? data?.accounts?.[0] ?? null
