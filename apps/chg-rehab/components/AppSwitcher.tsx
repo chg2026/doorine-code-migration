@@ -300,7 +300,7 @@ export default function AppSwitcher({
                             borderRadius: 4,
                           }}
                         >
-                          Coming soon
+                          Activate
                         </span>
                       )}
                     </div>
@@ -329,9 +329,12 @@ export default function AppSwitcher({
                     rel="noopener noreferrer"
                     onClick={(e) => {
                       setOpen(false);
-                      if (product.ssoEnabled) {
+                      if (product.ssoEnabled && enabledProducts.includes(product.code)) {
                         e.preventDefault();
                         openWithSso(href!);
+                      } else if (!enabledProducts.includes(product.code)) {
+                        e.preventDefault();
+                        window.open(`${href}/signup`, '_blank');
                       }
                     }}
                     style={{

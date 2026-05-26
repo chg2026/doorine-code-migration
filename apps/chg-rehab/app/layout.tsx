@@ -67,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 currentProduct="chg"
                 isInvestor={user.isInvestor ?? false}
                 isContractor={user.isContractor ?? false}
-                enabledProducts={user.accountProducts ?? []}
+                enabledProducts={user.isSuperAdmin ? ['chg', 'deallink', 'investor-portal', 'contractor-portal'] : (user.accountProducts ?? [])}
               />
               <AvatarDropdown initials={initials} fullName={fullName} />
             </div>
