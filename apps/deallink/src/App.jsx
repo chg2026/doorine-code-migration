@@ -9,6 +9,8 @@ import Landing from './pages/Landing.jsx';
 import Demo from './pages/Demo.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import Onboarding from './pages/Onboarding.jsx';
 import PublicProfile from './pages/PublicProfile.jsx';
 import DealDetail from './pages/DealDetail.jsx';
@@ -55,6 +57,8 @@ export default function App() {
         <Route path="/demo" element={<Demo />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<Admin><Onboarding /></Admin>} />
         <Route path="/deal/:slug" element={<DealIM />} />
         <Route path="/im/:dealId" element={<IMDeal />} />

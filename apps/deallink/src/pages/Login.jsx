@@ -27,10 +27,14 @@ export default function Login() {
   const [phoneSubmitting, setPhoneSubmitting] = React.useState(false);
   const [phoneError, setPhoneError] = React.useState(null);
   const [sentPhone, setSentPhone] = React.useState(''); // E.164 phone we sent the code to
-  const [ssoHandling, setSsoHandling] = React.useState(() => window.location.hash.includes('access_token='));
+  const [ssoHandling, setSsoHandling] = React.useState(() => {
+    const h = window.location.hash;
+    return h.includes('access_token=') && !h.includes('type=recovery');
+  });
 
   React.useEffect(() => {
     if (!window.location.hash.includes('access_token=')) return;
+    if (window.location.hash.includes('type=recovery')) return;
     const hash = window.location.hash.slice(1);
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
@@ -175,6 +179,9 @@ export default function Login() {
             <form onSubmit={submit} className="mt-6 space-y-4">
               <Field label="Email"><Input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} placeholder="you@email.com" autoFocus disabled={submitting} /></Field>
               <Field label="Password"><Input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} placeholder="••••••••" disabled={submitting} /></Field>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-xs text-[#b8860b] hover:underline">Forgot password?</Link>
+              </div>
               {error && <p className="text-sm text-red-400">{error}</p>}
               <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Signing in…' : <>Sign in <ArrowRight className="w-4 h-4" /></>}</Button>
               <p className="text-xs text-[#6e6e73] text-center">New to REI Flywheel? <Link to="/signup" style={{ textDecoration: 'underline', color: 'var(--ink)' }}>Sign up here</Link> with your phone number.</p>
