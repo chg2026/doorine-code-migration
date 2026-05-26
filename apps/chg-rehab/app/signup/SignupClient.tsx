@@ -100,7 +100,7 @@ export default function SignupClient() {
         password,
       });
       if (signInErr) throw signInErr;
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed. Please try again.");
       setLoading(false);
@@ -135,7 +135,7 @@ export default function SignupClient() {
       if (!res.ok && body.error !== "already_active") {
         throw new Error(body.message || body.error || "Activation failed.");
       }
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Activation failed. Please try again.");
       setLoading(false);
