@@ -1,0 +1,107 @@
+In server/routes/auth.js, add the following new route at the end of the file, 
+just before the module.exports line:
+
+// POST /api/auth/activate-product
+// Authenticated — adds a new product entitlement to the caller's existing account.
+// Used when a user who already has one Doorine product wants to activate another
+// (e.g. a REI Flywheel user activating CHG Rehab).
+router.post('/activate-product', requireAuth, async (req, res) => {
+  try {
+    const { product_code: rawProductCode } = req.body
+    const product_code = (rawProductCode || '').trim().toLowerCase()
+
+    if (!product_code) {
+      return res.status(400).json({ error: 'product_code is required.' })
+    }
+
+    const accountId = req.user.account_id
+    if (!accountId) {
+      return res.status(400).json({ error: 'No account associated with this user.' })
+    }
+
+    // Look up the product
+    const { data: product, error: productError } = await supabaseAdmin
+      .from('products')
+      .select('id, code')
+      .eq('code', product_code)
+      .single()
+
+    if (productError || !product?.id) {
+      return res.status(404).json({ error: `Product '${product_code}' not found.` })
+    }
+
+    // Check if entitlement already exists
+    const { data: existing } = await supabaseAdmin
+      .from('account_products')
+      .select('id, status')
+      .eq('account_id', accountId)
+      .eq('product_id', product.id)
+      .maybeSingle()
+
+    if (existing) {
+      if (existing.status === 'active') {
+        return res.status(409).json({
+          error: 'already_active',
+          message: `Your account already has access to ${product_code}.`,
+        })
+      }
+      // Reactivate a previously inactive entitlement
+      const { error: updateError } = await supabaseAdmin
+        .from('account_products')
+        .update({ status: 'active', started_at: new Date().toISOString() })
+        .eq('id', existing.id)
+      if (updateError) throw updateError
+      return res.json({ activated: true, product_code, reactivated: true })
+    }
+
+    // Grant the entitlement
+    const plan = product_code === 'deallink' ? 'free' : 'starter'
+    const { error: entitlementError } = await supabaseAdmin
+      .from('account_products')
+      .insert({
+        account_id: accountId,
+        product_id: product.id,
+        plan,
+        status: 'active',
+        started_at: new Date().toISOString(),
+      })
+    if (entitlementError) throw entitlementError
+
+    // For CHG: also create a role and department permissions for this account
+    if (product_code === 'chg') {
+      const roleId = require('crypto').randomUUID()
+      const { error: roleError } = await supabaseAdmin
+        .from('roles')
+        .insert({
+          id: roleId,
+          name: 'Admin',
+          account_id: accountId,
+          is_system: false,
+          product_id: product.id,
+        })
+      if (!roleError) {
+        const departments = ['acquisitions', 'construction', 'property_management', 'contractors', 'finance', 'tasks']
+        await supabaseAdmin
+          .from('role_permissions')
+          .insert(departments.map(dept => ({
+            role_id: roleId,
+            department: dept,
+            permission_level: 'edit',
+            product_id: product.id,
+          })))
+        // Update the user's profile with the new CHG role
+        await supabaseAdmin
+          .from('user_profiles')
+          .update({ role_id: roleId, is_account_admin: true })
+          .eq('id', req.user.profile.id)
+      }
+    }
+
+    res.json({ activated: true, product_code })
+  } catch (e) {
+    console.error('[auth/activate-product] Error:', e.message)
+    res.status(500).json({ error: 'Failed to activate product. Please try again.' })
+  }
+})
+
+Do not change anything else in the file.
