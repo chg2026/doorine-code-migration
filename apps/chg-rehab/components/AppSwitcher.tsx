@@ -324,7 +324,14 @@ export default function AppSwitcher({
                         openWithSso(href!);
                       } else if (!(enabledProducts ?? []).includes(product.code)) {
                         e.preventDefault();
-                        window.open(`${href}/signup`, '_blank');
+                        const supabase = getSupabaseBrowserClient();
+                        supabase.auth.getSession().then(({ data: { session } }) => {
+                          const email = session?.user?.email;
+                          const signupUrl = email
+                            ? `${href}/signup?email=${encodeURIComponent(email)}`
+                            : `${href}/signup`;
+                          window.open(signupUrl, '_blank');
+                        });
                       }
                     }}
                     style={{
