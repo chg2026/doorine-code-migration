@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SessionUser } from "@/lib/session";
+import WorkspaceNewPill from "@/components/WorkspaceNewPill";
 
 type NavItem = { href: string; label: string };
 type NavSection = { label?: string; items: NavItem[] };
@@ -33,6 +34,13 @@ const BASE_SECTIONS: NavSection[] = [
       { href: "/contacts", label: "Contacts" },
       { href: "/investor-portal", label: "Investor Portal" },
       { href: "/settings/team", label: "Team" },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      { href: "/command-center", label: "Command center" },
+      { href: "/messages", label: "Messages" },
     ],
   },
 ];
@@ -87,7 +95,10 @@ export default function TopNav({ user }: { user: SessionUser }) {
         {sections.map((section, idx) => (
           <div className="nav-section" key={section.label ?? `section-${idx}`}>
             {section.label ? (
-              <div className="nav-label">{section.label}</div>
+              <div className="nav-label">
+                {section.label}
+                {section.label === "Workspace" ? <WorkspaceNewPill /> : null}
+              </div>
             ) : null}
             {section.items.map((item) => {
               const active = isActive(item.href);

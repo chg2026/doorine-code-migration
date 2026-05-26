@@ -1,0 +1,1 @@
+- [Prisma vs Supabase cross-schema FK](prisma-supabase-cross-schema.md) — `prisma db push` on chg-rehab fails on the public.account_products→auth.users FK; create new tables via raw SQL.
