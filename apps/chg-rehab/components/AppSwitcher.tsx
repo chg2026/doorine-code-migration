@@ -90,16 +90,6 @@ function resolveUrl(product: Product): string | null {
  * interfere, then sets the location to the target after fetching the session.
  */
 async function openWithSso(baseHref: string): Promise<void> {
-  // Open WITHOUT noopener/noreferrer so the browser returns a live window
-  // reference. We need to set win.location.href after the async session fetch —
-  // noopener makes window.open() return null, which causes a fallback that
-  // navigates the current page instead of opening a new tab.
-  const win = window.open("about:blank", "_blank");
-  if (!win) {
-    // Popup was blocked — last resort: navigate current tab.
-    window.location.href = `${baseHref}/login`;
-    return;
-  }
   try {
     const supabase = getSupabaseBrowserClient();
     const {
@@ -112,12 +102,12 @@ async function openWithSso(baseHref: string): Promise<void> {
         ["token_type", "bearer"],
         ["expires_in", String(session.expires_in ?? 3600)],
       ]);
-      win.location.href = `${baseHref}/login#${params.toString()}`;
+      window.location.href = `${baseHref}/login#${params.toString()}`;
     } else {
-      win.location.href = `${baseHref}/login`;
+      window.location.href = `${baseHref}/login`;
     }
   } catch {
-    win.location.href = `${baseHref}/login`;
+    window.location.href = `${baseHref}/login`;
   }
 }
 
