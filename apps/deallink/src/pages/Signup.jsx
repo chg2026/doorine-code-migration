@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Building2, ArrowRight, Mail, Phone } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -42,6 +42,27 @@ export default function Signup() {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
   const [alreadyRegistered, setAlreadyRegistered] = React.useState(null);
+  const [searchParams] = useSearchParams();
+
+  React.useEffect(() => {
+    const prefillEmail = searchParams.get('email');
+    if (!prefillEmail) return;
+    setEmail(prefillEmail);
+    const trimmed = prefillEmail.trim().toLowerCase();
+    if (!trimmed.includes('@')) return;
+    fetch(`${API_BASE}/auth/check-credential`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: trimmed }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error === 'already_registered' || data.exists) {
+          setAlreadyRegistered({ products: data.products || [] });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (!auth.loading && auth.user) {
     return <Navigate to="/onboarding" replace />;
