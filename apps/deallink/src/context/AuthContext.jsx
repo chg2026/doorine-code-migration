@@ -142,9 +142,11 @@ export function AuthProvider({ children }) {
     return (entitlements || []).some((e) => e.code === code && e.status === 'active');
   };
 
-  const enabledProducts = (entitlements || [])
-    .filter((e) => e && e.status === 'active' && e.code)
-    .map((e) => e.code);
+  const enabledProducts = isSuperAdmin
+    ? ['chg', 'deallink', 'investor-portal', 'contractor-portal']
+    : (entitlements || [])
+        .filter((e) => e && e.status === 'active' && e.code)
+        .map((e) => e.code);
 
   const deallinkEnt = (entitlements || []).find((e) => e?.code === 'deallink' && e?.status === 'active') || null;
   const planFromEnt = deallinkEnt?.plan || deallinkEnt?.tier || deallinkEnt?.plan_code || null;
