@@ -272,7 +272,7 @@ export default function SignupClient() {
               <button
                 type="submit"
                 className="login-cta"
-                disabled={loading || checking || mode === "already-chg"}
+                disabled={loading || checking}
               >
                 {loading ? "Creating account…" : "Create account"}
               </button>
