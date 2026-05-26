@@ -88,7 +88,7 @@ export default function Login() {
       const res = await fetch(`${PHONE_API_BASE}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: sentPhone || normalizePhone(phone), code: clean }),
+        body: JSON.stringify({ phone: sentPhone || normalizePhone(phone), code: clean, product_code: 'deallink' }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
