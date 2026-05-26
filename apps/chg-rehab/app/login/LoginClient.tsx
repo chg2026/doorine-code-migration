@@ -130,6 +130,12 @@ export default function LoginClient({
         </Link>
 
         <div className="login-foot">Cleveland Holding Group · Operations Platform</div>
+        <div className="login-foot" style={{ marginTop: 12 }}>
+          New to CHG?{" "}
+          <a href="/signup" style={{ color: "#C9952A", textDecoration: "none", fontWeight: 600 }}>
+            Create an account
+          </a>
+        </div>
       </div>
     </div>
   );
