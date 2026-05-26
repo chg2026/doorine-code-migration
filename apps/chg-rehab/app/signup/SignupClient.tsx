@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
 const API = process.env.NEXT_PUBLIC_LEGACY_API_BASE_URL?.replace(/\/$/, "") || "https://rei-code-dev.replit.app";
@@ -17,6 +18,7 @@ type CredentialCheck =
   | { exists: true; products: string[] };
 
 export default function SignupClient() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +29,7 @@ export default function SignupClient() {
   const [loading, setLoading] = useState(false);
   const checkRef = useRef<string>("");
 
-  async function checkEmail(value: string) {
+  async function checkCredential(value: string) {
     const trimmed = value.trim().toLowerCase();
     if (!trimmed || !trimmed.includes("@")) return;
     checkRef.current = trimmed;
@@ -48,6 +50,14 @@ export default function SignupClient() {
       setChecking(false);
     }
   }
+
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+      checkCredential(emailParam);
+    }
+  }, []);
 
   // Derive current mode from the credential check result
   const mode: "unknown" | "new" | "activate" | "already-chg" =
@@ -100,7 +110,7 @@ export default function SignupClient() {
         password,
       });
       if (signInErr) throw signInErr;
-      window.location.href = "/dashboard";
+      window.location.href = "/pipeline";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed. Please try again.");
       setLoading(false);
@@ -135,7 +145,7 @@ export default function SignupClient() {
       if (!res.ok && body.error !== "already_active") {
         throw new Error(body.message || body.error || "Activation failed.");
       }
-      window.location.href = "/dashboard";
+      window.location.href = "/pipeline";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Activation failed. Please try again.");
       setLoading(false);
@@ -219,7 +229,7 @@ export default function SignupClient() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setCredentialCheck(null); setError(""); }}
-                  onBlur={(e) => checkEmail(e.target.value)}
+                  onBlur={(e) => checkCredential(e.target.value)}
                   className="login-input"
                   required
                   disabled={loading}
