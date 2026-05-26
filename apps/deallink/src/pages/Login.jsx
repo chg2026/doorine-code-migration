@@ -27,12 +27,28 @@ export default function Login() {
   const [phoneSubmitting, setPhoneSubmitting] = React.useState(false);
   const [phoneError, setPhoneError] = React.useState(null);
   const [sentPhone, setSentPhone] = React.useState(''); // E.164 phone we sent the code to
+  const [ssoHandling, setSsoHandling] = React.useState(() => window.location.hash.includes('access_token='));
 
   React.useEffect(() => {
-    if (window.location.hash.includes('access_token=')) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
+    if (!window.location.hash.includes('access_token=')) return;
+    const hash = window.location.hash.slice(1);
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    if (!accessToken || !refreshToken) { setSsoHandling(false); return; }
+    supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+      .then(() => { navigate('/dashboard', { replace: true }); })
+      .catch(() => { setSsoHandling(false); });
   }, []);
+
+  if (ssoHandling) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7]">
+        <p className="text-[#6e6e73] text-sm">Signing you in…</p>
+      </div>
+    );
+  }
 
   if (!auth.loading && auth.user) {
     const dest = (loc.state && loc.state.from) || '/dashboard';
