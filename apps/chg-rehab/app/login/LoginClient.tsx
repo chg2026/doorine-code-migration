@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
 export default function LoginClient({
@@ -12,12 +12,59 @@ export default function LoginClient({
   next: string;
   initialError: string;
 }) {
+  const LEGACY_API = (process.env.NEXT_PUBLIC_LEGACY_API_BASE_URL || "https://rei-code-dev.replit.app").replace(/\/$/, "");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
+  const [ssoHandling, setSsoHandling] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const h = window.location.hash.replace(/^#/, "");
+    if (!h) return false;
+    const params = new URLSearchParams(h);
+    return Boolean(params.get("access_token") && params.get("refresh_token"));
+  });
+
+  useEffect(() => {
+    if (!ssoHandling) return;
+    let cancelled = false;
+    (async () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      const params = new URLSearchParams(hash);
+      const access_token = params.get("access_token") || "";
+      const refresh_token = params.get("refresh_token") || "";
+      try {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      } catch { /* noop */ }
+      if (!access_token || !refresh_token) {
+        if (!cancelled) setSsoHandling(false);
+        return;
+      }
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { error: setErr } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (setErr) throw setErr;
+        const { data: { user } } = await supabase.auth.getUser();
+        const userEmail = user?.email || "";
+        const res = await fetch(`${LEGACY_API}/api/auth/check-credential`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail }),
+        });
+        const credData = await res.json();
+        if (credData.products?.includes("chg")) {
+          window.location.href = next || "/";
+        } else {
+          window.location.href = `/signup${userEmail ? `?email=${encodeURIComponent(userEmail)}` : ""}`;
+        }
+      } catch {
+        if (!cancelled) setSsoHandling(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,10 +107,14 @@ export default function LoginClient({
             CHG <span>Rehab</span>
           </div>
         </div>
-        <div className="login-sub">Operations platform — sign in to continue</div>
+        <div className="login-sub">
+          {ssoHandling ? "Signing you in…" : "Operations platform — sign in to continue"}
+        </div>
 
         {error ? <div className="login-error">{error}</div> : null}
 
+        {!ssoHandling && (
+        <>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <label className="login-label">
             Email
@@ -128,6 +179,8 @@ export default function LoginClient({
         >
           Sign in with phone number
         </Link>
+        </>
+        )}
 
         <div className="login-foot">Cleveland Holding Group · Operations Platform</div>
         <div className="login-foot" style={{ marginTop: 12 }}>
