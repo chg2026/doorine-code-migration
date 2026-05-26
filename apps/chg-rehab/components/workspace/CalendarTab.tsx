@@ -20,14 +20,18 @@ function ymd(d: Date) {
 }
 
 export default function CalendarTab() {
-  const [cursor, setCursor] = useState(() => {
-    const n = new Date();
-    return { y: n.getFullYear(), m: n.getMonth() + 1 };
-  });
+  // Initialised on the client only (in useEffect) to avoid SSR/CSR TZ drift.
+  const [cursor, setCursor] = useState<{ y: number; m: number } | null>(null);
   const [events, setEvents] = useState<Ev[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const n = new Date();
+    setCursor({ y: n.getFullYear(), m: n.getMonth() + 1 });
+  }, []);
+
   const load = useCallback(async () => {
+    if (!cursor) return;
     setLoading(true);
     try {
       const r = await fetch(`/api/workspace/calendar?month=${cursor.y}-${String(cursor.m).padStart(2, "0")}`, { cache: "no-store" });
@@ -38,6 +42,7 @@ export default function CalendarTab() {
   useEffect(() => { load(); }, [load]);
 
   const { cells, byDay } = useMemo(() => {
+    if (!cursor) return { cells: [] as { date: Date; inMonth: boolean }[], byDay: new Map<string, Ev[]>() };
     const first = new Date(cursor.y, cursor.m - 1, 1);
     const startDow = first.getDay();
     const daysInMonth = new Date(cursor.y, cursor.m, 0).getDate();
@@ -63,14 +68,19 @@ export default function CalendarTab() {
   }, [cursor, events]);
 
   const monthLabel = useMemo(() => {
+    if (!cursor) return "";
     return new Date(cursor.y, cursor.m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   }, [cursor]);
-  const todayKey = ymd(new Date());
+  const todayKey = cursor ? ymd(new Date()) : "";
 
   const upcoming = useMemo(() => {
+    if (!cursor) return [] as Ev[];
     const now = new Date();
     return events.filter((e) => new Date(e.when) >= now).slice(0, 8);
-  }, [events]);
+  }, [cursor, events]);
+
+  // Render nothing on the server / first client paint to keep markup identical.
+  if (!cursor) return <div className={s.calWrap}><div className={s.empty}>Loading calendar…</div></div>;
 
   return (
     <div className={s.calWrap}>
@@ -78,11 +88,11 @@ export default function CalendarTab() {
         <div className={s.calGrid}>
           <div className={s.calNav}>
             <button type="button" className={`${s.btn} ${s.ghost} ${s.small}`} onClick={() => {
-              setCursor((c) => c.m === 1 ? { y: c.y - 1, m: 12 } : { y: c.y, m: c.m - 1 });
+              setCursor((c) => !c ? c : (c.m === 1 ? { y: c.y - 1, m: 12 } : { y: c.y, m: c.m - 1 }));
             }}>‹</button>
             <span className={s.calMonth}>{monthLabel}</span>
             <button type="button" className={`${s.btn} ${s.ghost} ${s.small}`} onClick={() => {
-              setCursor((c) => c.m === 12 ? { y: c.y + 1, m: 1 } : { y: c.y, m: c.m + 1 });
+              setCursor((c) => !c ? c : (c.m === 12 ? { y: c.y + 1, m: 1 } : { y: c.y, m: c.m + 1 }));
             }}>›</button>
           </div>
           <div className={s.calHead}>

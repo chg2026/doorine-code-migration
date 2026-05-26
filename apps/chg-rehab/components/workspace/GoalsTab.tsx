@@ -16,6 +16,8 @@ type Goal = {
 };
 
 function currentQuarter() {
+  // Called only from button click handlers (client-only), never during render,
+  // so TZ skew here can't cause hydration mismatches.
   const d = new Date();
   return `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3) + 1}`;
 }
