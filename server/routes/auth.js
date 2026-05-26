@@ -677,4 +677,51 @@ router.post('/activate-product', requireAuth, async (req, res) => {
   }
 })
 
+// POST /api/auth/check-credential
+// Public — no auth required.
+// Accepts { email } or { phone } and returns whether a Doorine account exists
+// for that credential, and which products that account is entitled to.
+// Used by signup forms to show cross-product recognition before submission.
+router.post('/check-credential', async (req, res) => {
+  try {
+    const { email, phone } = req.body
+
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'email or phone is required.' })
+    }
+
+    let profileQuery = supabaseAdmin
+      .from('user_profiles')
+      .select('id, account_id')
+
+    if (email) {
+      const normalizedEmail = email.toLowerCase().trim()
+      profileQuery = profileQuery.eq('email', normalizedEmail)
+    } else {
+      profileQuery = profileQuery.eq('phone', phone.trim())
+    }
+
+    const { data: profile } = await profileQuery.maybeSingle()
+
+    if (!profile) {
+      return res.json({ exists: false, products: [] })
+    }
+
+    const { data: entitlements } = await supabaseAdmin
+      .from('account_products')
+      .select('products(code)')
+      .eq('account_id', profile.account_id)
+      .eq('status', 'active')
+
+    const products = (entitlements || [])
+      .map(e => Array.isArray(e.products) ? e.products[0]?.code : e.products?.code)
+      .filter(Boolean)
+
+    return res.json({ exists: true, products })
+  } catch (e) {
+    console.error('[auth/check-credential] Error:', e.message)
+    res.status(500).json({ error: 'Lookup failed. Please try again.' })
+  }
+})
+
 module.exports = router
