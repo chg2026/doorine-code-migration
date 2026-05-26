@@ -1,0 +1,170 @@
+We are adding two new sections to the CHG Rehab platform: Command Center and Messages. These are brand new top-level navigation items that sit under a new sidebar group called "Workspace". Here is the full spec. Build these exactly as described.
+
+---
+
+STACK CONTEXT
+- Frontend: existing framework in this repo (React or Next.js)
+- Backend/DB: Supabase
+- Auth: Supabase Auth (existing)
+- Hosting: Replit
+- Do not introduce any new frameworks or dependencies that aren't already in the project unless strictly necessary
+
+---
+
+NAVIGATION CHANGES
+
+Add a new sidebar section called "Workspace" between the People section and the Admin section. It contains two items:
+1. Command Center (icon: home or dashboard)
+2. Messages (icon: message-circle, with an unread badge count)
+
+Both items follow the exact same sidebar styling as existing nav items.
+
+---
+
+FEATURE 1: COMMAND CENTER
+
+Route: /command-center
+
+This is the daily operations hub. It has four tabs:
+
+TAB 1 — To-do list
+- Displays all tasks in the system
+- Each task has: task name, assignee (user), due date, priority (low / medium / urgent), optional context link to a deal or project, and a done/not-done state
+- Filter buttons: All / Mine / Assigned out
+- Clicking the checkbox marks a task complete
+- "+ Add task" button opens the task creation modal (see below)
+
+TAB 2 — Calendar
+- Monthly calendar grid view
+- Events are pulled from: deal closing dates (Pipeline), rehab project milestones (Rehab Manager), document expiry dates (Documents Hub), and manually created events
+- Clicking a date with an event shows event detail
+- Upcoming events list shown alongside the calendar
+
+TAB 3 — Goals
+- Two panels: Company goals and Individual goals
+- Each goal has: title, progress (percentage or X of Y), and a visual progress bar
+- Company goals are visible to all team members
+- Individual goals are per team member
+- "+ Goal" button to add a new goal
+
+TAB 4 — Reminders
+- Auto-generated reminders pulled from: document expiry (Documents Hub), overdue tasks, overdue pipeline deals
+- Also supports manually created reminders
+- Each reminder shows: title, source context, due/urgency date, and urgency level (urgent / upcoming / info)
+
+TASK CREATION MODAL
+- Opens from Command Center "+ Add task" button and from Messages "Task" button
+- Fields:
+  - Task name (text input, required)
+  - Assign to: type "@" to trigger a dropdown of all team members with avatar + name. Selecting assigns the task to that person.
+  - Due date (date picker)
+  - Priority (select: Low / Medium / Urgent)
+  - Link to (optional select): list of active deals from Pipeline and active projects from Rehab Manager
+- On submit: saves task to Supabase tasks table, sends an in-app notification to the assigned user
+- Assigned user sees the task appear in their "Mine" filter on their Command Center
+
+SUPABASE TABLE — tasks
+- id (uuid, primary key)
+- org_id (references org)
+- created_by (references users)
+- assigned_to (references users, nullable)
+- name (text)
+- priority (enum: low, medium, urgent)
+- due_date (date, nullable)
+- context_type (text, nullable — 'deal' or 'project')
+- context_id (uuid, nullable)
+- done (boolean, default false)
+- created_at (timestamp)
+
+---
+
+FEATURE 2: MESSAGES
+
+Route: /messages
+
+Layout: two-panel. Left panel is the channel/conversation list. Right panel is the active conversation thread.
+
+LEFT PANEL — Channel list
+Three sections with section headers:
+
+TEAM section:
+- Pre-created channels: #general, #acquisitions, #rehab-updates
+- Admin can create additional channels
+- Each channel shows name and last message preview
+
+CONTRACTORS section:
+- One conversation thread per linked contractor (pulled from Contractor Portal linked contractors)
+- Messages sent here are visible to the contractor in their Contractor Portal inbox
+
+INVESTORS section:
+- One conversation thread per investor (pulled from Investor Portal investors list)
+- Messages sent here are visible to the investor in their Investor Portal inbox
+
+RIGHT PANEL — Active thread
+- Shows message history for the selected channel or conversation
+- Messages from the current user appear on the right in an amber/gold bubble
+- Messages from others appear on the left with avatar and name
+- Input field at the bottom with send button
+- Typing "@" in the input triggers a mention dropdown showing all team members — selecting one inserts @Name into the message
+- "Task" button next to the input: clicking it opens the task creation modal and pre-fills the task name with the current message input text
+- Messages are stored in Supabase and load in real time using Supabase Realtime subscriptions
+
+SUPABASE TABLES
+
+messages table:
+- id (uuid, primary key)
+- org_id
+- channel_id (references channels)
+- sender_id (references users)
+- content (text)
+- created_at (timestamp)
+
+channels table:
+- id (uuid, primary key)
+- org_id
+- type (enum: team, contractor, investor)
+- name (text)
+- reference_id (uuid, nullable — contractor_id or investor_id for DM threads)
+- created_at (timestamp)
+
+---
+
+NOTIFICATIONS
+
+Add a notification bell icon to the top-right topbar (already exists in the UI). 
+
+Notification triggers:
+- A task is assigned to you
+- A task assigned by you is marked complete
+- A new message arrives in a channel you are part of
+- A document is expiring within 7 days (from Documents Hub)
+
+Notifications are stored in a Supabase notifications table and marked read when viewed. Show unread count as a badge on the bell icon and on the Messages nav item.
+
+---
+
+STYLING
+
+Follow the exact existing design system of the platform:
+- Same sidebar nav item style as all other nav items
+- Same card/panel patterns as the rest of the app
+- Same tab component style
+- Task priority badges: urgent = red background, medium = amber background, low = green background
+- New feature badges on "Command Center" and "Messages" nav items (small amber pill that says "New") — remove these after first visit per user
+
+---
+
+DO NOT:
+- Change any existing routes or components
+- Modify the existing sidebar structure other than adding the new Workspace section
+- Add any external UI libraries not already in the project
+- Touch the Contractor Portal or Investor Portal external-facing views — only add the messaging layer on the operator side
+
+---
+
+BUILD ORDER:
+1. Supabase tables (tasks, messages, channels, notifications)
+2. Command Center page with all four tabs and task modal
+3. Messages page with real-time Supabase subscriptions
+4. Notification bell with unread counts
+5. Wire up task assignment notifications
