@@ -92,6 +92,11 @@ export default function UpgradeModal({
           }),
         },
       );
+      if (res?.upgraded) {
+        // Direct subscription upgrade succeeded (existing sub was swapped in Stripe)
+        window.location.href = successUrl;
+        return;
+      }
       if (!res?.url) {
         throw new Error("Checkout did not return a redirect URL.");
       }
