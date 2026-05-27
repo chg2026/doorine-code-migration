@@ -174,6 +174,48 @@ router.post('/signup', checkSignupRateLimit, async (req, res) => {
       })
     if (entitlementError) throw entitlementError
 
+    // Seed default permission matrix rows for this account in Prisma.
+    // These power the Role permission matrix in Admin → Users & permissions.
+    // Only seeded for CHG accounts — other products use a different auth model.
+    if (product_code === 'chg') {
+      try {
+        const { PrismaClient } = require('@prisma/client')
+        const prisma = new PrismaClient()
+        const PERM_ROWS = [
+          { label: 'Approve draw payments',       adminLock: false, pm: 'edit',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'View projects',               adminLock: false, pm: 'view',  gc: 'view', sub: 'view', inspector: 'view',  locked: false },
+          { label: 'Edit projects & SOW',         adminLock: false, pm: 'edit',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Upload documents',            adminLock: false, pm: 'edit',  gc: 'edit', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Delete documents',            adminLock: true,  pm: 'none',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'View documents',              adminLock: false, pm: 'view',  gc: 'view', sub: 'view', inspector: 'view',  locked: false },
+          { label: 'File exception',              adminLock: false, pm: 'edit',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Verify checklist items',      adminLock: false, pm: 'edit',  gc: 'edit', sub: 'none', inspector: 'edit',  locked: false },
+          { label: 'View checklist',              adminLock: false, pm: 'view',  gc: 'view', sub: 'view', inspector: 'view',  locked: false },
+          { label: 'Add/edit SOW line items',     adminLock: false, pm: 'edit',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Create document categories',  adminLock: true,  pm: 'none',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Manage warehouse templates',  adminLock: true,  pm: 'edit',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Add items to warehouse',      adminLock: false, pm: 'edit',  gc: 'edit', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'View warehouse',              adminLock: false, pm: 'view',  gc: 'view', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'View activity log',           adminLock: false, pm: 'view',  gc: 'view', sub: 'view', inspector: 'view',  locked: false },
+          { label: 'Edit system log entries',     adminLock: true,  pm: 'none',  gc: 'none', sub: 'none', inspector: 'none',  locked: true  },
+          { label: 'Change admin settings',       adminLock: true,  pm: 'none',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+          { label: 'Add team members',            adminLock: false, pm: 'edit',  gc: 'none', sub: 'none', inspector: 'none',  locked: false },
+        ]
+        for (let i = 0; i < PERM_ROWS.length; i++) {
+          const p = PERM_ROWS[i]
+          await prisma.permissionLabelRow.upsert({
+            where: { companyId_label: { companyId: accountId, label: p.label } },
+            update: { ord: i, pm: p.pm, gc: p.gc, sub: p.sub, inspector: p.inspector, adminLock: p.adminLock, locked: p.locked },
+            create: { companyId: accountId, label: p.label, ord: i, pm: p.pm, gc: p.gc, sub: p.sub, inspector: p.inspector, adminLock: p.adminLock, locked: p.locked },
+          })
+        }
+        await prisma.$disconnect()
+      } catch (permSeedErr) {
+        // Non-fatal — account is created successfully even if perm rows fail.
+        console.error('[auth/signup] perm matrix seed error:', permSeedErr.message)
+      }
+    }
+
     let authUser, authError
     const createResult = await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
