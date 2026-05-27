@@ -1,3 +1,10 @@
+Do two things:
+
+CHANGE 1 — Install the Resend SDK. Run:
+cd apps/chg-rehab && npm install resend
+
+CHANGE 2 — Replace the entire contents of apps/chg-rehab/lib/email.ts with this:
+
 import { Resend } from "resend";
 
 export type InviteEmail = {
