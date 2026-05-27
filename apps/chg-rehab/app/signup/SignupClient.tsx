@@ -19,6 +19,7 @@ type CredentialCheck =
 
 export default function SignupClient() {
   const searchParams = useSearchParams();
+  const inviteToken = searchParams.get('token');
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [password, setPassword] = useState("");
@@ -150,6 +151,63 @@ export default function SignupClient() {
       setError(err instanceof Error ? err.message : "Activation failed. Please try again.");
       setLoading(false);
     }
+  }
+
+  async function handleInviteAccept(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirmPassword) { setError("Passwords don't match."); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/api/team/accept-invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: inviteToken, password }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || body.error || "Failed to accept invite.");
+      if (body.session?.access_token) {
+        const supabase = getSupabaseBrowserClient();
+        await supabase.auth.setSession({
+          access_token: body.session.access_token,
+          refresh_token: body.session.refresh_token,
+        });
+      }
+      window.location.href = "/pipeline";
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to accept invite.");
+      setLoading(false);
+    }
+  }
+
+  if (inviteToken) {
+    return (
+      <div className="login-shell">
+        <div className="login-card">
+          <div className="login-brand">
+            <div className="login-logo">CHG</div>
+            <div className="login-title">CHG <span>Rehab</span></div>
+          </div>
+          <div className="login-sub">You&apos;ve been invited to join a CHG Rehab workspace. Set a password to get started.</div>
+          {error ? <div className="login-error">{error}</div> : null}
+          <form onSubmit={handleInviteAccept} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <label className="login-label">
+              Password
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="login-input" required minLength={8} disabled={loading} placeholder="At least 8 characters" autoFocus />
+            </label>
+            <label className="login-label">
+              Confirm password
+              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="login-input" required minLength={8} disabled={loading} placeholder="Repeat password" />
+            </label>
+            <button type="submit" className="login-cta" disabled={loading}>
+              {loading ? "Joining…" : "Accept invite"}
+            </button>
+          </form>
+          <div className="login-foot">© 2026 CHG · Privacy · Terms</div>
+        </div>
+      </div>
+    );
   }
 
   return (
