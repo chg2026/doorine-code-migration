@@ -179,8 +179,9 @@ export default function TeamSettingsClient({
       setMembers(team.members ?? []);
       setGuests(team.guests ?? []);
       setPending(
-        (team.invites ?? []).map((i) => ({
+        ((team.invites ?? (team as any).pending_invites) ?? []).map((i: any) => ({
           ...i,
+          inviteId: i.inviteId ?? i.id,
           kind: (i.kind ?? "member") as "member" | "guest",
         })),
       );
