@@ -934,6 +934,30 @@ function UserSeatsSection({
     );
   }
 
+  async function revokeInvite(inviteId: string) {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Cancel this pending invite?")
+    ) return;
+    const previous = invites;
+    onInvitesChange(invites.filter((i) => i.id !== inviteId));
+    try {
+      const res = await fetch(`/api/admin/invites/${encodeURIComponent(inviteId)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        onInvitesChange(previous);
+        onToast(j.error || `Couldn't revoke invite (${res.status})`);
+        return;
+      }
+      onToast("Invite cancelled");
+    } catch {
+      onInvitesChange(previous);
+      onToast("Couldn't revoke invite");
+    }
+  }
+
   async function reactivateUser(user: RemovedUserRow) {
     const role = reactivateRoleById[user.id] ?? user.role;
     setPendingReactivateId(user.id);
@@ -1107,18 +1131,28 @@ function UserSeatsSection({
                   {new Date(inv.expiresAt).toLocaleDateString()}
                 </div>
               </div>
-              <span
-                style={{
-                  fontSize: 10,
-                  background: "#FFF8E6",
-                  color: "#7A5800",
-                  padding: "2px 8px",
-                  borderRadius: 3,
-                  border: "0.5px solid #F5C842",
-                }}
-              >
-                Pending
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    fontSize: 10,
+                    background: "#FFF8E6",
+                    color: "#7A5800",
+                    padding: "2px 8px",
+                    borderRadius: 3,
+                    border: "0.5px solid #F5C842",
+                  }}
+                >
+                  Pending
+                </span>
+                <button
+                  type="button"
+                  className="btn-sm"
+                  onClick={() => revokeInvite(inv.id)}
+                  style={{ color: "#A8231C", borderColor: "rgba(168,35,28,0.4)" }}
+                >
+                  Revoke
+                </button>
+              </div>
             </div>
           ))}
         </div>
