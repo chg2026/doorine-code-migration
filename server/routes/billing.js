@@ -19,7 +19,7 @@ const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null
 
 // Per-product canonical domains for Stripe redirect URLs.
 const PRODUCT_DOMAINS = {
-  'chg':                'https://chg.neuroaios.ai',
+  'chg':                'https://chg.doorine.com',
   'deallink':           'https://reiflywheel.doorine.com',
   'contractor-portal':  'https://contractorportal.neuroaios.ai',
 }
@@ -175,7 +175,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
 
     const domain = PRODUCT_DOMAINS[product_code]
       || req.body.success_url?.split('/billing')[0]
-      || 'https://chg.neuroaios.ai'
+      || 'https://chg.doorine.com'
 
     const session = await s.checkout.sessions.create({
       customer:      customerId,

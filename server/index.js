@@ -7,7 +7,7 @@ const app = express()
 const PORT = process.env.PORT || 8080
 
 const ALLOWED_ORIGINS = [
-  'https://chg.neuroaios.ai',
+  'https://chg.doorine.com',
   'https://deallink.neuroaios.ai',
   'https://investorportal.neuroaios.ai',
   'https://contractorportal.neuroaios.ai',
