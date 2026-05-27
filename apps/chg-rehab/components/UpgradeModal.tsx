@@ -80,7 +80,7 @@ export default function UpgradeModal({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await goldBridgeFetch<{ url?: string }>(
+      const res = await goldBridgeFetch<{ url?: string; upgraded?: boolean }>(
         "/api/billing/checkout",
         {
           method: "POST",
