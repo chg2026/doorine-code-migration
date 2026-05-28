@@ -83,9 +83,12 @@ export default function Marketplace() {
               {filtered.map((d) => (
                 <Card key={d.id} className="overflow-hidden hover:border-[rgba(0,0,0,0.12)] transition-colors group">
                   <div className="relative h-40 bg-[rgba(0,0,0,0.06)] flex items-center justify-center">
-                    {d.photoUrl
-                      ? <img src={d.photoUrl} alt={d.addr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      : <Building2 className="w-12 h-12 text-[#6e6e73]" />}
+                    {(() => {
+                      const src = d.photoUrl || d.photo_url || (Array.isArray(d.photos) && d.photos[0]) || null;
+                      return src
+                        ? <img src={src} alt={d.addr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        : <Building2 className="w-12 h-12 text-[#6e6e73]" />;
+                    })()}
                     <div className="absolute top-3 left-3"><StatusBadge status={d.status} /></div>
                   </div>
                   <div className="p-4">
