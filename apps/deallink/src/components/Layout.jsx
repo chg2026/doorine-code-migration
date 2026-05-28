@@ -5,6 +5,7 @@ import {
   Menu, X, Zap, Globe, Handshake, UserCheck, Eye, LogOut, ExternalLink, Settings,
   ListChecks, Upload, Calculator, CreditCard, Copy, Check,
 } from 'lucide-react';
+import OnboardingProgressBar from './OnboardingProgressBar.jsx';
 import { useStore } from '../store.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import AppSwitcher from './AppSwitcher.jsx';
@@ -206,6 +207,7 @@ export default function Layout({ children }) {
           {children}
         </main>
       </div>
+      <OnboardingProgressBar />
     </div>
   );
 }

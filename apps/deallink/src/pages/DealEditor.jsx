@@ -1,4 +1,5 @@
 import React from 'react';
+import OnboardingCard from '../components/OnboardingCard.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, Info, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge, FileSignature, Eye } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
@@ -135,6 +136,7 @@ export default function DealEditor({ mode }) {
           })}
         </div>
       )}
+      {mode === 'edit' && existing && <OnboardingCard stepKey={`deal_${tab}`} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
         <Card>

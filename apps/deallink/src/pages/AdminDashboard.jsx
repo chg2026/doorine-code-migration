@@ -5,6 +5,7 @@ import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, Button, Input, StatusBadge, PageHeader, EmptyState } from '../components/ui.jsx';
 import { DEAL_STATUSES } from '../lib/deallink-api.js';
+import OnboardingCard from '../components/OnboardingCard.jsx';
 
 export default function AdminDashboard() {
   const { state, dispatch } = useStore();
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
+      <OnboardingCard stepKey="properties_list" />
       <PageHeader
         title="Properties"
         subtitle={`${state.deals.length} active listing${state.deals.length === 1 ? '' : 's'}`}
