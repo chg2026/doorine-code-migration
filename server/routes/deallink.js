@@ -469,8 +469,9 @@ router.delete('/offers/:id', async (req, res) => {
 })
 
 // ─── MARKETPLACE ─────────────────────────────────────────────────────────
-// Cross-wholesaler deal feed. Auth required + product entitlement, but
-// returns deals from ANY account whose profile has marketplace_opt_in=true.
+// Cross-wholesaler deal feed. Auth required + product entitlement.
+// Marketplace visibility is controlled per-deal via marketplace_visible,
+// not via a profile-level opt-in flag.
 // We never expose account_id; profile handle/name only.
 
 function maskAddr(addr) {
@@ -480,10 +481,11 @@ function maskAddr(addr) {
 router.get('/marketplace', async (req, res) => {
   const db = dbOrFail(res); if (!db) return
 
+  // Fetch all profiles — marketplace visibility is controlled per-deal via
+  // marketplace_visible, not via a profile-level opt-in flag.
   const { data: profiles, error: pErr } = await db
     .from('deallink_profiles')
     .select('account_id, handle, name, initials, city')
-    .eq('marketplace_opt_in', true)
   if (pErr) return res.status(500).json({ error: pErr.message })
 
   const byAccount = new Map((profiles || []).map((p) => [p.account_id, p]))
