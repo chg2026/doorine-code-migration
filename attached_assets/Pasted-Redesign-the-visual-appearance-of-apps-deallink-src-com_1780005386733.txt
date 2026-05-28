@@ -1,0 +1,38 @@
+Redesign the visual appearance of apps/deallink/src/components/OnboardingCard.jsx. Keep all logic, step config, localStorage helpers, and exports identical — only change the styles. Here's the new design:
+Card container:
+
+Same position: fixed, bottom 88px, right 24px, width 360px, z-index 1000
+Background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,248,210,0.88) 60%, rgba(184,134,11,0.08) 100%)
+Backdrop filter: blur(20px) saturate(1.4)
+Border: 1.5px solid rgba(184,134,11,0.25)
+Border-radius: 20px
+Box shadow: 0 8px 40px rgba(184,134,11,0.20), 0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.8)
+overflow: hidden
+
+Gold top accent bar (the progress fill strip at the very top):
+
+Height 3px, background linear-gradient(90deg, #b8860b, #e6b422), same width percentage as before
+Add glow: box-shadow: 0 0 8px rgba(184,134,11,0.5)
+
+Header row (Step X of Y + dismiss X button):
+
+'Step X of Y' label: gold #b8860b, font-size 11px, font-weight 700, uppercase, letter-spacing 0.08em
+X dismiss button: color #86868b, hover area rounded
+
+Title: font-size 16px, font-weight 700, color #1d1d1f, margin-bottom 6px
+Description: font-size 13px, color #6e6e73, line-height 1.6
+Video area:
+
+Keep 16:9 ratio and iframe/placeholder logic
+Placeholder background: linear-gradient(135deg, #1a1a2e 0%, #2d1f0e 50%, #1a1a2e 100%)
+Gold play circle: 52px diameter, border 2px solid rgba(184,134,11,0.6), background rgba(184,134,11,0.15), centered, with the PlayCircle icon at 28px in gold
+'Video coming soon' text: font-size 11px, color rgba(184,134,11,0.7), margin-top 8px
+Border-radius on the video area: 12px
+Subtle inner border: 1px solid rgba(184,134,11,0.15)
+
+Buttons row:
+
+'Mark as done' button: background linear-gradient(135deg, #b8860b, #d4a017), color white, border-radius 10px, font-size 13px, font-weight 600, padding 10px 16px, flex 1, box-shadow 0 4px 12px rgba(184,134,11,0.35), display flex align-items center gap 6px
+'Skip' button: background rgba(0,0,0,0.04), color #6e6e73, border-radius 10px, same padding, border 1px solid rgba(0,0,0,0.08), font-size 13px
+
+Inline styles only. No Tailwind

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Play, Check } from 'lucide-react';
+import { X, PlayCircle, Check } from 'lucide-react';
 
 const STORAGE_KEY = 'rei_flywheel_tour';
 const GOLD = '#b8860b';
@@ -97,27 +97,54 @@ export default function OnboardingCard({ stepKey }) {
 
   return (
     <div
+      data-tick={tick}
       style={{
         position: 'fixed',
         bottom: 88,
         right: 24,
         width: 360,
-        background: '#ffffff',
-        borderRadius: 16,
-        boxShadow: '0 10px 32px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)',
-        border: '1px solid rgba(0,0,0,0.06)',
         zIndex: 1000,
+        background:
+          'linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,248,210,0.88) 60%, rgba(184,134,11,0.08) 100%)',
+        backdropFilter: 'blur(20px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+        border: '1.5px solid rgba(184,134,11,0.25)',
+        borderRadius: 20,
+        boxShadow:
+          '0 8px 40px rgba(184,134,11,0.20), 0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.8)',
         overflow: 'hidden',
         fontFamily: 'var(--sans, system-ui, sans-serif)',
       }}
-      data-tick={tick}
     >
       <div style={{ height: 3, background: 'rgba(0,0,0,0.06)' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: GOLD, transition: 'width 240ms ease' }} />
+        <div
+          style={{
+            width: `${pct}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #b8860b, #e6b422)',
+            boxShadow: '0 0 8px rgba(184,134,11,0.5)',
+            transition: 'width 240ms ease',
+          }}
+        />
       </div>
 
-      <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+      <div
+        style={{
+          padding: '14px 16px 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: GOLD,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
           Step {step.index} of {STEPS.length}
         </div>
         <button
@@ -129,8 +156,8 @@ export default function OnboardingCard({ stepKey }) {
             border: 'none',
             cursor: 'pointer',
             color: '#86868b',
-            padding: 4,
-            borderRadius: 6,
+            padding: 6,
+            borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -141,23 +168,36 @@ export default function OnboardingCard({ stepKey }) {
       </div>
 
       <div style={{ padding: '8px 16px 16px' }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#1d1d1f', letterSpacing: -0.2 }}>{step.title}</div>
-        <div style={{ fontSize: 13, color: '#6e6e73', marginTop: 6, lineHeight: 1.5 }}>{step.description}</div>
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            color: '#1d1d1f',
+            letterSpacing: -0.2,
+            marginBottom: 6,
+          }}
+        >
+          {step.title}
+        </div>
+        <div style={{ fontSize: 13, color: '#6e6e73', lineHeight: 1.6 }}>
+          {step.description}
+        </div>
 
         <div
           style={{
             marginTop: 12,
             aspectRatio: '16 / 9',
             width: '100%',
-            borderRadius: 10,
+            borderRadius: 12,
             overflow: 'hidden',
-            background: '#1d1d1f',
+            background:
+              'linear-gradient(135deg, #1a1a2e 0%, #2d1f0e 50%, #1a1a2e 100%)',
+            border: '1px solid rgba(184,134,11,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
             gap: 8,
-            color: 'rgba(255,255,255,0.7)',
           }}
         >
           {step.videoUrl ? (
@@ -172,19 +212,28 @@ export default function OnboardingCard({ stepKey }) {
             <>
               <div
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 52,
+                  height: 52,
                   borderRadius: '50%',
-                  background: 'rgba(184,134,11,0.18)',
-                  border: `1px solid ${GOLD}`,
+                  background: 'rgba(184,134,11,0.15)',
+                  border: '2px solid rgba(184,134,11,0.6)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Play size={20} color={GOLD} fill={GOLD} />
+                <PlayCircle size={28} color={GOLD} strokeWidth={2} />
               </div>
-              <div style={{ fontSize: 12, letterSpacing: 0.4 }}>Video coming soon</div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(184,134,11,0.7)',
+                  marginTop: 8,
+                  letterSpacing: 0.4,
+                }}
+              >
+                Video coming soon
+              </div>
             </>
           )}
         </div>
@@ -195,18 +244,19 @@ export default function OnboardingCard({ stepKey }) {
             onClick={() => setTourStep(stepKey, 'complete')}
             style={{
               flex: 1,
-              background: GOLD,
+              background: 'linear-gradient(135deg, #b8860b, #d4a017)',
               color: '#ffffff',
               border: 'none',
               borderRadius: 10,
-              padding: '11px 14px',
+              padding: '10px 16px',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 6,
+              boxShadow: '0 4px 12px rgba(184,134,11,0.35)',
             }}
           >
             <Check size={14} /> Mark as done
@@ -215,11 +265,11 @@ export default function OnboardingCard({ stepKey }) {
             type="button"
             onClick={() => setTourStep(stepKey, 'dismissed')}
             style={{
-              background: 'rgba(0,0,0,0.05)',
+              background: 'rgba(0,0,0,0.04)',
               color: '#6e6e73',
-              border: 'none',
+              border: '1px solid rgba(0,0,0,0.08)',
               borderRadius: 10,
-              padding: '11px 16px',
+              padding: '10px 16px',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
