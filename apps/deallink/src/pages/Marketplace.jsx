@@ -15,7 +15,6 @@ export default function Marketplace() {
   const [error, setError] = React.useState(null);
   const [filter, setFilter] = React.useState('All');
 
-  const optedIn = !!state.profile?.marketplaceOptIn;
   const { isFreePlan } = useAuth();
 
   async function load() {
@@ -35,21 +34,12 @@ export default function Marketplace() {
   const types = Array.from(new Set(items.map((d) => d.type).filter(Boolean)));
   const filtered = filter === 'All' ? items : items.filter((d) => d.type === filter);
 
-  async function toggleOptIn() {
-    await dispatch({ type: 'update_profile', patch: { marketplaceOptIn: !optedIn } });
-    show(optedIn ? 'Removed from marketplace' : 'Listed on marketplace');
-    load();
-  }
-
   return (
     <Layout>
       <PageHeader
         title="Marketplace"
-        subtitle="Cross-wholesaler deal feed. Opt in to share your inventory."
-        actions={<>
-          <Button variant="secondary" onClick={load}><RefreshCw className="w-4 h-4" /> Refresh</Button>
-          <Button variant={optedIn ? 'secondary' : 'primary'} onClick={toggleOptIn}>{optedIn ? 'Opted in ✓' : 'Opt in to share'}</Button>
-        </>}
+        subtitle="Cross-wholesaler deal feed. Mark any deal as visible to share it here."
+        actions={<Button variant="secondary" onClick={load}><RefreshCw className="w-4 h-4" /> Refresh</Button>}
       />
 
       {isFreePlan && (
@@ -59,7 +49,7 @@ export default function Marketplace() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[#1d1d1f] font-semibold text-sm">Upgrade to browse the marketplace</p>
-            <p className="text-[#6e6e73] text-xs mt-1">You can already opt in your own deals above so paid members can find them. Upgrade to Personal or Team to browse all listings.</p>
+            <p className="text-[#6e6e73] text-xs mt-1">Your deals marked as marketplace-visible are already visible to paid members. Upgrade to Personal or Team to browse all listings.</p>
           </div>
           <a href="/billing" className="flex-shrink-0 px-4 py-2 rounded-lg bg-[#b8860b] text-white font-semibold text-xs hover:opacity-90 transition-opacity">Upgrade</a>
         </div>
@@ -86,7 +76,7 @@ export default function Marketplace() {
             <Card className="text-center py-16">
               <Globe className="w-10 h-10 mx-auto text-[#6e6e73]" />
               <p className="text-[#1d1d1f] font-semibold mt-4">No deals on the marketplace yet</p>
-              <p className="text-[#6e6e73] text-sm mt-2">{optedIn ? 'Add deals to your inventory and they\'ll show up here.' : 'Opt in to be the first to share.'}</p>
+              <p className="text-[#6e6e73] text-sm mt-2">Add deals and mark them as marketplace-visible to be the first to share.</p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

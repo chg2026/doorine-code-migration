@@ -1,0 +1,56 @@
+# 1. Remove opt-in button and related state from Marketplace.jsx
+node -e "
+const fs = require('fs');
+let src = fs.readFileSync('apps/deallink/src/pages/Marketplace.jsx', 'utf8');
+
+// Remove optedIn state line
+src = src.replace(\`  const optedIn = !!state.profile?.marketplaceOptIn;\n\`, '');
+
+// Remove toggleOptIn function
+src = src.replace(\`  async function toggleOptIn() {
+    await dispatch({ type: 'update_profile', patch: { marketplaceOptIn: !optedIn } });
+    show(optedIn ? 'Removed from marketplace' : 'Listed on marketplace');
+    load();
+  }\n\n\`, '');
+
+// Remove opt-in button from PageHeader actions (keep Refresh button only)
+src = src.replace(
+  \`actions={<>
+          <Button variant=\"secondary\" onClick={load}><RefreshCw className=\"w-4 h-4\" /> Refresh</Button>
+          <Button variant={optedIn ? 'secondary' : 'primary'} onClick={toggleOptIn}>{optedIn ? 'Opted in ✓' : 'Opt in to share'}</Button>
+        </>}\`,
+  \`actions={<Button variant=\"secondary\" onClick={load}><RefreshCw className=\"w-4 h-4\" /> Refresh</Button>}\`
+);
+
+// Update subtitle
+src = src.replace(
+  'subtitle=\"Cross-wholesaler deal feed. Opt in to share your inventory.\"',
+  'subtitle=\"Cross-wholesaler deal feed. Mark any deal as visible to share it here.\"'
+);
+
+// Update empty state message
+src = src.replace(
+  \`<p className=\"text-[#6e6e73] text-sm mt-2\">{optedIn ? 'Add deals to your inventory and they\\'ll show up here.' : 'Opt in to be the first to share.'}</p>\`,
+  \`<p className=\"text-[#6e6e73] text-sm mt-2\">Add deals and mark them as marketplace-visible to be the first to share.</p>\`
+);
+
+// Update free plan banner text
+src = src.replace(
+  'You can already opt in your own deals above so paid members can find them. Upgrade to Personal or Team to browse all listings.',
+  'Your deals marked as marketplace-visible are already visible to paid members. Upgrade to Personal or Team to browse all listings.'
+);
+
+fs.writeFileSync('apps/deallink/src/pages/Marketplace.jsx', src);
+console.log('done');
+"
+
+# 2. Update help text in DealEditor.jsx
+sed -i 's/When on, this deal appears on the cross-wholesaler marketplace (provided your profile is opted in)./When on, this deal appears on the cross-wholesaler marketplace./' apps/deallink/src/pages/DealEditor.jsx
+
+# 3. Verify no optedIn references remain
+grep -n "optedIn\|toggleOptIn\|marketplaceOptIn\|opted in" apps/deallink/src/pages/Marketplace.jsx
+
+# 4. Commit and push
+git add apps/deallink/src/pages/Marketplace.jsx apps/deallink/src/pages/DealEditor.jsx
+git commit -m "feat: remove marketplace opt-in button — deal-level visibility is the only gate"
+git push origin deallink-dev

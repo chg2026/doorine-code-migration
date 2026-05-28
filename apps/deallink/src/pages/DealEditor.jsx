@@ -209,7 +209,7 @@ export default function DealEditor({ mode }) {
                 <span>
                   <span className="block text-sm text-[#1d1d1f] font-medium">Show on marketplace</span>
                   <span className="block text-xs text-[#6e6e73] mt-0.5">
-                    When on, this deal appears on the cross-wholesaler marketplace (provided your profile is opted in).
+                    When on, this deal appears on the cross-wholesaler marketplace.
                   </span>
                 </span>
               </label>
