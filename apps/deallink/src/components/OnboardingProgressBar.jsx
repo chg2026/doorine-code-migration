@@ -35,6 +35,7 @@ export default function OnboardingProgressBar() {
   const [dragging, setDragging] = React.useState(false);
   const dragInfoRef = React.useRef(null);
   const didDragRef = React.useRef(false);
+  const pendingToggleRef = React.useRef(null);
   const wrapRef = React.useRef(null);
   const DRAG_THRESHOLD = 4;
 
@@ -66,9 +67,14 @@ export default function OnboardingProgressBar() {
     };
     const onUp = () => {
       setDragging(false);
+      const wasDrag = didDragRef.current;
+      const toggle = pendingToggleRef.current;
       dragInfoRef.current = null;
-      // Leave didDragRef set so the upcoming click handler can suppress
-      // itself; the click handler clears it after reading.
+      pendingToggleRef.current = null;
+      didDragRef.current = false;
+      // Treat as a click only if the cursor never crossed the drag
+      // threshold during this mousedown→mouseup cycle.
+      if (!wasDrag && typeof toggle === 'function') toggle();
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -78,7 +84,7 @@ export default function OnboardingProgressBar() {
     };
   }, [dragging]);
 
-  const startDrag = (e) => {
+  const startDrag = (e, toggleAction) => {
     if (e.button !== 0) return;
     const rect = wrapRef.current ? wrapRef.current.getBoundingClientRect() : null;
     if (!rect) return;
@@ -92,16 +98,9 @@ export default function OnboardingProgressBar() {
       startY: e.clientY,
     };
     didDragRef.current = false;
+    pendingToggleRef.current = toggleAction || null;
     setDragging(true);
     e.preventDefault();
-  };
-
-  const consumeClickAfterDrag = () => {
-    if (didDragRef.current) {
-      didDragRef.current = false;
-      return true;
-    }
-    return false;
   };
 
   if (hidden) return null;
@@ -143,12 +142,7 @@ export default function OnboardingProgressBar() {
     return (
       <div ref={wrapRef} style={wrapperStyle}>
         <div
-          onMouseDown={startDrag}
-          onClick={(e) => {
-            if (consumeClickAfterDrag()) return;
-            e.stopPropagation();
-            setExpanded(true);
-          }}
+          onMouseDown={(e) => startDrag(e, () => setExpanded(true))}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -286,12 +280,7 @@ export default function OnboardingProgressBar() {
       )}
 
       <div
-        onMouseDown={startDrag}
-        onClick={(e) => {
-          if (consumeClickAfterDrag()) return;
-          e.stopPropagation();
-          setExpanded((v) => !v);
-        }}
+        onMouseDown={(e) => startDrag(e, () => setExpanded((v) => !v))}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
