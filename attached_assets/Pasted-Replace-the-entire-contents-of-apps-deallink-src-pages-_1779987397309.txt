@@ -1,3 +1,5 @@
+Replace the entire contents of apps/deallink/src/pages/DealDetail.jsx with the following:
+
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { MapPin, Home, Bed, Bath, Ruler, Users, KeyRound, ArrowLeft, ChevronRight } from 'lucide-react';
@@ -324,3 +326,8 @@ function LeadModal({ handle, deal, onClose, onSubmitted }) {
     </Modal>
   );
 }
+
+After writing the file, commit and push:
+git add apps/deallink/src/pages/DealDetail.jsx
+git commit -m "feat: redesign deal detail page with hero photo, price chips, spec cards"
+git push origin deallink-dev
