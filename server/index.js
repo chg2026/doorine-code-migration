@@ -70,6 +70,7 @@ const deallinkProduct = requireProduct('deallink')
 app.use('/api/deallink/public', require('./routes/deallink-public'))
 app.use('/api/deallink/im', require('./routes/deallink-im'))
 app.use('/api/deallink/notifications', requireAuth, require('./routes/deallink-notifications'))
+app.use('/api/deallink/dashboard', requireAuth, require('./routes/deallink-dashboard'))
 app.use('/api/deallink', requireAuth, deallinkProduct, scopeToAccount, require('./routes/deallink'))
 
 app.use('/api/dashboard', requireAuth, chgProduct, require('./routes/dashboard'))
