@@ -1,7 +1,7 @@
 import React from 'react';
 import OnboardingCard from '../components/OnboardingCard.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge, Eye } from 'lucide-react';
+import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge, Eye, X } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge, Modal } from '../components/ui.jsx';
@@ -54,6 +54,7 @@ export default function DealEditor({ mode }) {
   const [error, setError] = React.useState(null);
   const [tab, setTab] = React.useState('overview');
   const [comps, setComps] = React.useState(() => parseComps(existing?.comps));
+  const [previewOpen, setPreviewOpen] = React.useState(false);
 
   const dealCount = state.deals.length;
   const otherHiddenCount = state.deals.filter((d) => d.hideStreet && (!existing || d.id !== existing.id)).length;
@@ -407,21 +408,70 @@ export default function DealEditor({ mode }) {
           <Card>
             <CardHeader><CardTitle>Live preview</CardTitle></CardHeader>
             <CardBody>
-              <div className="rounded-lg overflow-hidden border border-[rgba(0,0,0,0.08)]">
-                <div className="h-32 bg-[rgba(0,0,0,0.06)] flex items-center justify-center">
-                  {(form.photos?.[0] || form.photoUrl) ? <img src={form.photos?.[0] || form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-[#6e6e73]" />}
+              {mode === 'edit' && existing ? (
+                <div
+                  onClick={() => setPreviewOpen(true)}
+                  style={{ cursor: 'pointer' }}
+                  className="rounded-lg overflow-hidden border border-[rgba(0,0,0,0.08)] transition-[outline] [outline:2px_solid_transparent] hover:[outline:2px_solid_rgba(184,134,11,0.4)]"
+                >
+                  <div className="h-32 bg-[rgba(0,0,0,0.06)] flex items-center justify-center">
+                    {(form.photos?.[0] || form.photoUrl) ? <img src={form.photos?.[0] || form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-[#6e6e73]" />}
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-center justify-between"><p className="text-[#1d1d1f] text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
+                    <p className="text-[#6e6e73] text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
+                    <p className="text-[#1d1d1f] font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-[#6e6e73] font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
+                  </div>
+                  <p style={{ fontSize: '10px', color: '#b8860b', textAlign: 'center', padding: '6px' }}>👁 Click to preview buyer view</p>
                 </div>
-                <div className="p-3">
-                  <div className="flex items-center justify-between"><p className="text-[#1d1d1f] text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
-                  <p className="text-[#6e6e73] text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
-                  <p className="text-[#1d1d1f] font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-[#6e6e73] font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
+              ) : (
+                <div className="rounded-lg overflow-hidden border border-[rgba(0,0,0,0.08)]">
+                  <div className="h-32 bg-[rgba(0,0,0,0.06)] flex items-center justify-center">
+                    {(form.photos?.[0] || form.photoUrl) ? <img src={form.photos?.[0] || form.photoUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-[#6e6e73]" />}
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-center justify-between"><p className="text-[#1d1d1f] text-sm font-semibold truncate">{form.hideStreet && form.addr ? form.addr.replace(/^\d+\s+/, '— ') : (form.addr || '—')}</p><StatusBadge status={form.status} /></div>
+                    <p className="text-[#6e6e73] text-xs font-mono mt-1">{form.zip || '—'} · {form.beds}/{form.baths} · {form.sqft}sf</p>
+                    <p className="text-[#1d1d1f] font-mono text-sm font-semibold mt-2">${(Number(form.ask) || 0).toLocaleString()} <span className="text-[#6e6e73] font-normal">/ ${(Number(form.arv) || 0).toLocaleString()} ARV</span></p>
+                  </div>
                 </div>
-              </div>
+              )}
               <p className="text-xs text-[#86868b] mt-3">This is what buyers see on your public profile.</p>
             </CardBody>
           </Card>
         </div>
       </div>
+
+      {mode === 'edit' && existing && previewOpen && (
+        <div
+          onClick={() => setPreviewOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: 'min(90vw, 1100px)', height: '85vh', background: 'white', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          >
+            <div style={{ height: '44px', background: '#1d1d1f', display: 'flex', alignItems: 'center', padding: '0 16px', justifyContent: 'space-between' }}>
+              <span style={{ color: 'white', fontSize: '13px', fontWeight: 600 }}>👁 Buyer view — Live Preview</span>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                style={{ color: 'white', cursor: 'pointer', background: 'none', border: 'none' }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <iframe
+              src={`https://doorine.com/r/${existing?.id}`}
+              title="Buyer Preview"
+              width="100%"
+              height="100%"
+              allow="fullscreen"
+              style={{ flex: 1, border: 'none' }}
+            />
+          </div>
+        </div>
+      )}
       {node}
     </Layout>
   );

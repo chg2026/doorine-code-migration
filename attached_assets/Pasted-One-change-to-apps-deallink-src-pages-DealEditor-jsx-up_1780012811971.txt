@@ -1,0 +1,13 @@
+One change to apps/deallink/src/pages/DealEditor.jsx — upgrade the Live Preview panel in the right sidebar.
+Current state: There's a 'Live Preview' card in the right sidebar that shows a static mini thumbnail of the deal (photo, address, status badge, price).
+What to build:
+
+Keep the existing mini preview card exactly as it looks today, but make the entire card clickable. Add cursor: pointer and a subtle gold hover ring: outline: '2px solid rgba(184,134,11,0.4)' on hover. Add a small label at the bottom of the card that says '👁 Click to preview buyer view' in font-size 10px, color #b8860b, text-align center, padding 6px.
+Add a previewOpen boolean state (default false). Clicking the card sets it to true.
+When previewOpen is true, render a full-screen modal overlay: fixed position, inset 0, background rgba(0,0,0,0.7), z-index 2000, display flex, align-items center, justify-content center. Clicking the overlay background closes the modal.
+Inside the overlay, a modal container: width min(90vw, 1100px), height 85vh, background white, border-radius 16px, overflow hidden, display flex, flex-direction column. Stop click propagation on this container so clicking inside doesn't close the modal.
+Modal header bar (height 44px, background #1d1d1f, display flex, align-items center, padding 0 16px, justify-content space-between): on the left show '👁 Buyer view — Live Preview' in white 13px font-weight 600. On the right show a close button (X icon from lucide-react, color white, cursor pointer, no background, no border) that sets previewOpen to false.
+Below the header, an iframe that fills the remaining height (flex 1). The iframe src should be the deal's public IM URL: https://doorine.com/r/${existing?.id} — only render the iframe when previewOpen is true (so it doesn't load in the background). Set title='Buyer Preview', width='100%', height='100%', border='none', allow='fullscreen'.
+Only show the clickable preview card and the modal when mode === 'edit' && existing — same condition as today.
+
+Do not change any other files.
