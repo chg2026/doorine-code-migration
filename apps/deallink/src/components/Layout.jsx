@@ -10,6 +10,8 @@ import { resetTour } from './OnboardingCard.jsx';
 import { useStore } from '../store.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import AppSwitcher from './AppSwitcher.jsx';
+import api from '../lib/api.js';
+import { supabase } from '../lib/supabase.js';
 
 const navGroups = [
   { label: null, items: [
@@ -213,6 +215,206 @@ function UserMenu({ initials, onEditProfile, onSignOut }) {
   );
 }
 
+function relTime(ts) {
+  if (!ts) return '';
+  const then = new Date(ts).getTime();
+  if (Number.isNaN(then)) return '';
+  const diff = Math.max(0, Date.now() - then);
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} hr ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d} day${d > 1 ? 's' : ''} ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function NotificationBell({ userId }) {
+  const [open, setOpen] = React.useState(false);
+  const [count, setCount] = React.useState(0);
+  const [items, setItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [hoverMark, setHoverMark] = React.useState(false);
+  const wrapRef = React.useRef(null);
+
+  const fetchUnreadCount = React.useCallback(async () => {
+    try {
+      const { data } = await api.get('/deallink/notifications/unread-count');
+      const c = data?.count ?? data?.unread ?? data?.unreadCount ?? 0;
+      setCount(Number(c) || 0);
+    } catch {
+      /* ignore — leave badge as-is */
+    }
+  }, []);
+
+  const fetchList = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get('/deallink/notifications');
+      const list = Array.isArray(data) ? data : (data?.notifications || data?.items || []);
+      setItems(list.slice(0, 10));
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial unread count on mount.
+  React.useEffect(() => { fetchUnreadCount(); }, [fetchUnreadCount]);
+
+  // Supabase real-time: increment badge when a new row arrives for this user.
+  React.useEffect(() => {
+    if (!userId) return undefined;
+    const channel = supabase
+      .channel(`deallink_notifications:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'deallink_notifications', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          setCount((c) => c + 1);
+          setItems((prev) => [payload.new, ...prev].slice(0, 10));
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  // Close dropdown on outside click.
+  React.useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const toggle = () => {
+    setOpen((v) => {
+      const next = !v;
+      if (next) fetchList();
+      return next;
+    });
+  };
+
+  const markAllRead = async () => {
+    try {
+      await api.post('/deallink/notifications/mark-all-read');
+    } catch {
+      return; // leave badge/items unchanged if the request failed
+    }
+    setCount(0);
+    setItems((prev) => prev.map((n) => ({ ...n, read: true, is_read: true })));
+  };
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={toggle}
+        className="relative text-[#6e6e73] hover:text-[#1d1d1f]"
+        title="Notifications"
+        aria-label="Notifications"
+      >
+        <Bell className="w-5 h-5" />
+        {count > 0 && (
+          <span
+            className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-[#b8860b] text-white text-[10px] font-bold leading-none"
+          >
+            {count > 99 ? '99+' : count}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 40,
+            right: 0,
+            width: 320,
+            background: '#1d1d1f',
+            borderRadius: 12,
+            border: '1px solid rgba(184,134,11,0.25)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+            zIndex: 1001,
+            overflow: 'hidden',
+            fontFamily: 'var(--sans, system-ui, sans-serif)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <span style={{ color: '#ffffff', fontSize: 13, fontWeight: 600 }}>Notifications</span>
+            <button
+              type="button"
+              onClick={markAllRead}
+              onMouseEnter={() => setHoverMark(true)}
+              onMouseLeave={() => setHoverMark(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#b8860b',
+                textDecoration: hoverMark ? 'underline' : 'none',
+                padding: 0,
+                fontFamily: 'inherit',
+              }}
+            >
+              Mark all as read
+            </button>
+          </div>
+
+          <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+            {loading ? (
+              <p style={{ color: '#86868b', fontSize: 13, padding: '18px 14px', textAlign: 'center' }}>Loading…</p>
+            ) : items.length === 0 ? (
+              <p style={{ color: '#86868b', fontSize: 13, padding: '18px 14px', textAlign: 'center' }}>No notifications</p>
+            ) : (
+              items.map((n, i) => {
+                const isRead = n.read ?? n.is_read ?? false;
+                return (
+                  <div
+                    key={n.id ?? i}
+                    style={{
+                      padding: '10px 14px',
+                      borderBottom: '1px solid rgba(255,255,255,0.06)',
+                      background: isRead ? 'transparent' : 'rgba(184,134,11,0.08)',
+                    }}
+                  >
+                    <p style={{ color: '#ffffff', fontSize: 13, fontWeight: 700, margin: 0 }}>
+                      {n.title || 'Notification'}
+                    </p>
+                    {(n.body || n.message) && (
+                      <p style={{ color: '#c7c7cc', fontSize: 12, margin: '2px 0 0' }}>
+                        {n.body || n.message}
+                      </p>
+                    )}
+                    <p style={{ color: '#86868b', fontSize: 11, margin: '4px 0 0' }}>
+                      {relTime(n.created_at || n.createdAt || n.timestamp)}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Layout({ children }) {
   const loc = useLocation();
   const nav = useNavigate();
@@ -314,10 +516,7 @@ export default function Layout({ children }) {
           {handle ? <ShareHandlePill handle={handle} /> : <span />}
           <div className="flex-1" />
           <AppSwitcher currentProduct="deallink" enabledProducts={auth.enabledProducts || []} iconColor="#94a3b8" />
-          <button className="relative text-[#6e6e73] hover:text-[#1d1d1f]" title="Notifications">
-            <Bell className="w-5 h-5" />
-            {false && 0 > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#b8860b] rounded-full" />}
-          </button>
+          <NotificationBell userId={auth.user?.id} />
           <UserMenu
             initials={initials}
             onEditProfile={() => nav('/settings')}
