@@ -229,6 +229,50 @@ router.post('/:handle/leads', express.json(), async (req, res) => {
   const { data, error } = await db.from('deallink_leads').insert(row).select().single()
   if (error) return res.status(500).json({ error: error.message })
   res.status(201).json({ lead: { id: data.id, created_at: data.created_at } })
+
+  // Fire-and-forget: notify the deal owner that a new buyer joined.
+  ;(async () => {
+    try {
+      if (!supabaseAdmin) return
+
+      const { data: owner } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id, email')
+        .eq('account_id', profile.account_id)
+        .eq('is_account_admin', true)
+        .maybeSingle()
+
+      if (!owner?.id || !owner?.email) return
+
+      const buyerFirst = row.first_name || 'Someone'
+      const buyerEmail = row.email
+      const buyerType = row.buyer_type || 'Buyer'
+
+      await createNotification(
+        owner.id,
+        'buyer_joined',
+        'New buyer joined your list',
+        `${buyerFirst} (${buyerEmail}) joined your buyer list`,
+        { deal_id: dealId, buyer_email: buyerEmail }
+      )
+
+      await sendEmailNotification(
+        owner.email,
+        'New buyer on your list — REI Flywheel',
+        `<p>Hi,</p>
+<p>A new buyer just joined your list.</p>
+<ul>
+  <li><strong>Name:</strong> ${buyerFirst}${row.last_name ? ' ' + row.last_name : ''}</li>
+  <li><strong>Email:</strong> ${buyerEmail}</li>
+  <li><strong>Buyer type:</strong> ${buyerType}</li>
+</ul>
+<p><a href="https://reiflywheel.doorine.com">Open REI Flywheel</a> to view your buyer list.</p>
+<p>— The REI Flywheel team</p>`
+      )
+    } catch (notifyErr) {
+      console.error('[deallink-public/buyer_joined] Notification error:', notifyErr.message)
+    }
+  })()
 })
 
 module.exports = router
