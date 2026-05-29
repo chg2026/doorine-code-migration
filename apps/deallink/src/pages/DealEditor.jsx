@@ -1937,6 +1937,17 @@ function IMLivePreview({ deal }) {
                 <p className="text-xs text-[#6e6e73] truncate">
                   {profile.handle ? `@${profile.handle}` : ''}{profile.bio ? ` · ${profile.bio}` : ''}
                 </p>
+                {profile.handle && (
+                  <a
+                    href={`${import.meta.env.VITE_DEALLINK_URL || ''}/signup`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline truncate"
+                    style={{ fontSize: 12, color: '#b8860b', fontWeight: 600, textDecoration: 'none', display: 'inline-block' }}
+                  >
+                    Follow @{profile.handle} on REI Flywheel →
+                  </a>
+                )}
               </div>
             </div>
           </section>
