@@ -7,6 +7,7 @@
 
 const express = require('express')
 const { supabaseAdmin } = require('../middleware/auth')
+const { createNotification, sendEmailNotification } = require('../services/notifications')
 
 const router = express.Router()
 
@@ -123,6 +124,59 @@ router.get('/:handle/:dealId', async (req, res) => {
     profile: publicProfile(profile),
     deal: publicDeal(deal),
   })
+
+  // Fire-and-forget: notify the deal owner that a buyer viewed this deal.
+  // Does not await — buyer page load is unaffected.
+  ;(async () => {
+    try {
+      if (!supabaseAdmin) return
+
+      // Resolve the deal owner's user_id and email from their account.
+      const { data: owner } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id, email')
+        .eq('account_id', profile.account_id)
+        .eq('is_account_admin', true)
+        .maybeSingle()
+
+      if (!owner?.id || !owner?.email) return
+
+      // Deduplicate: skip if we already notified this owner about this deal
+      // within the last 24 hours.
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      const { data: recent } = await supabaseAdmin
+        .from('deallink_notifications')
+        .select('id')
+        .eq('user_id', owner.id)
+        .eq('type', 'buyer_viewed')
+        .filter('metadata->>deal_id', 'eq', req.params.dealId)
+        .gte('created_at', since)
+        .maybeSingle()
+
+      if (recent) return
+
+      const dealAddr = deal.addr || 'Your deal'
+
+      await createNotification(
+        owner.id,
+        'buyer_viewed',
+        'Someone viewed your deal',
+        `${dealAddr} was just viewed`,
+        { deal_id: req.params.dealId }
+      )
+
+      await sendEmailNotification(
+        owner.email,
+        'Your deal was just viewed — REI Flywheel',
+        `<p>Hi,</p>
+<p>Someone just viewed your deal at <strong>${dealAddr}</strong>.</p>
+<p><a href="https://reiflywheel.doorine.com">Open REI Flywheel</a> to see your deal activity.</p>
+<p>— The REI Flywheel team</p>`
+      )
+    } catch (notifyErr) {
+      console.error('[deallink-public/buyer_viewed] Notification error:', notifyErr.message)
+    }
+  })()
 })
 
 router.post('/:handle/leads', express.json(), async (req, res) => {
