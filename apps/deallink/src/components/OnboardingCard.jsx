@@ -8,7 +8,7 @@ const STEPS = [
   {
     key: 'properties_list',
     index: 1,
-    title: 'Your deal inventory',
+    title: 'Your Deal Inventory',
     description:
       'Properties is where you manage all your active deals. Add a deal manually, import a CSV, and track asking price, ARV, and status — all in one place.',
     videoUrl: '',
@@ -16,33 +16,41 @@ const STEPS = [
   {
     key: 'deal_overview',
     index: 2,
-    title: 'Set up your deal',
+    title: 'Set Up Your Deal',
     description:
       'Fill in the address, specs, pricing, and photos for this property. The Live Preview on the right shows exactly what buyers will see on your public profile.',
     videoUrl: '',
   },
   {
-    key: 'deal_analysis',
-    index: 3,
-    title: 'Run the numbers',
-    description:
-      'Run a Deal Analyzer on this property to calculate ARV, repair cost, and MAO. The results attach to this deal and can be shown to buyers in the Investment Memo.',
-    videoUrl: '',
-  },
-  {
     key: 'deal_documents',
-    index: 4,
-    title: 'Keep docs with your deal',
+    index: 3,
+    title: 'Keep Docs with Your Deal',
     description:
       'Upload contracts, inspection reports, title docs — any file tied to this property. You can control which documents buyers see through the Investment Memo.',
     videoUrl: '',
   },
   {
-    key: 'deal_im',
-    index: 5,
-    title: 'Share with buyers',
+    key: 'deal_im_builder',
+    index: 4,
+    title: 'Build Your Investment Memo',
     description:
-      'The Investment Memo is a public page buyers can open without logging in. Toggle which sections to include, copy the link, and send it straight to your buyer list.',
+      'Toggle which sections buyers can see — property details, photos, deal numbers, rehab breakdown, and your contact info. The public link at the top is ready to copy and send.',
+    videoUrl: '',
+  },
+  {
+    key: 'deal_im_preview',
+    index: 5,
+    title: 'Preview the Buyer View',
+    description:
+      'Click the preview to see exactly what a buyer sees when they open your deal link. No login required on their end — just a clean, professional investment memo.',
+    videoUrl: '',
+  },
+  {
+    key: 'deal_analysis',
+    index: 6,
+    title: 'Run Your Numbers (Internal)',
+    description:
+      'The Deal Analysis tab is your private workspace. Run BRRRR, Fix & Flip, Multifamily, or MAO scenarios. This data stays internal — buyers never see it.',
     videoUrl: '',
   },
 ];

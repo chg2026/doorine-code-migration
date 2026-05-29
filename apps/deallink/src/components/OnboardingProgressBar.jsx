@@ -9,9 +9,10 @@ const GOLD_GLOW =
 const STEP_LABELS = [
   { key: 'properties_list', label: 'Properties' },
   { key: 'deal_overview', label: 'Deal overview' },
-  { key: 'deal_analysis', label: 'Deal analysis' },
   { key: 'deal_documents', label: 'Documents' },
-  { key: 'deal_im', label: 'Investment memo' },
+  { key: 'deal_im_builder', label: 'IM Builder' },
+  { key: 'deal_im_preview', label: 'IM Live Preview' },
+  { key: 'deal_analysis', label: 'Deal analysis' },
 ];
 
 function readHidden() {
