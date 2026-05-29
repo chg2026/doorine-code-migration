@@ -461,14 +461,9 @@ export default function DealEditor({ mode }) {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <iframe
-              src={`https://doorine.com/r/${existing?.id}`}
-              title="Buyer Preview"
-              width="100%"
-              height="100%"
-              allow="fullscreen"
-              style={{ flex: 1, border: 'none' }}
-            />
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <IMLivePreview deal={existing} />
+            </div>
           </div>
         </div>
       )}
