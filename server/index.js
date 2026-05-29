@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const cron = require('node-cron')
+const { createNotification, sendEmailNotification } = require('./services/notifications')
 require('dotenv').config()
 
 const app = express()
@@ -129,6 +130,77 @@ cron.schedule('0 10 * * *', async () => {
       if (!user.phone) continue
       console.log(`[nudge-cron] Would SMS ${user.phone} at day ${daysAgo}`)
     }
+  }
+})
+
+// Daily contract deadline alert — runs at 8:00 AM UTC.
+// Notifies deal owners when a deal under contract has 48 or 24 hours to go.
+cron.schedule('0 8 * * *', async () => {
+  try {
+    const { supabaseAdmin } = require('./middleware/auth')
+    if (!supabaseAdmin) return
+
+    // Build date strings for tomorrow (+1 day) and day-after-tomorrow (+2 days).
+    const pad = n => String(n).padStart(2, '0')
+    const toDateStr = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`
+
+    const now = new Date()
+    const d1 = new Date(now); d1.setUTCDate(d1.getUTCDate() + 1)
+    const d2 = new Date(now); d2.setUTCDate(d2.getUTCDate() + 2)
+    const tomorrow  = toDateStr(d1)  // 24-hour threshold
+    const dayAfter  = toDateStr(d2)  // 48-hour threshold
+
+    const { data: deals, error } = await supabaseAdmin
+      .from('deallink_deals')
+      .select('id, account_id, addr, contract_date')
+      .eq('status', 'Under Contract')
+      .in('contract_date', [tomorrow, dayAfter])
+
+    if (error) {
+      console.error('[contract-deadline-cron] Query error:', error.message)
+      return
+    }
+
+    if (!deals?.length) return
+
+    for (const deal of deals) {
+      try {
+        const hoursLabel = deal.contract_date === tomorrow ? '24' : '48'
+        const dealAddr   = deal.addr || 'Your deal'
+
+        const { data: owner } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id, email')
+          .eq('account_id', deal.account_id)
+          .eq('is_account_admin', true)
+          .maybeSingle()
+
+        if (!owner?.id || !owner?.email) continue
+
+        await createNotification(
+          owner.id,
+          'contract_deadline',
+          'Contract deadline approaching',
+          `${dealAddr} — contract deadline in ${hoursLabel} hours`,
+          { deal_id: deal.id }
+        )
+
+        await sendEmailNotification(
+          owner.email,
+          'Contract deadline alert — REI Flywheel',
+          `<p>Hi,</p>
+<p>Your deal at <strong>${dealAddr}</strong> has a contract deadline in <strong>${hoursLabel} hours</strong>.</p>
+<p><a href="${process.env.VITE_DEALLINK_URL || 'https://reiflywheel.doorine.com'}/admin">View the deal in REI Flywheel</a></p>
+<p>— The REI Flywheel team</p>`
+        )
+
+        console.log(`[contract-deadline-cron] Notified owner for deal ${deal.id} (${hoursLabel}h)`)
+      } catch (dealErr) {
+        console.error(`[contract-deadline-cron] Error on deal ${deal.id}:`, dealErr.message)
+      }
+    }
+  } catch (err) {
+    console.error('[contract-deadline-cron] Fatal error:', err.message)
   }
 })
 
