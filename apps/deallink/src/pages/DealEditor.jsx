@@ -1003,44 +1003,102 @@ function SavedAnalysisReport({ analysis, deal }) {
   );
 }
 
-// Right-rail MAO Calculator. Computes the Max Allowable Offer from the
-// deal's ARV using the 70% rule (ARV × pct − rehab). Rehab and the rule
-// percentage are editable locally; ARV is pulled from the deal form.
+// Right-rail MAO Calculator — the full detailed widget mirrored from the
+// Deal Analyzer (MaoCalc). ARV is pre-filled from the deal's current ARV;
+// all other fields are editable local state and are NOT saved to the deal.
+// MAO = ARV − buyer profit − repair − wholesale fee − misc costs.
 function MAOCalculator({ arv }) {
-  const [rehab, setRehab] = React.useState('');
-  const [pct, setPct] = React.useState(70);
-  const arvNum = Number(arv) || 0;
-  const pctNum = Number(pct) || 0;
-  const mao = arvNum * (pctNum / 100) - (Number(rehab) || 0);
+  const [arvVal, setArv] = React.useState(Number(arv) || 0);
+  const [repair, setRepair] = React.useState(0);
+  const [fee, setFee] = React.useState(0);
+  const [misc, setMisc] = React.useState(0);
+  const [profitVal, setProfitVal] = React.useState(20);
+  const [profitMode, setProfitMode] = React.useState('%'); // '%' or '$'
+
+  const profitDollar = profitMode === '%' ? arvVal * (profitVal / 100) : profitVal;
+  const profitPct    = profitMode === '$' ? (arvVal > 0 ? (profitVal / arvVal) * 100 : 0) : profitVal;
+  const mao          = arvVal - profitDollar - repair - fee - misc;
+  const totalInvest  = mao + repair + misc;
+  const roi          = totalInvest > 0 ? (profitDollar / totalInvest) * 100 : 0;
+
+  const inp = 'w-full border border-[rgba(0,0,0,0.08)] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#b8860b]';
+  const row = (label, icon, children) => (
+    <div className="mb-3">
+      <label className="flex items-center gap-1.5 text-xs text-[#6e6e73] mb-1">{icon} {label}</label>
+      {children}
+    </div>
+  );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-[#b8860b]" /> MAO Calculator
-        </CardTitle>
-      </CardHeader>
-      <CardBody className="space-y-3">
-        <Field label="ARV ($)">
-          <Input value={arvNum.toLocaleString()} readOnly className="bg-[rgba(0,0,0,0.04)] text-[#6e6e73] font-mono" />
-        </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Rule (%)">
-            <Input type="number" min="0" max="100" value={pct} onChange={(e) => setPct(e.target.value)} />
-          </Field>
-          <Field label="Rehab ($)">
-            <Input type="number" min="0" step="1000" value={rehab} onChange={(e) => setRehab(e.target.value)} placeholder="0" />
-          </Field>
+    <div className="bg-white border border-[rgba(0,0,0,0.08)] rounded-xl p-5">
+      <h2 className="text-sm font-semibold text-[#1d1d1f] mb-4 flex items-center gap-2">
+        <Calculator className="w-4 h-4 text-[#b8860b]" /> MAO (Maximum Allowable Offer)
+      </h2>
+
+      {row('After Repair Value (ARV)', '🏠',
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-[#6e6e73]">$</span>
+          <input type="number" className={inp} value={arvVal} onChange={e => setArv(Number(e.target.value) || 0)} />
         </div>
-        <div className="rounded-lg border-l-2 border-[#b8860b] bg-[#b8860b]/[0.06] p-3">
-          <p className="text-[10px] uppercase tracking-wider text-[#86868b] mb-1">Max Allowable Offer</p>
-          <p className={`font-mono text-lg font-bold ${mao >= 0 ? 'text-[#1d1d1f]' : 'text-red-500'}`}>
-            ${Math.round(mao).toLocaleString()}
-          </p>
-          <p className="text-[11px] text-[#86868b] mt-1">ARV × {pctNum}% − Rehab</p>
+      )}
+      {row('Repair Costs', '🔧',
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-[#6e6e73]">$</span>
+          <input type="number" className={inp} value={repair} onChange={e => setRepair(Number(e.target.value) || 0)} />
         </div>
-      </CardBody>
-    </Card>
+      )}
+      {row('Your Wholesale Fee', '$',
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-[#6e6e73]">$</span>
+          <input type="number" className={inp} value={fee} onChange={e => setFee(Number(e.target.value) || 0)} />
+        </div>
+      )}
+      {row('Miscellaneous Costs', '$',
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-[#6e6e73]">$</span>
+          <input type="number" className={inp} value={misc} onChange={e => setMisc(Number(e.target.value) || 0)} />
+        </div>
+      )}
+      {row("Buyer's Profit", '📊',
+        <div className="flex items-center gap-1">
+          <input type="number" className={inp} value={profitVal} onChange={e => setProfitVal(Number(e.target.value) || 0)} />
+          <select
+            value={profitMode}
+            onChange={e => setProfitMode(e.target.value)}
+            className="border border-[rgba(0,0,0,0.08)] rounded-md px-2 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#b8860b]"
+          >
+            <option value="%">%</option>
+            <option value="$">$</option>
+          </select>
+        </div>
+      )}
+
+      <div className="mt-5 pt-4 border-t border-[rgba(0,0,0,0.08)]">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#6e6e73] mb-3">Results</p>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-[#b8860b] font-medium">Maximum Allowable Offer:</span>
+            <span className="font-semibold text-[#b8860b]">{mao >= 0 ? `$${Math.round(mao).toLocaleString()}` : '—'}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-[#6e6e73]">Total Buyer Investment:</span>
+            <span className="font-mono">${Math.round(totalInvest).toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-[#6e6e73]">Buyer's Profit Margin:</span>
+            <span className="font-mono">{profitPct.toFixed(1)}%</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-[#6e6e73]">Buyer's ROI:</span>
+            <span className="font-mono">{roi.toFixed(2)}%</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-[#b8860b]">Your Wholesale Fee:</span>
+            <span className="font-semibold text-[#b8860b]">${Math.round(fee).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
