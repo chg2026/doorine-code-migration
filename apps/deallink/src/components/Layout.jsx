@@ -316,7 +316,7 @@ export default function Layout({ children }) {
           <AppSwitcher currentProduct="deallink" enabledProducts={auth.enabledProducts || []} iconColor="#94a3b8" />
           <button className="relative text-[#6e6e73] hover:text-[#1d1d1f]" title="Notifications">
             <Bell className="w-5 h-5" />
-            {state.leads?.length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#b8860b] rounded-full" />}
+            {false && 0 > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#b8860b] rounded-full" />}
           </button>
           <UserMenu
             initials={initials}
