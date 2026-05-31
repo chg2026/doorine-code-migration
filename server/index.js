@@ -72,6 +72,7 @@ app.use('/api/deallink/im', require('./routes/deallink-im'))
 app.use('/api/deallink/notifications', requireAuth, require('./routes/deallink-notifications'))
 app.use('/api/deallink/dashboard', requireAuth, require('./routes/deallink-dashboard'))
 app.use('/api/deallink/alerts', requireAuth, require('./routes/deallink-alerts'))
+app.use('/api/deallink/referrals', requireAuth, require('./routes/deallink-referrals'))
 app.use('/api/deallink', requireAuth, deallinkProduct, scopeToAccount, require('./routes/deallink'))
 
 app.use('/api/dashboard', requireAuth, chgProduct, require('./routes/dashboard'))
