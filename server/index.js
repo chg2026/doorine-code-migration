@@ -205,4 +205,115 @@ cron.schedule('0 8 * * *', async () => {
   }
 })
 
+// Weekly deal activity digest — runs every Monday at 8:00 AM UTC.
+// Sends one email per active REI Flywheel user summarising the week's stats
+// and resets profile_views_this_week → profile_views_last_week.
+cron.schedule('0 8 * * 1', async () => {
+  try {
+    const { supabaseAdmin } = require('./middleware/auth')
+    if (!supabaseAdmin) return
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const appUrl = process.env.VITE_DEALLINK_URL || 'https://reiflywheel.doorine.com'
+
+    // Fetch all active REI Flywheel users — anyone with a deallink_profiles row.
+    const { data: profiles, error: profilesErr } = await supabaseAdmin
+      .from('deallink_profiles')
+      .select('account_id, handle')
+
+    if (profilesErr) {
+      console.error('[weekly-digest-cron] Failed to fetch profiles:', profilesErr.message)
+      return
+    }
+    if (!profiles?.length) return
+
+    for (const profile of profiles) {
+      try {
+        const accountId = profile.account_id
+
+        // Resolve account admin (user_id + email).
+        const { data: admin } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id, email')
+          .eq('account_id', accountId)
+          .eq('is_account_admin', true)
+          .maybeSingle()
+
+        if (!admin?.id || !admin?.email) continue
+
+        // Gather stats in parallel.
+        const [statsRes, buyersRes, dealsRes] = await Promise.all([
+          supabaseAdmin
+            .from('deallink_user_stats')
+            .select('profile_views_this_week, profile_views_last_week')
+            .eq('user_id', admin.id)
+            .maybeSingle(),
+
+          supabaseAdmin
+            .from('deallink_buyers')
+            .select('*', { count: 'exact', head: true })
+            .eq('account_id', accountId)
+            .gte('im_registered_at', sevenDaysAgo),
+
+          supabaseAdmin
+            .from('deallink_deals')
+            .select('*', { count: 'exact', head: true })
+            .eq('account_id', accountId)
+            .gte('updated_at', sevenDaysAgo),
+        ])
+
+        const views      = statsRes.data?.profile_views_this_week ?? 0
+        const newBuyers  = buyersRes.count ?? 0
+        const activeDeal = dealsRes.count  ?? 0
+
+        // Send digest email.
+        await sendEmailNotification(
+          admin.email,
+          `${views} buyer${views === 1 ? '' : 's'} viewed your deals this week — REI Flywheel`,
+          `<p>Hi${profile.handle ? ' @' + profile.handle : ''},</p>
+<p>Here's your weekly REI Flywheel summary:</p>
+<table style="border-collapse:collapse;width:100%;max-width:480px">
+  <tr>
+    <td style="padding:8px 0;border-bottom:1px solid #eee"><strong>Profile views this week</strong></td>
+    <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">${views}</td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0;border-bottom:1px solid #eee"><strong>New buyers registered</strong></td>
+    <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">${newBuyers}</td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0"><strong>Deals with activity</strong></td>
+    <td style="padding:8px 0;text-align:right">${activeDeal}</td>
+  </tr>
+</table>
+<br>
+<p style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:14px">
+  💡 <strong>Tip:</strong> Deals with photos get 3× more buyer views. Add photos to any deal missing them.
+</p>
+<p><a href="${appUrl}/admin">View your deals in REI Flywheel →</a></p>
+<p style="color:#999;font-size:12px">— The REI Flywheel team</p>`
+        )
+
+        // Reset stats: archive this week's views into last_week, zero out this_week.
+        await supabaseAdmin
+          .from('deallink_user_stats')
+          .upsert(
+            {
+              user_id: admin.id,
+              profile_views_last_week: views,
+              profile_views_this_week: 0,
+            },
+            { onConflict: 'user_id' }
+          )
+
+        console.log(`[weekly-digest-cron] Sent digest to ${admin.email} (views=${views} buyers=${newBuyers} deals=${activeDeal})`)
+      } catch (userErr) {
+        console.error(`[weekly-digest-cron] Error for account ${profile.account_id}:`, userErr.message)
+      }
+    }
+  } catch (err) {
+    console.error('[weekly-digest-cron] Fatal error:', err.message)
+  }
+})
+
 module.exports = app
