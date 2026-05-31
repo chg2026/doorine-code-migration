@@ -245,7 +245,7 @@ cron.schedule('0 8 * * 1', async () => {
         const [statsRes, buyersRes, dealsRes] = await Promise.all([
           supabaseAdmin
             .from('deallink_user_stats')
-            .select('profile_views_this_week, profile_views_last_week')
+            .select('profile_views_this_week, profile_views_last_week, last_deal_action_at, streak_weeks')
             .eq('user_id', admin.id)
             .maybeSingle(),
 
@@ -294,7 +294,13 @@ cron.schedule('0 8 * * 1', async () => {
 <p style="color:#999;font-size:12px">— The REI Flywheel team</p>`
         )
 
-        // Reset stats: archive this week's views into last_week, zero out this_week.
+        // Streak logic: active this week = last_deal_action_at within 7 days.
+        const lastAction  = statsRes.data?.last_deal_action_at
+        const currentStreak = statsRes.data?.streak_weeks ?? 0
+        const isActive    = lastAction && new Date(lastAction) >= new Date(sevenDaysAgo)
+        const newStreak   = isActive ? currentStreak + 1 : 0
+
+        // Reset stats: archive this week's views → last_week, zero this_week, update streak.
         await supabaseAdmin
           .from('deallink_user_stats')
           .upsert(
@@ -302,11 +308,12 @@ cron.schedule('0 8 * * 1', async () => {
               user_id: admin.id,
               profile_views_last_week: views,
               profile_views_this_week: 0,
+              streak_weeks: newStreak,
             },
             { onConflict: 'user_id' }
           )
 
-        console.log(`[weekly-digest-cron] Sent digest to ${admin.email} (views=${views} buyers=${newBuyers} deals=${activeDeal})`)
+        console.log(`[weekly-digest-cron] Sent digest to ${admin.email} (views=${views} buyers=${newBuyers} deals=${activeDeal} streak=${newStreak})`)
       } catch (userErr) {
         console.error(`[weekly-digest-cron] Error for account ${profile.account_id}:`, userErr.message)
       }

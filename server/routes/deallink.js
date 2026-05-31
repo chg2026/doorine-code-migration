@@ -115,6 +115,17 @@ router.post('/deals', async (req, res) => {
   const { data, error } = await db.from('deallink_deals').insert(row).select().single()
   if (error) return res.status(500).json({ error: error.message })
   res.status(201).json({ deal: data })
+  ;(async () => {
+    try {
+      if (!supabaseAdmin || !req.user?.id) return
+      await supabaseAdmin.from('deallink_user_stats').upsert(
+        { user_id: req.user.id, last_deal_action_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    } catch (e) {
+      console.error('[deallink/stats] last_deal_action_at update error (POST /deals):', e.message)
+    }
+  })()
 })
 
 router.post('/deals/bulk', async (req, res) => {
@@ -128,6 +139,17 @@ router.post('/deals/bulk', async (req, res) => {
   const { data, error } = await db.from('deallink_deals').insert(rows).select()
   if (error) return res.status(500).json({ error: error.message })
   res.status(201).json({ deals: data || [] })
+  ;(async () => {
+    try {
+      if (!supabaseAdmin || !req.user?.id) return
+      await supabaseAdmin.from('deallink_user_stats').upsert(
+        { user_id: req.user.id, last_deal_action_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    } catch (e) {
+      console.error('[deallink/stats] last_deal_action_at update error (POST /deals/bulk):', e.message)
+    }
+  })()
 })
 
 router.patch('/deals/:id', async (req, res) => {
@@ -146,6 +168,17 @@ router.patch('/deals/:id', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message })
   if (!data) return res.status(404).json({ error: 'Deal not found.' })
   res.json({ deal: data })
+  ;(async () => {
+    try {
+      if (!supabaseAdmin || !req.user?.id) return
+      await supabaseAdmin.from('deallink_user_stats').upsert(
+        { user_id: req.user.id, last_deal_action_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    } catch (e) {
+      console.error('[deallink/stats] last_deal_action_at update error (PATCH /deals/:id):', e.message)
+    }
+  })()
 })
 
 router.delete('/deals/:id', async (req, res) => {
