@@ -126,6 +126,74 @@ router.post('/deals', async (req, res) => {
     } catch (e) {
       console.error('[deallink/stats] last_deal_action_at update error (POST /deals):', e.message)
     }
+    // Referral activation — runs only when this is the user's first deal.
+    try {
+      if (!supabaseAdmin || !req.user?.id || !accountId) return
+
+      const { count: totalDeals } = await supabaseAdmin
+        .from('deallink_deals')
+        .select('*', { count: 'exact', head: true })
+        .eq('account_id', accountId)
+
+      if (totalDeals !== 1) return
+
+      // Find a pending referral for this user.
+      const { data: referral } = await supabaseAdmin
+        .from('deallink_referrals')
+        .select('id, referrer_id')
+        .eq('referred_user_id', req.user.id)
+        .eq('status', 'pending')
+        .maybeSingle()
+
+      if (!referral) return
+
+      // Activate the referral.
+      await supabaseAdmin
+        .from('deallink_referrals')
+        .update({ status: 'activated', activated_at: new Date().toISOString() })
+        .eq('id', referral.id)
+
+      // Count referrer's total activated referrals (including this one).
+      const { count: activatedCount } = await supabaseAdmin
+        .from('deallink_referrals')
+        .select('*', { count: 'exact', head: true })
+        .eq('referrer_id', referral.referrer_id)
+        .eq('status', 'activated')
+
+      // Award tier badges if threshold is hit and badge not yet awarded.
+      const BADGE_TIERS = [
+        { threshold: 3, badge_type: 'founding_member' },
+        { threshold: 5, badge_type: 'verified' },
+        { threshold: 10, badge_type: 'ambassador' },
+      ]
+
+      for (const tier of BADGE_TIERS) {
+        if (activatedCount === tier.threshold) {
+          const { data: existing } = await supabaseAdmin
+            .from('deallink_badges')
+            .select('id')
+            .eq('user_id', referral.referrer_id)
+            .eq('badge_type', tier.badge_type)
+            .maybeSingle()
+
+          if (!existing) {
+            await supabaseAdmin.from('deallink_badges').insert({
+              user_id: referral.referrer_id,
+              badge_type: tier.badge_type,
+            })
+          }
+        }
+      }
+
+      // Notify the referrer.
+      await createNotification(referral.referrer_id, {
+        type: 'referral_activated',
+        title: 'Your referral is now active!',
+        body: 'Someone you referred just posted their first deal.',
+      })
+    } catch (refErr) {
+      console.error('[deallink/referral-activation] Error:', refErr.message)
+    }
   })()
   // Alert matching engine — fire-and-forget, never blocks the response.
   ;(async () => {
