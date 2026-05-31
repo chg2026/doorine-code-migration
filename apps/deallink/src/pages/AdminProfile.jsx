@@ -1,8 +1,9 @@
 import React from 'react';
-import { Instagram, Facebook, MessageCircle, Copy, Check, ExternalLink } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle, Copy, Check, ExternalLink, Trash2, Bell } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { DealLinkAPI } from '../lib/deallink-api.js';
+import api from '../lib/api.js';
 import { initialsOf } from '../lib/utils.js';
 import { supabase } from '../lib/supabase.js';
 import {
@@ -355,9 +356,309 @@ export default function AdminProfile() {
             <PhonePreview profile={form} deals={state.deals} theme={theme} />
           </div>
         </div>
+
+        <div style={{ marginTop: 28 }}>
+          <MarketAlerts show={show} />
+        </div>
       </div>
       {node}
     </Layout>
+  );
+}
+
+/* ────────────── market alerts ────────────── */
+
+const PROPERTY_TYPES = [
+  { value: 'single_family', label: 'Single Family' },
+  { value: 'multi_family',  label: 'Multi Family' },
+  { value: 'commercial',    label: 'Commercial' },
+  { value: 'land',          label: 'Land' },
+];
+
+function alertTypeLabel(type) {
+  if (type === 'wholesaler_jv') return 'JV deals';
+  if (type === 'buyer') return 'Buyer';
+  return type || 'Alert';
+}
+
+function alertGeography(a) {
+  const parts = [a.city, a.zip].filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'Anywhere';
+}
+
+function alertDetails(a) {
+  const bits = [];
+  const types = a.property_types || a.propertyTypes;
+  if (Array.isArray(types) && types.length) {
+    bits.push(types.map((t) => (PROPERTY_TYPES.find((p) => p.value === t)?.label || t)).join(', '));
+  }
+  const min = a.price_min ?? a.priceMin;
+  const max = a.price_max ?? a.priceMax;
+  if (min != null || max != null) {
+    const fmt = (n) => `$${Number(n).toLocaleString()}`;
+    if (min != null && max != null) bits.push(`${fmt(min)}–${fmt(max)}`);
+    else if (min != null) bits.push(`${fmt(min)}+`);
+    else bits.push(`up to ${fmt(max)}`);
+  }
+  return bits.join(' · ');
+}
+
+function MarketAlerts({ show }) {
+  const [alerts, setAlerts] = React.useState([]);
+  const [loadingAlerts, setLoadingAlerts] = React.useState(true);
+  const [wh, setWh] = React.useState({ city: '', zip: '', jvOnly: false });
+  const [buyer, setBuyer] = React.useState({ city: '', zip: '', types: [], priceMin: '', priceMax: '' });
+  const [savingWh, setSavingWh] = React.useState(false);
+  const [savingBuyer, setSavingBuyer] = React.useState(false);
+
+  const loadAlerts = React.useCallback(async () => {
+    setLoadingAlerts(true);
+    try {
+      const { data } = await api.get('/deallink/alerts');
+      const list = Array.isArray(data) ? data : (data?.alerts || data?.items || []);
+      setAlerts(list);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoadingAlerts(false);
+    }
+  }, []);
+
+  React.useEffect(() => { loadAlerts(); }, [loadAlerts]);
+
+  async function saveWholesaler(e) {
+    e?.preventDefault();
+    setSavingWh(true);
+    try {
+      await api.post('/deallink/alerts', {
+        alert_type: wh.jvOnly ? 'wholesaler_jv' : 'buyer',
+        city: wh.city.trim() || null,
+        zip: wh.zip.trim() || null,
+      });
+      show && show('Alert saved');
+      setWh({ city: '', zip: '', jvOnly: false });
+      loadAlerts();
+    } catch (err) {
+      show && show(err?.response?.data?.error || 'Failed to save alert');
+    } finally {
+      setSavingWh(false);
+    }
+  }
+
+  async function saveBuyer(e) {
+    e?.preventDefault();
+    setSavingBuyer(true);
+    try {
+      await api.post('/deallink/alerts', {
+        alert_type: 'buyer',
+        city: buyer.city.trim() || null,
+        zip: buyer.zip.trim() || null,
+        property_types: buyer.types,
+        price_min: buyer.priceMin === '' ? null : Number(buyer.priceMin),
+        price_max: buyer.priceMax === '' ? null : Number(buyer.priceMax),
+      });
+      show && show('Alert saved');
+      setBuyer({ city: '', zip: '', types: [], priceMin: '', priceMax: '' });
+      loadAlerts();
+    } catch (err) {
+      show && show(err?.response?.data?.error || 'Failed to save alert');
+    } finally {
+      setSavingBuyer(false);
+    }
+  }
+
+  async function toggleActive(a) {
+    const id = a.id;
+    const next = !(a.active ?? a.is_active ?? true);
+    setAlerts((prev) => prev.map((x) => (x.id === id ? { ...x, active: next, is_active: next } : x)));
+    try {
+      await api.patch(`/deallink/alerts/${id}`, { active: next });
+    } catch {
+      setAlerts((prev) => prev.map((x) => (x.id === id ? { ...x, active: !next, is_active: !next } : x)));
+      show && show('Failed to update alert');
+    }
+  }
+
+  async function deleteAlert(id) {
+    if (!window.confirm('Delete this alert?')) return;
+    const prev = alerts;
+    setAlerts((p) => p.filter((x) => x.id !== id));
+    try {
+      await api.delete(`/deallink/alerts/${id}`);
+      show && show('Alert deleted');
+    } catch {
+      setAlerts(prev);
+      show && show('Failed to delete alert');
+    }
+  }
+
+  function toggleType(v) {
+    setBuyer((b) => ({
+      ...b,
+      types: b.types.includes(v) ? b.types.filter((t) => t !== v) : [...b.types, v],
+    }));
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <Bell size={18} style={{ color: ADMIN.accent }} />
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: ADMIN.inkStrong, margin: 0 }}>Market Alerts</h2>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+        gap: 18,
+      }}>
+        {/* For wholesalers */}
+        <NeuCard>
+          <SectionTitle>For wholesalers</SectionTitle>
+          <form onSubmit={saveWholesaler} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Label>City</Label>
+                <NeuInput value={wh.city} onChange={(e) => setWh((s) => ({ ...s, city: e.target.value }))} placeholder="Cleveland" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Label>ZIP</Label>
+                <NeuInput value={wh.zip} onChange={(e) => setWh((s) => ({ ...s, zip: e.target.value }))} placeholder="44101" />
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ minWidth: 0 }}>
+                <Label>Only notify me about JV deals</Label>
+                <div style={{ fontSize: 11, color: ADMIN.mute, lineHeight: 1.5 }}>
+                  When on, you'll only hear about joint-venture wholesaler deals in this area.
+                </div>
+              </div>
+              <NeuToggle on={wh.jvOnly} onChange={(v) => setWh((s) => ({ ...s, jvOnly: v }))} />
+            </div>
+            <NeuButton type="submit" gold disabled={savingWh} style={{ width: '100%' }}>
+              {savingWh ? 'Saving…' : 'Save alert'}
+            </NeuButton>
+          </form>
+        </NeuCard>
+
+        {/* For buyers */}
+        <NeuCard>
+          <SectionTitle>For buyers</SectionTitle>
+          <form onSubmit={saveBuyer} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Label>City</Label>
+                <NeuInput value={buyer.city} onChange={(e) => setBuyer((s) => ({ ...s, city: e.target.value }))} placeholder="Cleveland" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Label>ZIP</Label>
+                <NeuInput value={buyer.zip} onChange={(e) => setBuyer((s) => ({ ...s, zip: e.target.value }))} placeholder="44101" />
+              </div>
+            </div>
+            <div>
+              <Label>Property types</Label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
+                {PROPERTY_TYPES.map(({ value, label }) => (
+                  <NeuCheckbox
+                    key={value}
+                    checked={buyer.types.includes(value)}
+                    onChange={() => toggleType(value)}
+                    label={label}
+                  />
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Label>Min price</Label>
+                <NeuInput type="number" value={buyer.priceMin} onChange={(e) => setBuyer((s) => ({ ...s, priceMin: e.target.value }))} placeholder="0" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Label>Max price</Label>
+                <NeuInput type="number" value={buyer.priceMax} onChange={(e) => setBuyer((s) => ({ ...s, priceMax: e.target.value }))} placeholder="500000" />
+              </div>
+            </div>
+            <NeuButton type="submit" gold disabled={savingBuyer} style={{ width: '100%' }}>
+              {savingBuyer ? 'Saving…' : 'Save alert'}
+            </NeuButton>
+          </form>
+        </NeuCard>
+      </div>
+
+      {/* Existing alerts */}
+      <NeuCard style={{ marginTop: 18 }}>
+        <SectionTitle>Your alerts</SectionTitle>
+        {loadingAlerts ? (
+          <div style={{ fontSize: 13, color: ADMIN.mute }}>Loading…</div>
+        ) : alerts.length === 0 ? (
+          <div style={{ fontSize: 13, color: ADMIN.mute }}>No alerts yet. Create one above to get notified about new deals.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {alerts.map((a) => {
+              const active = a.active ?? a.is_active ?? true;
+              const details = alertDetails(a);
+              return (
+                <div key={a.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  borderRadius: 12, boxShadow: INSET_SHADOW, background: ADMIN.bg,
+                  padding: '12px 14px',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase',
+                        color: ADMIN.accent, background: 'rgba(184,134,11,0.12)',
+                        padding: '2px 8px', borderRadius: 999,
+                      }}>{alertTypeLabel(a.alert_type)}</span>
+                      <span style={{ fontSize: 13, color: ADMIN.inkStrong, fontWeight: 500 }}>{alertGeography(a)}</span>
+                    </div>
+                    {details && <div style={{ fontSize: 11, color: ADMIN.mute }}>{details}</div>}
+                  </div>
+                  <NeuToggle on={active} onChange={() => toggleActive(a)} />
+                  <button
+                    type="button"
+                    onClick={() => deleteAlert(a.id)}
+                    title="Delete alert"
+                    aria-label="Delete alert"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      color: '#d4493a',
+                    }}
+                  >
+                    <Trash2 style={{ width: 16, height: 16 }} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </NeuCard>
+    </div>
+  );
+}
+
+function NeuCheckbox({ checked, onChange, label }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        padding: '4px 0', fontFamily: 'inherit', textAlign: 'left',
+      }}
+    >
+      <span style={{
+        width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+        boxShadow: checked ? 'none' : INSET_SHADOW,
+        background: checked ? ADMIN.accent : ADMIN.bg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {checked && <Check style={{ width: 12, height: 12, color: '#ffffff' }} />}
+      </span>
+      <span style={{ fontSize: 13, color: ADMIN.ink }}>{label}</span>
+    </button>
   );
 }
 
