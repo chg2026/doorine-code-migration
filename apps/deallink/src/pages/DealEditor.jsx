@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge, Eye, X } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import DealDebutModal from '../components/DealDebutModal.jsx';
+import DealHighlightCard from '../components/DealHighlightCard.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge, Modal } from '../components/ui.jsx';
 import { DEAL_STATUSES, DealLinkAPI, DOCUMENT_CATEGORIES } from '../lib/deallink-api.js';
@@ -57,6 +58,7 @@ export default function DealEditor({ mode }) {
   const [comps, setComps] = React.useState(() => parseComps(existing?.comps));
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [debut, setDebut] = React.useState({ open: false, address: '' });
+  const [highlightOpen, setHighlightOpen] = React.useState(false);
 
   const dealCount = state.deals.length;
   const otherHiddenCount = state.deals.filter((d) => d.hideStreet && (!existing || d.id !== existing.id)).length;
@@ -204,6 +206,15 @@ export default function DealEditor({ mode }) {
             {error && <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-lg">{error}</div>}
 
             {(mode !== 'edit' || tab === 'overview') && (<>
+
+            {mode === 'edit' && existing && (
+              <div className="flex items-center justify-between gap-3 pb-1">
+                <h3 className="text-[#1d1d1f] font-semibold text-sm">Overview</h3>
+                <Button variant="secondary" onClick={() => setHighlightOpen(true)}>
+                  <Share2 className="w-4 h-4" /> Share this deal
+                </Button>
+              </div>
+            )}
 
             <section>
               <h3 className="text-[#1d1d1f] font-semibold text-sm mb-3">Address</h3>
@@ -481,6 +492,13 @@ export default function DealEditor({ mode }) {
         address={debut.address}
         onClose={() => { setDebut({ open: false, address: '' }); nav('/admin'); }}
       />
+      {highlightOpen && existing && (
+        <DealHighlightCard
+          deal={existing}
+          profile={state.profile}
+          onClose={() => setHighlightOpen(false)}
+        />
+      )}
       {node}
     </Layout>
   );
