@@ -621,4 +621,38 @@ router.get('/marketplace', async (req, res) => {
   })
 })
 
+// ─── CONTENT SHARES ───────────────────────────────────────────────────────
+
+router.post('/content-shares', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+  if (!req.user?.id) return res.status(401).json({ error: 'Unauthorized.' })
+
+  const { content_type, deal_id = null, platform } = req.body || {}
+
+  const { error } = await db.from('deallink_content_shares').insert({
+    user_id: req.user.id,
+    content_type,
+    deal_id: deal_id || null,
+    platform,
+  })
+
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ ok: true })
+})
+
+router.get('/content-shares', async (req, res) => {
+  const db = dbOrFail(res); if (!db) return
+  if (!req.user?.id) return res.status(401).json({ error: 'Unauthorized.' })
+
+  const { data, error } = await db
+    .from('deallink_content_shares')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .order('shared_at', { ascending: false })
+    .limit(50)
+
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data || [])
+})
+
 module.exports = router
