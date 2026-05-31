@@ -345,6 +345,16 @@ function DealLinkShell({ children }) {
         <div className="text-[#b8860b] font-bold tracking-wide text-sm">REI Flywheel</div>
       </header>
       <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
+      <footer className="px-4 py-6 text-center">
+        <a
+          href="https://doorine.com"
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-[#b8860b]/60 hover:text-[#b8860b] transition-colors"
+        >
+          Built on REI Flywheel
+        </a>
+      </footer>
     </div>
   );
 }
