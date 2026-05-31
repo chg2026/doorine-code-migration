@@ -3,6 +3,7 @@ import OnboardingCard from '../components/OnboardingCard.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Image as ImageIcon, Share2, Copy, ExternalLink, Check, Calculator, ChevronRight, FileText, Upload, Download, FileImage, FileCheck2, Scroll, FileBadge, Eye, X } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
+import DealDebutModal from '../components/DealDebutModal.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardHeader, CardTitle, CardBody, Button, Input, Select, Textarea, Field, StatusBadge, Modal } from '../components/ui.jsx';
 import { DEAL_STATUSES, DealLinkAPI, DOCUMENT_CATEGORIES } from '../lib/deallink-api.js';
@@ -55,6 +56,7 @@ export default function DealEditor({ mode }) {
   const [tab, setTab] = React.useState('overview');
   const [comps, setComps] = React.useState(() => parseComps(existing?.comps));
   const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [debut, setDebut] = React.useState({ open: false, address: '' });
 
   const dealCount = state.deals.length;
   const otherHiddenCount = state.deals.filter((d) => d.hideStreet && (!existing || d.id !== existing.id)).length;
@@ -109,9 +111,15 @@ export default function DealEditor({ mode }) {
       comps: JSON.stringify(comps),
     };
     if (mode === 'new') {
+      const isFirstDeal = dealCount === 0;
       dispatch({ type: 'add_deal', deal: data });
       dispatch({ type: 'update_onboarding', patch: { addedDeal: true } });
       show('Deal added');
+      if (isFirstDeal && !localStorage.getItem('debut_shown')) {
+        localStorage.setItem('debut_shown', 'true');
+        setDebut({ open: true, address: data.addr });
+        return;
+      }
     } else {
       dispatch({ type: 'update_deal', id: existing.id, patch: data });
       show('Saved');
@@ -467,6 +475,12 @@ export default function DealEditor({ mode }) {
           </div>
         </div>
       )}
+      <DealDebutModal
+        open={debut.open}
+        handle={state.profile?.handle || ''}
+        address={debut.address}
+        onClose={() => { setDebut({ open: false, address: '' }); nav('/admin'); }}
+      />
       {node}
     </Layout>
   );
