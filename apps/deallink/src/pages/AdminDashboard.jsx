@@ -3,6 +3,129 @@ import { Link, useNavigate } from 'react-router-dom';
 import AdminShell from '../components/AdminShell.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Kicker, Status, Tag } from '../components/UI.jsx';
+import api from '../lib/api.js';
+
+function ReferralTracker() {
+  const [referralUrl, setReferralUrl] = React.useState(null);
+  const [stats, setStats] = React.useState({ total: 0, activated: 0, pending: 0 });
+  const [loading, setLoading] = React.useState(true);
+  const [copied, setCopied] = React.useState(false);
+
+  React.useEffect(() => {
+    Promise.all([
+      api.get('/deallink/referrals/my-link').catch(() => ({ data: { referral_url: null } })),
+      api.get('/deallink/referrals/stats').catch(() => ({ data: { total: 0, activated: 0, pending: 0 } })),
+    ]).then(([linkRes, statsRes]) => {
+      setReferralUrl(linkRes.data.referral_url);
+      setStats(statsRes.data);
+    }).finally(() => setLoading(false));
+  }, []);
+
+  const handleCopy = () => {
+    if (!referralUrl) return;
+    navigator.clipboard.writeText(referralUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const FOUNDING_THRESHOLD = 3;
+  const activated = stats.activated || 0;
+  const progressPct = Math.min((activated / FOUNDING_THRESHOLD) * 100, 100);
+  const earned = activated >= FOUNDING_THRESHOLD;
+
+  const GOLD = '#b8860b';
+  const GOLD_LIGHT = '#fef9ec';
+  const GOLD_BORDER = '#d4a843';
+
+  if (loading) return null;
+
+  return (
+    <div style={{
+      margin: '0 24px 20px',
+      background: GOLD_LIGHT,
+      border: `1px solid ${GOLD_BORDER}`,
+      borderRadius: 8,
+      padding: '20px 24px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <span style={{ fontSize: 18 }}>🤝</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: GOLD }}>Invite wholesalers to REI Flywheel</span>
+      </div>
+
+      {referralUrl === null ? (
+        <div style={{ fontSize: 13, color: 'var(--mute)', marginTop: 8 }}>
+          Set your handle in profile settings to get your referral link.{' '}
+          <Link to="/admin/profile" style={{ color: GOLD, fontWeight: 600 }}>Go to profile →</Link>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+            <input
+              readOnly
+              value={referralUrl}
+              style={{
+                flex: 1,
+                fontSize: 13,
+                background: '#fff',
+                border: `1px solid ${GOLD_BORDER}`,
+                borderRadius: 4,
+                padding: '7px 10px',
+                color: 'var(--ink)',
+                minWidth: 0,
+              }}
+              onFocus={(e) => e.target.select()}
+            />
+            <button
+              onClick={handleCopy}
+              style={{
+                background: GOLD,
+                color: '#fff',
+                border: 'none',
+                borderRadius: 4,
+                padding: '7px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {copied ? 'Copied!' : 'Copy link'}
+            </button>
+          </div>
+
+          <div style={{ marginTop: 14 }}>
+            {earned ? (
+              <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>
+                🏆 Founding Member badge earned!
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: GOLD, marginBottom: 6, fontWeight: 600 }}>
+                  <span>{activated} of {FOUNDING_THRESHOLD} referrals activated</span>
+                  <span>{FOUNDING_THRESHOLD - activated} to go</span>
+                </div>
+                <div style={{ background: '#e8d9a0', borderRadius: 99, height: 8, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${progressPct}%`,
+                    height: '100%',
+                    background: GOLD,
+                    borderRadius: 99,
+                    transition: 'width 0.4s ease',
+                  }} />
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 6 }}>
+                  Get your Founding Member badge at {FOUNDING_THRESHOLD} active referrals
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { state, dispatch } = useStore();
@@ -34,6 +157,8 @@ export default function AdminDashboard() {
           <Link to="/admin/deal/new" className="btn sm solid">+ Add deal</Link>
         </div>
       </div>
+
+      <ReferralTracker />
 
       <div style={{ padding: '0 24px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {[['all', `All ${state.deals.length}`], ['active', `Active ${counts.active || 0}`], ['pending', `Pending ${counts.pending || 0}`], ['sold', `Sold ${counts.sold || 0}`]].map(([k, l]) => (
