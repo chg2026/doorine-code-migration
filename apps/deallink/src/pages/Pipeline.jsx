@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { GripVertical } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Layout from '../components/Layout.jsx';
+import MilestoneCard from '../components/MilestoneCard.jsx';
 import { useStore } from '../store.jsx';
 import { STATUS_STYLES } from '../components/ui.jsx';
 import { useStore as _useStore } from '../store.jsx';
@@ -13,6 +14,7 @@ const COLUMNS = STATUSES.map((id) => ({ id, label: id, ...STATUS_STYLES[id] }));
 export default function Pipeline() {
   const { state, dispatch } = useStore();
   const deals = state.deals;
+  const [milestone, setMilestone] = React.useState(null);
 
   function onDragEnd(result) {
     if (!result.destination) return;
@@ -20,7 +22,12 @@ export default function Pipeline() {
     const newStatus = result.destination.droppableId;
     const deal = deals.find((d) => String(d.id) === dealId);
     if (!deal || deal.status === newStatus) return;
+    const wasClosed = deal.status === 'Closed';
     dispatch({ type: 'update_deal', id: deal.id, patch: { status: newStatus } });
+    if (newStatus === 'Closed' && !wasClosed && !localStorage.getItem(`milestone_closed_${deal.id}`)) {
+      localStorage.setItem(`milestone_closed_${deal.id}`, '1');
+      setMilestone({ type: 'first_deal_closed' });
+    }
   }
 
   return (
@@ -105,6 +112,13 @@ export default function Pipeline() {
           </div>
         </DragDropContext>
       </div>
+      {milestone && (
+        <MilestoneCard
+          milestone={milestone}
+          profile={state.profile}
+          onClose={() => setMilestone(null)}
+        />
+      )}
     </Layout>
   );
 }
