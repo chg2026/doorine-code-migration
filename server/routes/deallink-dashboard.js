@@ -56,13 +56,14 @@ router.get('/action-inbox', requireAuth, async (req, res) => {
         .or('notes.is.null,notes.eq.')
         .or('status.is.null,status.eq.'),
 
-      // Stale deals: not closed/dead and not updated in 7+ days.
+      // Stale deals: not closed/dead and created 7+ days ago.
       db
         .from('deallink_deals')
         .select('*', { count: 'exact', head: true })
         .eq('account_id', accountId)
-        .lt('updated_at', sevenDaysAgo)
-        .not('status', 'in', '("Closed","Dead")'),
+        .lt('created_at', sevenDaysAgo)
+        .neq('status', 'Closed')
+        .neq('status', 'Dead'),
     ])
 
     if (offersRes.error) throw offersRes.error
