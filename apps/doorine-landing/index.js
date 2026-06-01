@@ -272,7 +272,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
         <li><span class="check">✓</span>Contractor coordination</li>
         <li><span class="check">✓</span>Deal pipeline & CRM</li>
       </ul>
-      <a href="#" class="pcard-link">Explore CHG Rehab →</a>
+      <a href="https://chg.doorine.com" class="pcard-link">Explore CHG Rehab →</a>
     </div>
     <div class="pcard">
       <div class="pcard-accent"></div>
@@ -286,7 +286,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
         <li><span class="check">✓</span>Deal marketplace & pipeline</li>
         <li><span class="check">✓</span>Deal analyzer tools</li>
       </ul>
-      <a href="#" class="pcard-link">Explore REIflywheel →</a>
+      <a href="https://reiflywheel.doorine.com" class="pcard-link">Explore REIflywheel →</a>
     </div>
     <div class="pcard">
       <div class="pcard-accent"></div>
