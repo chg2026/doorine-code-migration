@@ -382,7 +382,7 @@ function alertTypeLabel(type) {
 }
 
 function alertGeography(a) {
-  const parts = [a.city, a.zip].filter(Boolean);
+  const parts = [a.geography?.city, a.geography?.zip].filter(Boolean);
   return parts.length ? parts.join(' · ') : 'Anywhere';
 }
 
