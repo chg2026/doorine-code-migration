@@ -441,7 +441,7 @@ function Step0Preview({ deal, onUnlock }) {
             <p style={{ fontSize: 13, color: 'var(--mute)', marginTop: 16, textAlign: 'center' }}>
               Shared by{' '}
               <a
-                href={`https://reiflywheel.doorine.com/p/${wholesaler.handle}`}
+                href={`https://doorine.com/r/${wholesaler.handle}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: 'var(--accent)', fontWeight: 600 }}
