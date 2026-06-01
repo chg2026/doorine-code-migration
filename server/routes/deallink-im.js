@@ -118,6 +118,56 @@ router.get('/:dealId', async (req, res) => {
         },
       },
     })
+    // Fire-and-forget: notify the deal owner that a buyer viewed their deal.
+    ;(async () => {
+      try {
+        if (!supabaseAdmin) return
+
+        // Resolve owner id and email.
+        const { data: owner } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id, email')
+          .eq('account_id', deal.account_id)
+          .eq('is_account_admin', true)
+          .maybeSingle()
+
+        if (!owner?.id) return
+
+        // Rate-limit: skip if a buyer_viewed notification was sent in the last 24h.
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        const { data: recent } = await supabaseAdmin
+          .from('deallink_notifications')
+          .select('id')
+          .eq('user_id', owner.id)
+          .eq('type', 'buyer_viewed')
+          .eq('metadata->>deal_id', dealId)
+          .gte('created_at', oneDayAgo)
+          .maybeSingle()
+
+        if (recent) return
+
+        const dealAddr = addr || 'Your deal'
+
+        await createNotification(owner.id, {
+          type: 'buyer_viewed',
+          title: 'Someone viewed your deal',
+          body: `${dealAddr} was just viewed`,
+          metadata: { deal_id: dealId },
+        })
+
+        if (owner.email) {
+          await sendEmailNotification(
+            owner.email,
+            'Your deal was just viewed — REI Flywheel',
+            `<p>Good news — someone just viewed your deal.</p>
+<p><strong>${dealAddr}</strong> was just viewed by a buyer on REI Flywheel.</p>
+<p style="color:#999;font-size:12px">— The REI Flywheel team</p>`
+          )
+        }
+      } catch (notifyErr) {
+        console.error('[deallink-im/get] Notification error:', notifyErr.message)
+      }
+    })()
   } catch (e) {
     console.error('[deallink-im/get] Error:', e.message)
     res.status(500).json({ error: 'Failed to load deal.' })
