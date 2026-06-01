@@ -233,7 +233,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
     <a href="#">Pricing</a>
     <a href="#">Sign in</a>
   </div>
-  <button class="nav-cta">Get started →</button>
+  <a href="https://reiflywheel.doorine.com" class="nav-cta">Get started →</a>
 </nav>
 
 <section class="hero">
@@ -241,8 +241,8 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
   <h1>One platform.<br>Every <em>role.</em></h1>
   <p>Doorine connects the entire real estate investment ecosystem — flippers, wholesalers, and contractors — under one roof.</p>
   <div class="hero-btns">
-    <button class="btn-primary">Get started →</button>
-    <button class="btn-ghost">See the products</button>
+    <a href="https://reiflywheel.doorine.com" class="btn-primary">Get started →</a>
+    <a href="#products" class="btn-ghost">See the products</a>
   </div>
 </section>
 
@@ -253,7 +253,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
   <div class="stat"><div class="stat-num">1</div><div class="stat-label">Login. Every product.</div></div>
 </div>
 
-<section class="products">
+<section class="products" id="products">
   <div class="section-head">
     <div class="pill"><span class="pill-dot"></span>The suite</div>
     <h2>Built for every part of<br>the <em>deal.</em></h2>
@@ -300,7 +300,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
         <li><span class="check">✓</span>RFI & change order workflow</li>
         <li><span class="check">✓</span>Compliance & lien waivers</li>
       </ul>
-      <a href="#" class="pcard-link">Explore Contractor Portal →</a>
+      <a href="https://chg.doorine.com" class="pcard-link">Explore Contractor Portal →</a>
     </div>
   </div>
 </section>
@@ -336,7 +336,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
   <div class="pill" style="border-color:rgba(196,154,42,0.4);color:#9A8C72;"><span class="pill-dot"></span>Get started today</div>
   <h2>Real estate runs on<br><em>Doorine.</em></h2>
   <p>Join flippers, wholesalers, and contractors already using Doorine to run their businesses.</p>
-  <button class="btn-primary">Get started for free →</button>
+  <a href="https://reiflywheel.doorine.com" class="btn-primary">Get started for free →</a>
 </section>
 
 <footer>
