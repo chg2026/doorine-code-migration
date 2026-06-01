@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus, Search, Building2, Bed, Bath, Ruler, Eye, MoreVertical, Upload,
-  ArrowUp, ArrowDown, FileText, Users, Clock, ChevronRight, MapPin, AlertCircle,
+  ArrowUp, ArrowDown, FileText, Users, Clock, ChevronRight, MapPin, AlertCircle, Award,
 } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
@@ -199,10 +199,92 @@ function ProfileScore() {
   );
 }
 
+function ReferralTracker() {
+  const [data, setData] = React.useState(null);
+  const [copied, setCopied] = React.useState(false);
+  React.useEffect(() => {
+    let alive = true;
+    Promise.all([
+      api.get('/deallink/referrals/my-link'),
+      api.get('/deallink/referrals/stats'),
+    ])
+      .then(([linkRes, statsRes]) => {
+        if (alive) setData({ link: linkRes.data || {}, stats: statsRes.data || {} });
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  if (!data) return null;
+
+  const referralUrl = data.link?.referral_url ?? null;
+
+  if (!referralUrl) {
+    return (
+      <Card className="p-4 mb-6">
+        <p className="text-sm text-[#6e6e73]">
+          Set your handle in{' '}
+          <Link to="/admin/profile" className="font-semibold text-[#b8860b] hover:underline">profile settings</Link>{' '}
+          to get your referral link
+        </p>
+      </Card>
+    );
+  }
+
+  const activated = Math.max(0, Number(data.stats?.activated) || 0);
+  const earned = activated >= 3;
+  const pct = Math.min(100, (activated / 3) * 100);
+
+  function copy() {
+    if (!navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(referralUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {});
+  }
+
+  return (
+    <Card className="mb-6 p-5 border-[rgba(184,134,11,0.35)]" style={{ background: 'rgba(184,134,11,0.08)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <Award className="w-5 h-5 text-[#b8860b] flex-shrink-0" />
+        <h2 className="text-[#1d1d1f] font-semibold">Invite wholesalers — earn your Founding Member badge</h2>
+      </div>
+      <div className="flex gap-2 mb-4">
+        <input
+          readOnly
+          value={referralUrl}
+          onFocus={(e) => e.target.select()}
+          className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-white border border-[rgba(184,134,11,0.3)] text-[#1d1d1f] text-sm"
+        />
+        <button
+          type="button"
+          onClick={copy}
+          className="bg-[#b8860b] hover:opacity-90 text-white font-semibold text-sm px-4 py-2 rounded-lg flex-shrink-0"
+        >
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+      </div>
+      {earned ? (
+        <p className="text-[#1d1d1f] text-sm font-semibold">🏆 Founding Member badge earned!</p>
+      ) : (
+        <>
+          <div className="w-full h-2.5 rounded-full bg-[rgba(0,0,0,0.08)] overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: GOLD }} />
+          </div>
+          <p className="text-[#6e6e73] text-xs mt-2">{activated} of 3 referrals activated</p>
+        </>
+      )}
+    </Card>
+  );
+}
+
 function DashboardInsights() {
   return (
     <div className="mt-8">
       <ActivityCounter />
+      <ReferralTracker />
       <ActionInbox />
       <MarketFeed />
       <ProfileScore />
