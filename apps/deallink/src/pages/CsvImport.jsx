@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, CheckCircle2, AlertCircle, XCircle, Copy, Download } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle2, AlertCircle, XCircle, Download } from 'lucide-react';
 import Layout from '../components/Layout.jsx';
 import { useStore, useToast } from '../store.jsx';
 import { Card, CardBody, Button, Select } from '../components/ui.jsx';
@@ -24,13 +24,6 @@ const FIELDS = [
   { key: 'notes', label: 'Notes', match: ['notes', 'comments', 'remarks'] },
   { key: '__ignore', label: '— Ignore —', match: [] },
 ];
-
-const SAMPLE_CSV = `Property Address,City,State,Zip,Price,ARV,Type,Bed,Bath,SqFt,Occ,Access,Comments
-2418 Wentworth Ave,Dallas,TX,75215,142000,225000,SFR,3,2,1340,Vacant,Lockbox,Cosmetic rehab new roof
-1903 N Prairie St,Dallas,TX,75204,89000,168000,SFR,2,1,980,Tenant,Tenant,Tenant on M2M
-7412 Beckley Ave,Dallas,TX,75232,310000,480000,MF,8,4,3200,Mixed,Call,4-unit good cashflow
-4221 Maple Grove Rd,Fort Worth,TX,76114,168000,245000,SFR,3,2,1520,Vacant,Lockbox,Backup welcome
-508 E Jefferson Blvd,Dallas,TX,75203,74000,140000,SFR,2,1,820,Vacant,Lockbox,Cash only minor foundation`;
 
 export default function CsvImport() {
   const { state, dispatch } = useStore();
@@ -60,10 +53,6 @@ export default function CsvImport() {
     const rows = parseCsv(text);
     if (rows.length === 0) { show('Empty file'); return; }
     setFilename(file.name); setRawRows(rows); setMapping(autoMap(rows[0])); setStep(2);
-  }
-  function useSample() {
-    const rows = parseCsv(SAMPLE_CSV);
-    setFilename('properties_sample.csv'); setRawRows(rows); setMapping(autoMap(rows[0])); setStep(2);
   }
   function downloadTemplate() {
     const csv =
@@ -125,7 +114,6 @@ export default function CsvImport() {
             <p className="text-[#6e6e73] text-xs mt-1">Up to 500 rows · max 10 MB</p>
             <div className="flex gap-2 justify-center mt-4 flex-wrap">
               <Button variant="secondary" type="button">Browse files</Button>
-              <Button variant="secondary" type="button" onClick={(e) => { e.preventDefault(); useSample(); }}><Copy className="w-3 h-3" /> Use sample</Button>
               <Button variant="secondary" type="button" onClick={(e) => { e.preventDefault(); downloadTemplate(); }}><Download className="w-3 h-3" /> Template</Button>
             </div>
             <input type="file" accept=".csv,text/csv" onChange={(e) => handleFile(e.target.files[0])} className="hidden" />
