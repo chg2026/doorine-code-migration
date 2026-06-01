@@ -354,10 +354,6 @@ router.post('/:dealId/offer', async (req, res) => {
   const { dealId } = req.params
   const { buyer_id, amount, notes, buyer_type } = req.body
 
-  if (!buyer_id) {
-    return res.status(400).json({ error: 'buyer_id is required.' })
-  }
-
   try {
     // Fetch deal to get account_id and address.
     const { data: deal, error: dealErr } = await db
@@ -373,7 +369,7 @@ router.post('/:dealId/offer', async (req, res) => {
       .from('deallink_offers')
       .insert({
         deal_id:    dealId,
-        buyer_id,
+        buyer_id:   buyer_id || null,
         account_id: deal.account_id,
         amount:     amount || null,
         notes:      notes  || null,
