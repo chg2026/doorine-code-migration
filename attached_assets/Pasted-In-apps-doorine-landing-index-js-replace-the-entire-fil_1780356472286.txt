@@ -1,0 +1,153 @@
+In apps/doorine-landing/index.js, replace the entire file with the following. Also run npm install node-fetch@2 first.
+
+The new file does:
+
+
+
+
+
+Crawler detection (Facebook, Twitter, WhatsApp, Slack, Discord, Telegram, LinkedIn, iMessage)
+
+
+
+For /r/:handle → crawlers get OG HTML fetched from Gold Bridge public profile API; humans get 301
+
+
+
+For /im/:dealId → crawlers get OG HTML fetched from Gold Bridge IM API; humans get 301
+
+
+
+All other requests unchanged
+
+js
+
+const express = require('express')
+const fetch   = require('node-fetch')
+
+const app = express()
+
+// ─── Config ──────────────────────────────────────────────────────────────────
+
+const GOLD_BRIDGE_API = (process.env.GOLD_BRIDGE_API_URL || '').replace(/\/$/, '')
+const FLYWHEEL_URL    = 'https://reiflywheel.doorine.com'
+const SITE_URL        = 'https://doorine.com'
+const DEFAULT_IMAGE   = `${SITE_URL}/og-default.png`
+
+// ─── Crawler detection ───────────────────────────────────────────────────────
+
+const CRAWLER_RE = /facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|Slackbot|TelegramBot|Discordbot|ia_archiver|Applebot|Pinterest|Googlebot|bingbot|DuckDuckBot|Baiduspider|YandexBot|Sogou|Exabot|facebot/i
+
+function isCrawler(req) {
+  return CRAWLER_RE.test(req.headers['user-agent'] || '')
+}
+
+// ─── OG HTML builder ─────────────────────────────────────────────────────────
+
+function ogHtml({ title, description, image, url, siteName }) {
+  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(description)}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta property="og:image" content="${esc(image)}">
+<meta property="og:url" content="${esc(url)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${esc(siteName || 'REI Flywheel')}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(image)}">
+<script>window.location.href="${esc(url)}"</script>
+</head>
+<body><p>Redirecting…</p></body>
+</html>`
+}
+
+// ─── Routes ──────────────────────────────────────────────────────────────────
+
+// Profile link — doorine.com/r/:handle
+app.get('/r/:handle', async (req, res) => {
+  if (!isCrawler(req)) {
+    return res.redirect(301, `${FLYWHEEL_URL}/p/${req.params.handle}`)
+  }
+
+  const canonicalUrl = `${FLYWHEEL_URL}/p/${req.params.handle}`
+
+  try {
+    const apiRes  = await fetch(`${GOLD_BRIDGE_API}/api/deallink/public/${req.params.handle}`, { timeout: 5000 })
+    if (!apiRes.ok) throw new Error('not found')
+    const { profile, deals } = await apiRes.json()
+
+    const name   = profile?.name || req.params.handle
+    const city   = profile?.city ? ` · ${profile.city}` : ''
+    const bio    = profile?.bio  || `Check out ${name}'s off-market real estate deals on REI Flywheel.`
+    const count  = Array.isArray(deals) ? deals.length : 0
+    const desc   = count > 0 ? `${count} active deal${count !== 1 ? 's' : ''} — ${bio}` : bio
+    const image  = profile?.avatar_url || DEFAULT_IMAGE
+
+    return res.send(ogHtml({
+      title:    `${name}${city} — REI Flywheel`,
+      description: desc,
+      image,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  } catch (_) {
+    return res.send(ogHtml({
+      title:    `REI Flywheel — Off-Market Deals`,
+      description: 'Browse off-market real estate deals from wholesalers on REI Flywheel.',
+      image:    DEFAULT_IMAGE,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  }
+})
+
+// Deal IM link — doorine.com/im/:dealId
+app.get('/im/:dealId', async (req, res) => {
+  if (!isCrawler(req)) {
+    return res.redirect(301, `${FLYWHEEL_URL}/im/${req.params.dealId}`)
+  }
+
+  const canonicalUrl = `${FLYWHEEL_URL}/im/${req.params.dealId}`
+
+  try {
+    const apiRes = await fetch(`${GOLD_BRIDGE_API}/api/deallink/im/${req.params.dealId}`, { timeout: 5000 })
+    if (!apiRes.ok) throw new Error('not found')
+    const { preview } = await apiRes.json()
+
+    const addr        = preview?.addr   || 'Off-Market Deal'
+    const city        = preview?.city   ? `, ${preview.city}` : ''
+    const zip         = preview?.zip    ? ` ${preview.zip}`   : ''
+    const type        = preview?.type   ? ` · ${preview.type}` : ''
+    const ask         = preview?.ask    ? ` · $${Number(preview.ask).toLocaleString()}` : ''
+    const wholesaler  = preview?.wholesaler?.name || 'a REI Flywheel wholesaler'
+    const image       = preview?.photos?.[0] || DEFAULT_IMAGE
+
+    return res.send(ogHtml({
+      title:    `${addr}${city}${zip}${type}${ask}`,
+      description: `Off-market deal from ${wholesaler} on REI Flywheel. Submit an offer or request more info.`,
+      image,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  } catch (_) {
+    return res.send(ogHtml({
+      title:    'Off-Market Deal — REI Flywheel',
+      description: 'View this exclusive off-market real estate deal on REI Flywheel.',
+      image:    DEFAULT_IMAGE,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  }
+})
+
+// ─── Static HTML landing page ─────────────────────────────────────────────────
+// (keep existing HTML constant and route unchanged)
+
+Then keep the existing HTML constant and GET / route and catch-all exactly as they are now.

@@ -1,5 +1,129 @@
 const express = require('express')
+const fetch   = require('node-fetch')
+
 const app = express()
+
+// ─── Config ──────────────────────────────────────────────────────────────────
+
+const GOLD_BRIDGE_API = (process.env.GOLD_BRIDGE_API_URL || '').replace(/\/$/, '')
+const FLYWHEEL_URL    = 'https://reiflywheel.doorine.com'
+const SITE_URL        = 'https://doorine.com'
+const DEFAULT_IMAGE   = `${SITE_URL}/og-default.png`
+
+// ─── Crawler detection ───────────────────────────────────────────────────────
+
+const CRAWLER_RE = /facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|Slackbot|TelegramBot|Discordbot|ia_archiver|Applebot|Pinterest|Googlebot|bingbot|DuckDuckBot|Baiduspider|YandexBot|Sogou|Exabot|facebot/i
+
+function isCrawler(req) {
+  return CRAWLER_RE.test(req.headers['user-agent'] || '')
+}
+
+// ─── OG HTML builder ─────────────────────────────────────────────────────────
+
+function ogHtml({ title, description, image, url, siteName }) {
+  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(description)}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta property="og:image" content="${esc(image)}">
+<meta property="og:url" content="${esc(url)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${esc(siteName || 'REI Flywheel')}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(image)}">
+<script>window.location.href="${esc(url)}"</script>
+</head>
+<body><p>Redirecting…</p></body>
+</html>`
+}
+
+// ─── Routes ──────────────────────────────────────────────────────────────────
+
+// Profile link — doorine.com/r/:handle
+app.get('/r/:handle', async (req, res) => {
+  if (!isCrawler(req)) {
+    return res.redirect(301, `${FLYWHEEL_URL}/p/${req.params.handle}`)
+  }
+
+  const canonicalUrl = `${FLYWHEEL_URL}/p/${req.params.handle}`
+
+  try {
+    const apiRes  = await fetch(`${GOLD_BRIDGE_API}/api/deallink/public/${req.params.handle}`, { timeout: 5000 })
+    if (!apiRes.ok) throw new Error('not found')
+    const { profile, deals } = await apiRes.json()
+
+    const name   = profile?.name || req.params.handle
+    const city   = profile?.city ? ` · ${profile.city}` : ''
+    const bio    = profile?.bio  || `Check out ${name}'s off-market real estate deals on REI Flywheel.`
+    const count  = Array.isArray(deals) ? deals.length : 0
+    const desc   = count > 0 ? `${count} active deal${count !== 1 ? 's' : ''} — ${bio}` : bio
+    const image  = profile?.avatar_url || DEFAULT_IMAGE
+
+    return res.send(ogHtml({
+      title:    `${name}${city} — REI Flywheel`,
+      description: desc,
+      image,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  } catch (_) {
+    return res.send(ogHtml({
+      title:    `REI Flywheel — Off-Market Deals`,
+      description: 'Browse off-market real estate deals from wholesalers on REI Flywheel.',
+      image:    DEFAULT_IMAGE,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  }
+})
+
+// Deal IM link — doorine.com/im/:dealId
+app.get('/im/:dealId', async (req, res) => {
+  if (!isCrawler(req)) {
+    return res.redirect(301, `${FLYWHEEL_URL}/im/${req.params.dealId}`)
+  }
+
+  const canonicalUrl = `${FLYWHEEL_URL}/im/${req.params.dealId}`
+
+  try {
+    const apiRes = await fetch(`${GOLD_BRIDGE_API}/api/deallink/im/${req.params.dealId}`, { timeout: 5000 })
+    if (!apiRes.ok) throw new Error('not found')
+    const { preview } = await apiRes.json()
+
+    const addr        = preview?.addr   || 'Off-Market Deal'
+    const city        = preview?.city   ? `, ${preview.city}` : ''
+    const zip         = preview?.zip    ? ` ${preview.zip}`   : ''
+    const type        = preview?.type   ? ` · ${preview.type}` : ''
+    const ask         = preview?.ask    ? ` · $${Number(preview.ask).toLocaleString()}` : ''
+    const wholesaler  = preview?.wholesaler?.name || 'a REI Flywheel wholesaler'
+    const image       = preview?.photos?.[0] || DEFAULT_IMAGE
+
+    return res.send(ogHtml({
+      title:    `${addr}${city}${zip}${type}${ask}`,
+      description: `Off-market deal from ${wholesaler} on REI Flywheel. Submit an offer or request more info.`,
+      image,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  } catch (_) {
+    return res.send(ogHtml({
+      title:    'Off-Market Deal — REI Flywheel',
+      description: 'View this exclusive off-market real estate deal on REI Flywheel.',
+      image:    DEFAULT_IMAGE,
+      url:      canonicalUrl,
+      siteName: 'REI Flywheel',
+    }))
+  }
+})
+
+// ─── Static HTML landing page ─────────────────────────────────────────────────
 
 const HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -228,138 +352,7 @@ footer{padding:32px 60px;border-top:1px solid rgba(160,140,100,0.2);background:v
 </body>
 </html>`
 
-// ─── Routes ──────────────────────────────────────────────────────────────────
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const API_BASE = 'https://rei-code-dev.replit.app'
-
-function escapeHtml(value) {
-  if (value === null || value === undefined) return ''
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function escapeJs(value) {
-  return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/</g, '\\u003c')
-}
-
-function ogHtml({ title, description, image, url, redirectUrl }) {
-  const safeTitle = escapeHtml(title)
-  const safeDescription = escapeHtml(description)
-  const safeImage = image ? escapeHtml(image) : ''
-  const safeUrl = escapeHtml(url)
-  const safeRedirect = escapeHtml(redirectUrl)
-  const jsRedirect = escapeJs(redirectUrl)
-  const imageTags = safeImage
-    ? `  <meta property="og:image" content="${safeImage}" />\n  <meta property="og:image:width" content="1200" />\n  <meta property="og:image:height" content="630" />\n  <meta name="twitter:image" content="${safeImage}" />\n`
-    : ''
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${safeTitle}</title>
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="REI Flywheel" />
-  <meta property="og:title" content="${safeTitle}" />
-  <meta property="og:description" content="${safeDescription}" />
-${imageTags}  <meta property="og:url" content="${safeUrl}" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${safeTitle}" />
-  <meta name="twitter:description" content="${safeDescription}" />
-  <link rel="canonical" href="${safeRedirect}" />
-</head>
-<body>
-  <p>Redirecting to <a href="${safeRedirect}">${safeRedirect}</a>…</p>
-  <script>window.location.href = '${jsRedirect}';</script>
-</body>
-</html>`
-}
-
-async function fetchJson(url) {
-  try {
-    const r = await fetch(url, { headers: { accept: 'application/json' } })
-    if (!r.ok) return null
-    return await r.json()
-  } catch {
-    return null
-  }
-}
-
-function formatMoney(n) {
-  const num = Number(n)
-  if (!Number.isFinite(num)) return ''
-  return '$' + Math.round(num).toLocaleString('en-US')
-}
-
-app.get('/og/p/:handle', async (req, res) => {
-  const { handle } = req.params
-  const redirectUrl = `https://reiflywheel.doorine.com/p/${handle}`
-  const data = await fetchJson(`${API_BASE}/api/deallink/public/${encodeURIComponent(handle)}`)
-
-  const profile = data?.profile ?? data ?? {}
-  const deals = Array.isArray(data?.deals) ? data.deals : Array.isArray(profile?.deals) ? profile.deals : []
-  const activeDeals = deals.filter((d) => {
-    const s = String(d?.status ?? '').toLowerCase()
-    return !s || s === 'active' || s === 'live' || s === 'open'
-  }).length || deals.length
-
-  const bio = profile.bio || profile.tagline || profile.description || 'Real estate investor on REI Flywheel'
-  const avatar = profile.avatar_url || profile.avatarUrl || profile.photo_url || profile.photoUrl
-  const firstDealPhoto = deals
-    .map((d) => {
-      const photos = d?.photos || d?.images || []
-      if (Array.isArray(photos) && photos.length) {
-        const p = photos[0]
-        return typeof p === 'string' ? p : p?.url || p?.src
-      }
-      return d?.cover_photo || d?.coverPhoto || d?.photo_url || d?.image_url
-    })
-    .find(Boolean)
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.send(
-    ogHtml({
-      title: `@${handle} — REI Flywheel`,
-      description: `${bio} · ${activeDeals} active deals`,
-      image: avatar || firstDealPhoto || '',
-      url: `https://doorine.com/r/${handle}`,
-      redirectUrl,
-    }),
-  )
-})
-
-app.get('/og/im/:dealId', async (req, res) => {
-  const { dealId } = req.params
-  const redirectUrl = `https://reiflywheel.doorine.com/im/${dealId}`
-  const data = await fetchJson(`${API_BASE}/api/deallink/im/${encodeURIComponent(dealId)}`)
-
-  const preview = data?.preview ?? {}
-  const title = `${preview.addr}, ${preview.city} — $${Number(preview.ask).toLocaleString()} asking`
-  const description = `${preview.type} · ${preview.beds}bd/${preview.baths}ba · View full deal analysis on REI Flywheel`
-  const firstPhoto = preview.photos?.[0] || ''
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.send(
-    ogHtml({
-      title,
-      description,
-      image: firstPhoto,
-      url: `https://doorine.com/r/${dealId}`,
-      redirectUrl,
-    }),
-  )
-})
-
-app.get('/r/:handle', (req, res) => {
-  const { handle } = req.params
-  const prefix = UUID_RE.test(handle) ? 'og/im' : 'og/p'
-  res.redirect(302, `/${prefix}/${handle}`)
-})
+// ─── Routes (static) ───────────────────────────────────────────────────────────
 
 app.get('/im/:dealId', (req, res) => {
   res.redirect(301, `https://reiflywheel.doorine.com/im/${req.params.dealId}`)
