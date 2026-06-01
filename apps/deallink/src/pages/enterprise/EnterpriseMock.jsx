@@ -1,8 +1,11 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import { Card } from '../../components/ui.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export function EnterpriseBanner() {
+  const { plan } = useAuth();
+  if (plan === 'personal' || plan === 'team') return null;
   return (
     <div className="bg-gradient-to-r from-[rgba(184,134,11,0.08)] to-[rgba(184,134,11,0.04)] border border-[#b8860b]/30 rounded-xl p-4 mb-6 flex items-center gap-3">
       <div className="w-10 h-10 rounded-lg bg-[rgba(184,134,11,0.10)] flex items-center justify-center flex-shrink-0"><Lock className="w-5 h-5 text-[#b8860b]" /></div>
