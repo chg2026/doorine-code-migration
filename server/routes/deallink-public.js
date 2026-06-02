@@ -111,6 +111,8 @@ router.get('/:handle', async (req, res) => {
 
   if (dErr) return res.status(500).json({ error: dErr.message })
 
+  logProfileView(db, profile) // fire-and-forget
+
   res.json({
     profile: publicProfile(profile),
     deals: (deals || []).map(publicDeal),
