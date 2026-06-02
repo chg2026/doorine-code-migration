@@ -11,6 +11,27 @@ const { createNotification, sendEmailNotification } = require('../services/notif
 
 const router = express.Router()
 
+// Resolve account_id → owner user_id, then log a profile_viewed notification.
+// Fire-and-forget: never throws, never delays the API response.
+async function logProfileView(db, profile) {
+  try {
+    const { data: owner } = await db
+      .from('user_profiles')
+      .select('id')
+      .eq('account_id', profile.account_id)
+      .eq('is_account_admin', true)
+      .maybeSingle()
+    if (!owner?.id) return
+    await db.from('deallink_notifications').insert({
+      user_id: owner.id,
+      type:    'profile_viewed',
+      title:   'Someone viewed your profile',
+      body:    'A visitor opened your public REI Flywheel profile.',
+      read:    false,
+    })
+  } catch (_) { /* non-critical — never throw */ }
+}
+
 const PUBLIC_STATUSES = ['New', 'Marketed', 'Under Contract']
 
 function dbOrFail(res) {
