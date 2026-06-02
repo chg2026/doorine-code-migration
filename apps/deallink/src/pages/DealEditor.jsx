@@ -1590,7 +1590,7 @@ function analysisHeadline(a) {
 function IMPublicLink({ deal, show }) {
   const [copied, setCopied] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const shareUrl = `https://doorine.com/r/${deal.id}`;
+  const shareUrl = `https://doorine.com/im/${deal.id}`;
   const previewLive = false;
 
   async function copyLink() {
@@ -1650,32 +1650,13 @@ function IMPublicLink({ deal, show }) {
 // Share button rendered next to the Live preview sub-tab. Generates the
 // public buyer link (slug) on first click via DealLinkAPI.shareIM, then
 // switches to a copy affordance with the resolved URL.
-function ShareIMButton({ deal, onSave, show }) {
-  const { dispatch } = useStore();
-  const [busy, setBusy]   = React.useState(false);
+function ShareIMButton({ deal, show }) {
   const [copied, setCopied] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const slug = deal.imSlug || null;
-  const shareUrl = slug ? `https://doorine.com/r/${deal.id}` : '';
+  const shareUrl = `https://doorine.com/im/${deal.id}`;
 
   async function handleClick() {
     setError(null);
-    if (!slug) {
-      setBusy(true);
-      try {
-        const s = await DealLinkAPI.shareIM(deal.id);
-        if (!s) throw new Error('Server did not return a share slug.');
-        // The /im/share endpoint already persists im_slug server-side,
-        // so we only need to refresh local state — no second PATCH.
-        dispatch({ type: '_optimistic_update_deal', id: deal.id, patch: { imSlug: s } });
-        show && show('Share link ready — click again to copy');
-      } catch (err) {
-        setError(err?.response?.data?.error || err?.message || 'Failed to generate share link');
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
@@ -1691,15 +1672,14 @@ function ShareIMButton({ deal, onSave, show }) {
       <button
         type="button"
         onClick={handleClick}
-        disabled={busy}
         className="inline-flex items-center gap-2 rounded-md bg-yellow-400 hover:bg-yellow-300 border-2 border-black px-3 py-1.5 text-sm font-semibold text-black shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        title={slug ? shareUrl : 'Generate a public buyer link for this IM'}
+        title={shareUrl}
       >
         <Share2 className="w-4 h-4" />
-        {busy ? 'Generating…' : copied ? 'Copied!' : 'Share IM'}
+        {copied ? 'Copied!' : 'Share IM'}
       </button>
       {error && <span className="text-[11px] text-red-400">{error}</span>}
-      {slug && !error && (
+      {!error && (
         <span className="text-[11px] text-[#86868b] max-w-[280px] truncate" title={shareUrl}>
           {shareUrl}
         </span>
@@ -2052,7 +2032,7 @@ function IMMemoBuilder({ deal, onSave, show }) {
   // ships with the "Live preview" sub-task. Until then the link string is
   // generated (and copyable for later) but the open-preview affordance is
   // disabled to avoid sending users to a 404.
-  const shareUrl = `https://doorine.com/r/${deal.id}`;
+  const shareUrl = `https://doorine.com/im/${deal.id}`;
   const previewLive = false;
 
   // Optimistic patch helper. `path` is one of: 'selectedAnalysisId',

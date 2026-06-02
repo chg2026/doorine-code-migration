@@ -18,7 +18,7 @@ export default function DealHighlightCard({ deal, profile, onClose }) {
 
   const handle = profile?.handle || '';
   const base = import.meta.env.VITE_DEALLINK_URL || '';
-  const shareUrl = `${base}/p/${handle}/${deal?.id}`;
+  const shareUrl = `https://doorine.com/im/${deal?.id}`;
   const profileUrl = `${base}/p/${handle}`;
 
   const photo = (Array.isArray(deal?.photos) && deal.photos[0]) || deal?.photoUrl || '';
