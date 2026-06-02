@@ -52,7 +52,7 @@ app.get('/r/:handle', async (req, res) => {
     return res.redirect(302, `${FLYWHEEL_URL}/p/${req.params.handle}`)
   }
 
-  const canonicalUrl = `${FLYWHEEL_URL}/p/${req.params.handle}`
+  const canonicalUrl = `${SITE_URL}/r/${req.params.handle}`
 
   try {
     const apiRes  = await fetch(`${GOLD_BRIDGE_API}/api/deallink/public/${req.params.handle}`, { timeout: 5000 })
@@ -91,7 +91,7 @@ app.get('/im/:dealId', async (req, res) => {
     return res.redirect(302, `${FLYWHEEL_URL}/im/${req.params.dealId}`)
   }
 
-  const canonicalUrl = `${FLYWHEEL_URL}/im/${req.params.dealId}`
+  const canonicalUrl = `${SITE_URL}/im/${req.params.dealId}`
 
   try {
     const apiRes = await fetch(`${GOLD_BRIDGE_API}/api/deallink/im/${req.params.dealId}`, { timeout: 5000 })
