@@ -18,7 +18,7 @@ const ALLOWED_ORIGINS = [
   'https://contractor.doorine.com',
   'https://doorine.com',
 ]
-const DEV_ORIGIN_RE = /^https:\/\/[a-zA-Z0-9-]+\.(replit\.dev|replit\.app)$/
+const DEV_ORIGIN_RE = /^https:\/\/[a-zA-Z0-9-]+\.(replit\.dev|replit\.app|run\.app)$/
 
 app.use(cors({
   origin: (origin, callback) => {
