@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install production dependencies for this isolated app
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy the rest of the server source code files
 COPY . .
