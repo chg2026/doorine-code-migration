@@ -13,16 +13,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# =========================================================================
-# ADD THIS LINE: Copies your sub-app env file to where Next.js expects it
-# =========================================================================
+# Copy the environment file to BOTH the root and the app directory 
+# to guarantee Next.js loads it during build compilation context
 RUN cp apps/chg-rehab/.env.production ./.env.production
+RUN cp apps/chg-rehab/.env.production apps/chg-rehab/.env.production
 
-# Run your single production build
 RUN npm run build
 
 # Stage 3: Runner container environment
@@ -32,21 +30,19 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create a system user to run the app securely without root permissions
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the built assets and standalone configurations from the builder stage
-COPY --from=builder /app/public ./public
+# Correctly copy over monorepo assets into their proper workspace trees
+COPY --from=builder /app/apps/chg-rehab/public ./apps/chg-rehab/public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./apps/chg-rehab/.next/static
 
 USER nextjs
 
-# Cloud Run defaults to port 8080, instruct Next.js to listen there
 EXPOSE 8080
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 
-# Start the Next.js production server
-CMD ["node", "server.js"]
+# Target the standalone server entry point for the specific app folder
+CMD ["node", "apps/chg-rehab/server.js"]
