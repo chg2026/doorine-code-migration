@@ -32,10 +32,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Correctly copy over monorepo assets into their proper workspace trees
-COPY --from=builder /app/apps/chg-rehab/public ./apps/chg-rehab/public
+# =========================================================================
+# FIXED: Copy standard flat paths instead of monorepo subfolders
+# =========================================================================
+COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./apps/chg-rehab/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
@@ -43,5 +45,5 @@ EXPOSE 8080
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 
-# Target the standalone server entry point for the specific app folder
-CMD ["node", "apps/chg-rehab/server.js"]
+# Target the root production server entry point
+CMD ["node", "server.js"]
