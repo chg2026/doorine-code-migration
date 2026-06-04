@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone", // 👈 Instructs Next.js to build the isolated production server
+  output: "standalone", // Instructs Next.js to build the isolated production server
   reactStrictMode: true,
   experimental: {
     serverActions: { allowedOrigins: ["*"] },
