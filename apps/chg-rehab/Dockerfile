@@ -14,18 +14,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Next.js collects completely anonymous telemetry data about general usage.
-# Un-comment the following line to disable telemetry during the build:
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Tell Next.js we are building for production
 ENV NODE_ENV=production
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-RUN npm run build
+# =========================================================================
+# ADD THIS LINE: Copies your sub-app env file to where Next.js expects it
+# =========================================================================
+RUN cp apps/chg-rehab/.env.production ./.env.production
 
+# Run your single production build
 RUN npm run build
 
 # Stage 3: Runner container environment
