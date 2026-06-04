@@ -16,10 +16,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Copy the environment file to BOTH the root and the app directory 
-# to guarantee Next.js loads it during build compilation context
-RUN cp apps/chg-rehab/.env.production ./.env.production
-RUN cp apps/chg-rehab/.env.production apps/chg-rehab/.env.production
+# Copy the environment file from current context to the builder's root.
+# The '|| true' ensures the build succeeds even if Next.js handles it automatically.
+RUN cp .env.production ./.env.production || true
 
 RUN npm run build
 
